@@ -42,4 +42,18 @@ RSpec.describe Saxon::Processor do
       expect(Saxon::Processor.default).to be(expected)
     end
   end
+
+  context "instances" do
+    subject { Saxon::Processor.create }
+
+    context "DocumentBuilders" do
+      it "can return a new DocumentBuilder" do
+        expect(subject.document_builder).to be_a(Saxon::DocumentBuilder)
+      end
+
+      it "the return DocumentBuilder is correctly instantiated" do
+        expect(subject.document_builder.to_java).to respond_to(:build)
+      end
+    end
+  end
 end

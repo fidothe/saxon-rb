@@ -1,6 +1,7 @@
 require 'saxon/s9api'
 require 'saxon/source'
 require 'saxon/configuration'
+require 'saxon/document_builder'
 
 module Saxon
   # Saxon::Processor wraps the S9API::Processor object. This is the object
@@ -40,6 +41,14 @@ module Saxon
     #   instance to wrap
     def initialize(s9_processor)
       @s9_processor = s9_processor
+    end
+
+    # Generate a new DocumentBuilder that uses this Processor.
+    # Sharing DocumentBuilders across threads is not recommended/
+    #
+    # @return [Saxon::DocumentBuilder] A new Saxon::DocumentBuilder
+    def document_builder
+      Saxon::DocumentBuilder.new(@s9_processor.newDocumentBuilder)
     end
 
     # @return [net.sf.saxon.s9api.Processor] The underlying Saxon processor
