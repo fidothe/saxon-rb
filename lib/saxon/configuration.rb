@@ -20,10 +20,16 @@ module Saxon
       end
     end
 
+    # @param processor [Saxon::Processor] a Saxon::Processor instance
     # @return [Saxon::Configuration]
-    def self.create
+    def self.create(processor = nil)
       Saxon::Loader.load!
-      new(Saxon::S9API::Configuration.new)
+      if processor
+        config = processor.to_java.underlying_configuration
+      else
+        config = Saxon::S9API::Configuration.new
+      end
+      new(config)
     end
 
     # @param license_path [String] the absolute path to a Saxon PE or EE

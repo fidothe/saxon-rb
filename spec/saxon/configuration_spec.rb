@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'saxon/configuration'
+require 'saxon/processor'
 
 RSpec.describe Saxon::Configuration do
   it "is instantiated from a java Configuration instance" do
@@ -10,6 +11,11 @@ RSpec.describe Saxon::Configuration do
   context "creating a new instance safely" do
     it "can be created without a pre-existing processor" do
       expect(Saxon::Configuration.create).to be_a(Saxon::Configuration)
+    end
+
+    it "can be created correctly from a Processor" do
+      processor = Saxon::Processor.create
+      expect(Saxon::Configuration.create(processor)).to be_a(Saxon::Configuration)
     end
   end
 
