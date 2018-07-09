@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
 
 It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
   spec.summary       = %q{Saxon 9.8 for JRuby, with an idiomatic Ruby API}
-  saxon.homepage      = "https://github.com/fidothe/saxon-rb"
+  spec.homepage      = "https://github.com/fidothe/saxon-rb"
   spec.license       = 'MIT'
   spec.platform      = 'java'
 
@@ -24,7 +24,10 @@ It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
+  spec.requirements << 'jar net.sf.saxon, Saxon-HE, 9.8.0-12'
+
   spec.add_development_dependency 'bundler', '~> 1.16'
+  spec.add_development_dependency 'jar-dependencies'
   spec.add_development_dependency 'rake', '~> 12.0'
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'vcr', '~> 4.0'

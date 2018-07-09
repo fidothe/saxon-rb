@@ -26,5 +26,5 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  c.include FixtureHelpers
+  config.include FixtureHelpers
 end
