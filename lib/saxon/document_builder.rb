@@ -1,3 +1,5 @@
+require 'saxon/xdm_node'
+
 module Saxon
   # Builds XDM objects from XML sources, for use in XSLT or for query and
   # access
@@ -21,12 +23,6 @@ module Saxon
     #   DocumentBuilder instance
     def to_java
       @s9_document_builder
-    end
-  end
-
-  class XdmNode
-    def initialize(node)
-      @node = node
     end
   end
 end
