@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'saxon/processor'
 require 'saxon/source'
 require 'saxon/document_builder'

@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'saxon/processor'
 
 RSpec.describe Saxon::Processor do

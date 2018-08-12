@@ -1,10 +1,8 @@
-require 'spec_helper'
 require 'saxon/xdm_node'
 require 'saxon/processor'
 require 'saxon/source'
-require 'saxon/document_builder'
 
-RSpec.describe Saxon::DocumentBuilder do
+RSpec.describe Saxon::XdmNode do
   let(:doc_builder) { Saxon::Processor.create.document_builder }
   let(:source) { Saxon::Source.from_string("<doc/>", base_uri: "http://example.org/") }
 

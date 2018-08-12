@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'saxon/parse_options'
 
 RSpec.describe Saxon::ParseOptions do
