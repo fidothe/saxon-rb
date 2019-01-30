@@ -56,9 +56,10 @@ module Saxon
     # <tt>Processor</tt>. Sharing <tt>XPath::Compiler</tt>s across threads is
     # fine as long as the static context is not changed.
     #
+    # @yield An XPath compiler DSL block, see {Saxon::XPath::Compiler.create}
     # @return [Saxon::XPath::Compiler] a new XPath compiler
-    def xpath_compiler
-      Saxon::XPath::Compiler.new(@s9_processor.newXPathCompiler)
+    def xpath_compiler(&block)
+      Saxon::XPath::Compiler.create(self, &block)
     end
 
     # @return [net.sf.saxon.s9api.Processor] The underlying Saxon processor
