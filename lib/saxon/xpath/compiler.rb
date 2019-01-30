@@ -32,7 +32,7 @@ module Saxon
         @s9_processor, @static_context = s9_processor, static_context
       end
 
-      def_delegators :static_context, :declared_collations, :default_collation
+      def_delegators :static_context, :declared_collations, :default_collation, :declared_namespaces
 
       # @param expression [String] the XPath expression to compile
       # @return [Saxon::XPath::Executable] the executable query
@@ -46,6 +46,9 @@ module Saxon
         compiler = @s9_processor.newXPathCompiler
         declared_collations.each do |uri, collation|
           compiler.declareCollation(uri, collation)
+        end
+        declared_namespaces.each do |prefix, uri|
+          compiler.declareNamespace(prefix, uri)
         end
         compiler.declareDefaultCollation(default_collation) unless default_collation.nil?
         compiler

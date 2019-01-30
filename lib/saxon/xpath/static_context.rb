@@ -2,6 +2,12 @@ module Saxon
   module XPath
     class StaticContext
       class DSL
+        # Executes the Proc/lambda passed in with a new instance of
+        # {StaticContext} as <tt>self</tt>, allowing the DSL methods to be
+        # called in a DSL-ish way
+        #
+        # @param block [Proc] the block of DSL calls to be executed
+        # @return [Saxon::XPath::StaticContext] the static context created by the block
         def self.define(block)
           new.define(block)
         end
@@ -34,6 +40,13 @@ module Saxon
         # @param collation_uri [String] The URI of the Collation to set as the default
         def default_collation(collation_uri)
           @default_collation = collation_uri
+        end
+
+        # Bind prefixes to namespace URIs
+        #
+        # @param namespaces [Hash<String, Symbol => String>]
+        def namespace(namespaces = {})
+          @declared_namespaces = @declared_namespaces.merge(namespaces.transform_keys(&:to_s))
         end
 
         private

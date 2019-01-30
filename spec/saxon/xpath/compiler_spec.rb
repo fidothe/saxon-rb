@@ -7,8 +7,13 @@ RSpec.describe Saxon::XPath::Compiler do
   let(:context_xml) {
 <<-EOS
 <doc>
-  <e a="1">aä</e>
-  <e a="2">ab</e>
+  <collation>
+    <e a="1">aä</e>
+    <e a="2">ab</e>
+  </collation>
+  <namespace>
+    <a:n xmlns:a="http://example.org/a"/>
+  </namespace>
 </doc>
 EOS
   }
@@ -29,13 +34,31 @@ EOS
     context "collations" do
       it "can have collations and default collation set" do
         us_collation = java.text.Collator.getInstance(java.util.Locale::US)
+        uk_collation = java.text.Collator.getInstance(java.util.Locale::UK)
         compiler = Saxon::XPath::Compiler.create(processor) {
           collation 'http://example.org/collation' => us_collation
+          collation 'http://example.org/collation-1' => uk_collation
           default_collation 'http://example.org/collation'
         }
 
-        expect(compiler.declared_collations).to eq('http://example.org/collation' => us_collation)
+        expect(compiler.declared_collations).to eq({
+          'http://example.org/collation' => us_collation, 'http://example.org/collation-1' => uk_collation
+        })
         expect(compiler.default_collation).to eq('http://example.org/collation')
+      end
+    end
+
+    context "namespaces" do
+      it "can have namespaces bound to prefixes" do
+        compiler = Saxon::XPath::Compiler.create(processor) {
+          namespace a: 'http://example.org/a', b: 'http://example.org/b'
+          namespace 'c' => 'http://example.org/c'
+        }
+
+        expect(compiler.declared_namespaces).to eq({
+          'a' => 'http://example.org/a', 'b' => 'http://example.org/b',
+          'c' => 'http://example.org/c'
+        })
       end
     end
   end
@@ -53,7 +76,14 @@ EOS
         collation 'http://example.org/german' => german
         default_collation 'http://example.org/german'
       }
-      expect(compiler.compile('/doc/e[1][compare(., /doc/e[2]) = 1]').run(context_doc).to_a).to eq([])
+      expect(compiler.compile('/doc/collation/e[1][compare(., /doc/collation/e[2]) = 1]').run(context_doc).to_a).to eq([])
+    end
+
+    specify "an XPath which uses namespaces" do
+      compiler = described_class.create(processor) {
+        namespace a: 'http://example.org/a'
+      }
+      expect(compiler.compile('/doc/namespace/a:n').run(context_doc).to_a.size).to eq(1)
     end
   end
 end
