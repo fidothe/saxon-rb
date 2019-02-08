@@ -32,12 +32,20 @@ module Saxon
         @s9_processor, @static_context = s9_processor, static_context
       end
 
-      def_delegators :static_context, :declared_collations, :default_collation, :declared_namespaces
+      def_delegators :static_context, :declared_collations, :default_collation, :declared_namespaces, :declared_variables
+      # @!attribute [r] declared_collations
+      #   @return [Hash<String => java.text.Collator>] declared collations as URI => Collator hash
+      # @!attribute [r] default_collation
+      #   @return [String] the URI of the default declared collation
+      # @!attribute [r] declared_namespaces
+      #   @return [Hash<String => String>] declared namespaces as prefix => URI hash
+      # @!attribute [r] declared_variables
+      #   @return [Hash<Saxon::QName => Saxon::XPath::VariableDeclaration>] declared variables as QName => Declaration hash
 
       # @param expression [String] the XPath expression to compile
       # @return [Saxon::XPath::Executable] the executable query
       def compile(expression)
-        Saxon::XPath::Executable.new(new_compiler.compile(expression))
+        Saxon::XPath::Executable.new(new_compiler.compile(expression), static_context)
       end
 
       private
@@ -49,6 +57,9 @@ module Saxon
         end
         declared_namespaces.each do |prefix, uri|
           compiler.declareNamespace(prefix, uri)
+        end
+        declared_variables.each do |_, decl|
+          compiler.declareVariable(*decl.compiler_args)
         end
         compiler.declareDefaultCollation(default_collation) unless default_collation.nil?
         compiler

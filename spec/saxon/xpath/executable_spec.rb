@@ -6,20 +6,18 @@ require 'saxon/xpath/executable'
 module Saxon::XPath
   RSpec.describe Executable do
     let(:processor) { Saxon::Processor.create }
+    let(:static_context) { StaticContext.new }
+    let(:xpe) { processor.to_java.newXPathCompiler.compile('/') }
 
     describe "instantiating" do
-      it "requires a Java XPathExecutable" do
-        xpe = processor.to_java.newXPathCompiler.compile('/')
-
-        expect(described_class.new(xpe)).to be_a(Saxon::XPath::Executable)
+      it "requires a Java XPathExecutable and a Saxon::XPath::StaticContext" do
+        expect(described_class.new(xpe, static_context)).to be_a(Saxon::XPath::Executable)
       end
     end
 
     describe "instances" do
       specify "return the underlying Java XPathExecutable when asked" do
-        xpe = processor.to_java.newXPathCompiler.compile('/')
-
-        instance = described_class.new(xpe)
+        instance = described_class.new(xpe, static_context)
 
         expect(instance.to_java).to be(xpe)
       end

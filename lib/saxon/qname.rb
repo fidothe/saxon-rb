@@ -73,9 +73,18 @@ module Saxon
       return false unless other.is_a?(QName)
       s9_qname.equals(other.to_java)
     end
+    alias_method :eql?, :==
+
+    def hash
+      @hash ||= (local_name + uri).hash
+    end
 
     def to_java
       s9_qname
+    end
+
+    def to_s
+      s9_qname.to_s
     end
 
     def inspect

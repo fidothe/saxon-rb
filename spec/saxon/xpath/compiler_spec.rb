@@ -61,6 +61,76 @@ EOS
         })
       end
     end
+
+    context "variables" do
+      let(:qname) {
+        Saxon::QName.create({
+          prefix: 'a', uri: 'http://example.org/a', local_name: 'var'
+        })
+      }
+
+      it "can be declared without explicit type info" do
+        compiler = Saxon::XPath::Compiler.create(processor) {
+          namespace a: 'http://example.org/a'
+          variable 'a:var'
+        }
+
+        expect(compiler.declared_variables).to eq({
+          qname => Saxon::XPath::VariableDeclaration.new({
+            qname: qname,
+            zero_or_more: 'item()'
+          })
+        })
+      end
+
+      it "can be declared with a Ruby type mapped to an XDM type" do
+        compiler = Saxon::XPath::Compiler.create(processor) {
+          namespace a: 'http://example.org/a'
+          variable 'a:var', one_or_more: ::String
+        }
+
+        expect(compiler.declared_variables).to eq({
+          qname => Saxon::XPath::VariableDeclaration.new({
+            qname: qname,
+            one_or_more: 'xs:string'
+          })
+        })
+      end
+
+      it "can be declared with explicit type / occurence info" do
+        compiler = Saxon::XPath::Compiler.create(processor) {
+          namespace a: 'http://example.org/a'
+          variable 'a:var', 'xs:string+'
+        }
+
+        expect(compiler.declared_variables).to eq({
+          qname => Saxon::XPath::VariableDeclaration.new({
+            qname: qname,
+            one_or_more: 'xs:string'
+          })
+        })
+      end
+
+      it "can be declared with a variable name not in a namespace" do
+        qname = Saxon::QName.clark('var')
+        compiler = Saxon::XPath::Compiler.create(processor) {
+          variable 'var'
+        }
+
+        expect(compiler.declared_variables).to eq({
+          qname => Saxon::XPath::VariableDeclaration.new({
+            qname: qname,
+            zero_or_more: 'item()'
+          })
+        })
+      end
+
+      it "cannot be declared if a needed namespace binding isn't there" do
+        expect {
+          Saxon::XPath::Compiler.create(processor) { variable 'a:var' }
+        }.to raise_error(Saxon::XPath::MissingVariableNamespaceError)
+      end
+    end
   end
 
   describe "compiling and running an XPath" do
@@ -84,6 +154,13 @@ EOS
         namespace a: 'http://example.org/a'
       }
       expect(compiler.compile('/doc/namespace/a:n').run(context_doc).to_a.size).to eq(1)
+    end
+
+    specify "an XPath which uses variables" do
+      compiler = described_class.create(processor) {
+        variable 'var', 'xs:string'
+      }
+      expect(compiler.compile('/doc/collation/e[. = $var]').run(context_doc, 'var' => 'ab').to_a.size).to eq(1)
     end
   end
 end

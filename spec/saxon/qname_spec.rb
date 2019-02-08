@@ -60,9 +60,17 @@ RSpec.describe Saxon::QName do
       expect(subject.eqname).to eq('Q{http://example.org/}el')
     end
 
+    specify "return their XPath lexical form for #to_s" do
+      expect(subject.to_s).to eq('pre:el')
+    end
+
     context "comparison" do
       specify "two QNames with the same NS URI and name are equal, prefix is ignored" do
         expect(subject).to eq(Saxon::QName.clark("{http://example.org/}el"))
+      end
+
+      specify "two QNames with the same NS URI and name generate the same hash code, prefix is ignored" do
+        expect(subject.hash).to eq(Saxon::QName.clark("{http://example.org/}el").hash)
       end
     end
   end

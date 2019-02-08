@@ -1,23 +1,32 @@
 require_relative '../xdm_node'
+require_relative '../xdm_atomic_value'
 
 module Saxon
   module XPath
     # Represents a compiled XPath query ready to be executed
     class Executable
+      # @return [XPath::StaticContext] the XPath's static context
+      attr_reader :static_context
+
       # @api private
       # @param s9_xpath_executable [net.sf.saxon.s9api.XPathExecutable] the
       #   Saxon compiled XPath object
-      def initialize(s9_xpath_executable)
-        @s9_xpath_executable = s9_xpath_executable
+      # @param static_context [XPath::StaticContext] the XPath's static
+      #   context
+      def initialize(s9_xpath_executable, static_context)
+        @s9_xpath_executable, @static_context = s9_xpath_executable, static_context
       end
 
       # Run the compiled query using a passed-in node as the context item.
       # @param context_item [Saxon::XdmNode] the context item node
       # @return [Saxon::XPath::Result] the result of the query as an
       #   enumerable
-      def run(context_item)
+      def run(context_item, variables = {})
         selector = to_java.load
         selector.setContextItem(context_item.to_java)
+        variables.each do |qname_or_string, value|
+          selector.setVariable(static_context.resolve_variable_qname(qname_or_string).to_java, Saxon::XdmAtomicValue.create(value).to_java)
+        end
         Result.new(selector.iterator)
       end
 
