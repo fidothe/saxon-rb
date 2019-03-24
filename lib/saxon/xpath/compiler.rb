@@ -14,7 +14,7 @@ module Saxon
       # @yield An XPath compiler DSL block
       # @return [Saxon::XPath::Compiler] the new compiler instance
       def self.create(processor, &block)
-        static_context = XPath::StaticContext::DSL.define(block)
+        static_context = XPath::StaticContext.define(block)
         new(processor.to_java, static_context)
       end
 
@@ -46,6 +46,11 @@ module Saxon
       # @return [Saxon::XPath::Executable] the executable query
       def compile(expression)
         Saxon::XPath::Executable.new(new_compiler.compile(expression), static_context)
+      end
+
+      def create(&block)
+        new_static_context = static_context.define(block)
+        self.class.new(@s9_processor, new_static_context)
       end
 
       private

@@ -131,6 +131,92 @@ EOS
         }.to raise_error(Saxon::XPath::MissingVariableNamespaceError)
       end
     end
+
+    context "immutability" do
+      subject {
+        described_class.create(processor) {
+          namespace a: 'http://example.org/a'
+          variable 'a:var', 'xs:string'
+          collation 'http://example.org/collation' => java.text.Collator.getInstance(java.util.Locale::UK)
+          default_collation 'http://example.org/collation'
+        }
+      }
+
+      specify "the declared_variables hash is frozen" do
+        expect { subject.declared_variables['a'] = :a }.to raise_error(FrozenError)
+      end
+
+      specify "the default collation cannot be changed" do
+
+      end
+
+      specify "the declared_collations hash is frozen"
+      specify "the declared_namespaces hash is frozen"
+    end
+
+    context "deriving a new Compiler from an existing one" do
+      let(:uk_collation) { java.text.Collator.getInstance(java.util.Locale::UK) }
+      let(:us_collation) { java.text.Collator.getInstance(java.util.Locale::US) }
+      let(:base) {
+        ukc = uk_collation
+        described_class.create(processor) {
+          namespace a: 'http://example.org/a'
+          variable 'a:var', 'xs:string'
+          collation 'http://example.org/collation' => ukc
+          default_collation 'http://example.org/collation'
+        }
+      }
+
+      specify "the existing properties are preserved" do
+        usc = us_collation
+        compiler = base.create {
+          namespace b: 'http://example.org/b'
+          variable 'b:var', 'xs:string'
+          collation 'http://example.org/collation-1' => usc
+        }
+
+        expect(compiler.declared_namespaces).to eq({
+          'a' => 'http://example.org/a', 'b' => 'http://example.org/b'
+        })
+
+        a_var_qname = Saxon::QName.create({
+          prefix: 'a', uri: 'http://example.org/a', local_name: 'var'
+        })
+        b_var_qname = Saxon::QName.create({
+          prefix: 'b', uri: 'http://example.org/b', local_name: 'var'
+        })
+        expect(compiler.declared_variables).to eq({
+          a_var_qname => Saxon::XPath::VariableDeclaration.new(qname: a_var_qname, one: 'xs:string'),
+          b_var_qname => Saxon::XPath::VariableDeclaration.new(qname: b_var_qname, one: 'xs:string')
+        })
+
+        expect(compiler.declared_collations).to eq({
+          'http://example.org/collation' => uk_collation, 'http://example.org/collation-1' => us_collation
+        })
+        expect(compiler.default_collation).to eq('http://example.org/collation')
+      end
+
+     specify "existing properties can be overwritten" do
+        usc = us_collation
+        compiler = base.create {
+          variable 'a:var', 'xs:string+'
+          default_collation nil
+        }
+
+        expect(compiler.declared_namespaces).to eq({
+          'a' => 'http://example.org/a'
+        })
+
+        a_var_qname = Saxon::QName.create({
+          prefix: 'a', uri: 'http://example.org/a', local_name: 'var'
+        })
+        expect(compiler.declared_variables).to eq({
+          a_var_qname => Saxon::XPath::VariableDeclaration.new(qname: a_var_qname, one_or_more: 'xs:string')
+        })
+
+        expect(compiler.default_collation).to be_nil
+      end
+    end
   end
 
   describe "compiling and running an XPath" do

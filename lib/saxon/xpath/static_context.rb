@@ -17,11 +17,39 @@ module Saxon
 
     # Represents the static context for a compiled XPath. {StaticContext}s are immutable.
     class StaticContext
+      # methods used by both {StaticContext} and {StaticContext::DSL}
+      module Common
+        # @param args [Hash]
+        # @option args [Hash<Saxon::QName => Saxon::XPath::VariableDeclaration>] :declared_variables Hash of declared variables
+        # @option args [Hash<String => String>] :declared_namespaces Hash of namespace bindings prefix => URI
+        # @option args [Hash<String => java.text.Collator>] :declared_collations Hash of URI => Collator bindings
+        # @option args [String] :default_collation URI of the default collation
+        def initialize(args = {})
+          @declared_variables = args.fetch(:declared_variables, {}).freeze
+          @declared_namespaces = args.fetch(:declared_namespaces, {}).freeze
+          @declared_collations = args.fetch(:declared_collations, {}).freeze
+          @default_collation = args.fetch(:default_collation, nil).freeze
+        end
+
+        # returns the context details in a hash suitable for initializing a new one
+        # @return [Hash<Symbol => Hash,null>] the args hash
+        def args_hash
+          {
+            declared_namespaces: @declared_namespaces,
+            declared_variables: @declared_variables,
+            declared_collations: @declared_collations,
+            default_collation: @default_collation
+          }
+        end
+      end
+
       # methods for resolving a QName represented as a <tt>prefix:local-name</tt> string into a {Saxon::QName} by looking the prefix up in declared namespaces
       module Resolver
         # Resolve a QName string into a {Saxon::QName}.
         #
-        # If the arg is a {Saxon::QName} already, it just gets returned. If it's an instance of the underlying Saxon Java QName, it'll be wrapped into a {Saxon::QName}
+        # If the arg is a {Saxon::QName} already, it just gets returned. If
+        # it's an instance of the underlying Saxon Java QName, it'll be wrapped
+        # into a {Saxon::QName}
         #
         # If the arg is a string, it's resolved by using {resolve_variable_name}
         #
@@ -61,31 +89,16 @@ module Saxon
       # Provides the hooks for constructing a {StaticContext} with a DSL.
       # @api private
       class DSL
-        # Executes the Proc/lambda passed in with a new instance of
-        # {StaticContext} as <tt>self</tt>, allowing the DSL methods to be
-        # called in a DSL-ish way
-        #
-        # @param block [Proc] the block of DSL calls to be executed
-        # @return [Saxon::XPath::StaticContext] the static context created by the block
-        def self.define(block)
-          new.define(block)
-        end
+        include Common
 
-        def initialize
-          @declared_collations = {}
-          @declared_variables = {}
-          @declared_namespaces = {}
-          @default_collation_uri = nil
-        end
-
-        # execute the passed in Proc/lambda using {#instance_exec} and return a
+        # Create an instance based on the args hash, and execute the passed in Proc/lambda against it using {#instance_exec} and return a
         # new {StaticContext} with the results
         # @param block [Proc] a Proc/lambda (or <tt>to_proc</tt>'d containing DSL calls
         # @return [Saxon::XPath::StaticContext]
-        # @api private
-        def define(block)
-          instance_exec(&block) unless block.nil?
-          StaticContext.new(args_hash)
+        def self.define(block, args = {})
+          dsl = new(args)
+          dsl.instance_exec(&block) unless block.nil?
+          StaticContext.new(dsl.args_hash)
         end
 
         # Add one or more collations to the context. Calling this multiple
@@ -95,7 +108,7 @@ module Saxon
         #
         # @param collations [Hash<String => java.text.Collator>] Hash of URI, <tt>Collator</tt> key-value pairs.
         def collation(collations = {})
-          @declared_collations = @declared_collations.merge(collations)
+          @declared_collations = @declared_collations.merge(collations).freeze
         end
 
         # Set the default Collation to use
@@ -109,7 +122,7 @@ module Saxon
         #
         # @param namespaces [Hash{String, Symbol => String}]
         def namespace(namespaces = {})
-          @declared_namespaces = @declared_namespaces.merge(namespaces.transform_keys(&:to_s))
+          @declared_namespaces = @declared_namespaces.merge(namespaces.transform_keys(&:to_s)).freeze
         end
 
         # Declare a XPath variable's existence in the context
@@ -129,7 +142,9 @@ module Saxon
         # If it's nil, then the default <tt>item()*</tt> – anything – type declaration is used
         def variable(qname, type = nil)
           qname = resolve_variable_qname(qname)
-          @declared_variables[qname] = resolve_variable_declaration(qname, type)
+          @declared_variables = @declared_variables.merge({
+            qname => resolve_variable_declaration(qname, type)
+          }).freeze
         end
 
         private
@@ -162,28 +177,21 @@ module Saxon
           args_hash[:qname] = qname
           Saxon::XPath::VariableDeclaration.new(args_hash)
         end
+      end
 
-        def args_hash
-          {
-            declared_namespaces: @declared_namespaces, declared_variables: @declared_variables,
-            declared_collations: @declared_collations, default_collation: @default_collation
-          }
-        end
+      include Common
+
+      # Executes the Proc/lambda passed in with a new instance of
+      # {StaticContext} as <tt>self</tt>, allowing the DSL methods to be
+      # called in a DSL-ish way
+      #
+      # @param block [Proc] the block of DSL calls to be executed
+      # @return [Saxon::XPath::StaticContext] the static context created by the block
+      def self.define(block)
+        DSL.define(block)
       end
 
       attr_reader :declared_variables, :declared_namespaces, :declared_collations, :default_collation
-
-      # @param args [Hash]
-      # @option args [Hash<Saxon::QName => Saxon::XPath::VariableDeclaration>] :declared_variables Hash of declared variables
-      # @option args [Hash<String => String>] :declared_namespaces Hash of namespace bindings prefix => URI
-      # @option args [Hash<String => java.text.Collator>] :declared_collations Hash of URI => Collator bindings
-      # @option args [String] :default_collation URI of the default collation
-      def initialize(args = {})
-        @declared_variables = args.fetch(:declared_variables, {})
-        @declared_namespaces = args.fetch(:declared_namespaces, {})
-        @declared_collations = args.fetch(:declared_collations, {})
-        @default_collation = args.fetch(:default_collation, nil)
-      end
 
       # @return [Saxon::QName]
       # @overload resolve_variable_qname(qname)
@@ -195,6 +203,10 @@ module Saxon
       #   @param qname_or_string [String] the name as a string
       def resolve_variable_qname(qname_or_string)
         Resolver.resolve_variable_qname(qname_or_string, declared_namespaces)
+      end
+
+      def define(block)
+        DSL.define(block, args_hash)
       end
     end
   end
