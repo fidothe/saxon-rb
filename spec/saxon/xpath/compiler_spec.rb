@@ -196,7 +196,7 @@ EOS
         expect(compiler.default_collation).to eq('http://example.org/collation')
       end
 
-     specify "existing properties can be overwritten" do
+      specify "existing properties can be overwritten" do
         usc = us_collation
         compiler = base.create {
           variable 'a:var', 'xs:string+'
