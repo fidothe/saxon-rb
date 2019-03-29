@@ -3,9 +3,26 @@ require 'vcr'
 require 'simplecov'
 SimpleCov.start
 
+require 'saxon/source'
+
 module FixtureHelpers
   def fixture_path(path)
     File.expand_path(File.join('../fixtures', path), __FILE__)
+  end
+
+  def fixture_source(path, source_opts = {})
+    Saxon::Source.from_path(fixture_path(path), source_opts)
+  end
+
+  def fixture_doc(processor, path, source_opts = {})
+    doc_builder = processor.document_builder
+    doc_builder.build(fixture_source(path, source_opts))
+  end
+
+  def string_doc(processor, str, source_opts = {base_uri: "http://example.org/"})
+    doc_builder = processor.document_builder
+    source = Saxon::Source.from_string(str, source_opts)
+    doc_builder.build(source)
   end
 end
 

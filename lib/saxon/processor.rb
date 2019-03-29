@@ -3,6 +3,7 @@ require 'saxon/source'
 require 'saxon/configuration'
 require 'saxon/document_builder'
 require 'saxon/xpath'
+require 'saxon/xslt'
 
 module Saxon
   # Saxon::Processor wraps the S9API::Processor object. This is the object
@@ -60,6 +61,16 @@ module Saxon
     # @return [Saxon::XPath::Compiler] a new XPath compiler
     def xpath_compiler(&block)
       Saxon::XPath::Compiler.create(self, &block)
+    end
+
+    # Generate a new <tt>XSLT::Compiler</tt> that uses this
+    # <tt>Processor</tt>. Sharing <tt>XSLT::Compiler</tt>s across threads is
+    # fine as long as the static context is not changed.
+    #
+    # @yield An XPath compiler DSL block, see {Saxon::XSLT::Compiler.create}
+    # @return [Saxon::XSLT::Compiler] a new XSLT compiler
+    def xslt_compiler(&block)
+      Saxon::XSLT::Compiler.create(self, &block)
     end
 
     # @return [net.sf.saxon.s9api.Processor] The underlying Saxon processor
