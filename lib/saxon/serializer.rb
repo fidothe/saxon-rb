@@ -1,4 +1,5 @@
 require 'saxon/s9api'
+require 'stringio'
 
 module Saxon
   # Serialize XDM objects.
@@ -46,6 +47,20 @@ module Saxon
         s9_serializer.setOutputProperty(resolved_property(property), value)
       end
 
+      # @overload fetch(property)
+      #   @param [Symbol, Saxon::S9API::Serializer::Property] property The property to fetch
+      # @overload fetch(property, default)
+      #   @param property [Symbol, Saxon::S9API::Serializer::Property] The property to fetch
+      #   @param default [Object] The value to return if the property is unset
+      def fetch(property, default = nil)
+        explicit_value = self[property]
+        if explicit_value.nil? && !default.nil?
+          default
+        else
+          explicit_value
+        end
+      end
+
       private
       def resolved_property(property_key)
         case property_key
@@ -70,18 +85,58 @@ module Saxon
       @output_property ||= OutputProperties.new(s9_serializer)
     end
 
-    # Serialize an XdmNode to an IO
-    #
-    # @param [Saxon::XdmNode] xdm_node The XdmNode to serialize
-    # @param [File, IO] io The IO to serialize to
-    def serialize(xdm_node, io)
-      s9_serializer.setOutputStream(io.to_outputstream)
-      s9_serializer.serializeNode(xdm_node.to_java)
+    # @overload serialize(xdm_value, io)
+    #   Serialize an XdmValue to an IO
+    #   @param [Saxon::XdmValue] xdm_value The XdmValue to serialize
+    #   @param [File, IO] io The IO to serialize to
+    #   @return [nil]
+    # @overload serialize(xdm_value, path)
+    #   Serialize an XdmValue to file <tt>path</tt>
+    #   @param [Saxon::XdmValue] xdm_value The XdmValue to serialize
+    #   @param [String, Pathname] path The path of the file to serialize to
+    #   @return [nil]
+    # @overload serialize(xdm_value)
+    #   Serialize an XdmValue to a String
+    #   @param [Saxon::XdmValue] xdm_value The XdmValue to serialize
+    #   @return [String] The serialized XdmValue
+    def serialize(xdm_value, io_or_path = nil)
+      case io_or_path
+      when nil
+        serialize_to_string(xdm_value)
+      when String, Pathname
+        serialize_to_file(xdm_value, io_or_path)
+      else
+        serialize_to_io(xdm_value, io_or_path)
+      end
     end
 
     # @return [Saxon::S9API::Serializer] The underlying Saxon Serializer object
     def to_java
       s9_serializer
+    end
+
+    private
+
+    def serialize_to_io(xdm_value, io)
+      s9_serializer.setOutputStream(io.to_outputstream)
+      s9_serializer.serializeXdmValue(xdm_value.to_java)
+      nil
+    end
+
+    def serialize_to_string(xdm_value)
+      str_encoding = output_property.fetch(:encoding, Encoding.default_internal || Encoding.default_external)
+      StringIO.open { |io|
+        io.binmode
+        serialize_to_io(xdm_value, io)
+        io.string.force_encoding(str_encoding)
+      }
+    end
+
+    def serialize_to_file(xdm_value, path)
+      file = Java::JavaIO::File.new(path)
+      s9_serializer.setOutputFile(file)
+      s9_serializer.serializeXdmValue(xdm_value.to_java)
+      nil
     end
   end
 end
