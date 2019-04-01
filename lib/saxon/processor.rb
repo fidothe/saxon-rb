@@ -53,6 +53,15 @@ module Saxon
       Saxon::DocumentBuilder.new(@s9_processor.newDocumentBuilder)
     end
 
+    # Declare custom collations for use by XSLT, XPath, and XQuery processors
+    #
+    # @param collations [Hash<String => java.text.Collator>] collations to
+    #   declare, as a hash of URI => Collator
+    def declare_collations(collations)
+      collations.each do |uri, collation|
+        @s9_processor.declareCollation(uri, collation)
+      end
+    end
     # Generate a new <tt>XPath::Compiler</tt> that uses this
     # <tt>Processor</tt>. Sharing <tt>XPath::Compiler</tt>s across threads is
     # fine as long as the static context is not changed.

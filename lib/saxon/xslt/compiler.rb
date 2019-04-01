@@ -32,7 +32,7 @@ module Saxon
         @s9_processor, @static_context = s9_processor, static_context
       end
 
-      def_delegators :static_context, :declared_collations, :default_collation
+      def_delegators :static_context, :default_collation
       # @!attribute [r] declared_collations
       #   @return [Hash<String => java.text.Collator>] declared collations as URI => Collator hash
       # @!attribute [r] default_collation
@@ -53,9 +53,6 @@ module Saxon
 
       def new_compiler
         compiler = @s9_processor.newXsltCompiler
-        declared_collations.each do |uri, collation|
-          compiler.declareCollation(uri, collation)
-        end
         compiler.declareDefaultCollation(default_collation) unless default_collation.nil?
         compiler
       end

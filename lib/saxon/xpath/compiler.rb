@@ -32,9 +32,7 @@ module Saxon
         @s9_processor, @static_context = s9_processor, static_context
       end
 
-      def_delegators :static_context, :declared_collations, :default_collation, :declared_namespaces, :declared_variables
-      # @!attribute [r] declared_collations
-      #   @return [Hash<String => java.text.Collator>] declared collations as URI => Collator hash
+      def_delegators :static_context, :default_collation, :declared_namespaces, :declared_variables
       # @!attribute [r] default_collation
       #   @return [String] the URI of the default declared collation
       # @!attribute [r] declared_namespaces
@@ -57,9 +55,6 @@ module Saxon
 
       def new_compiler
         compiler = @s9_processor.newXPathCompiler
-        declared_collations.each do |uri, collation|
-          compiler.declareCollation(uri, collation)
-        end
         declared_namespaces.each do |prefix, uri|
           compiler.declareNamespace(prefix, uri)
         end

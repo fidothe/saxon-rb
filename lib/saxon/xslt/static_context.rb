@@ -9,7 +9,6 @@ module Saxon
         # @option args [Hash<String => java.text.Collator>] :declared_collations Hash of URI => Collator bindings
         # @option args [String] :default_collation URI of the default collation
         def initialize(args = {})
-          @declared_collations = args.fetch(:declared_collations, {}).freeze
           @default_collation = args.fetch(:default_collation, nil).freeze
         end
 
@@ -17,7 +16,6 @@ module Saxon
         # @return [Hash<Symbol => Hash,null>] the args hash
         def args_hash
           {
-            declared_collations: @declared_collations,
             default_collation: @default_collation
           }
         end
@@ -38,24 +36,15 @@ module Saxon
           StaticContext.new(dsl.args_hash)
         end
 
-        # Add one or more collations to the context. Calling this multiple
-        # times will add to the set of collations, not replace it. If duplicate
-        # URI keys are used in later {#collation} calls, the last one will win
-        # and be the collation for that key
-        #
-        # @param collations [Hash<String => java.text.Collator>] Hash of URI, <tt>Collator</tt> key-value pairs.
-        def collation(collations = {})
-          @declared_collations = @declared_collations.merge(collations).freeze
-        end
-
-        # Set the default Collation to use
+        # Set the default Collation to use. This should be one of the special
+        # collation URIs Saxon recognises, or one that has been registered
+        # using Saxon::Processor#declare_collations on the Processor that
+        # created the {XSLT::Compiler} this context is for.
         #
         # @param collation_uri [String] The URI of the Collation to set as the default
         def default_collation(collation_uri)
           @default_collation = collation_uri
         end
-
-        private
       end
 
       include Common
@@ -70,7 +59,7 @@ module Saxon
         DSL.define(block)
       end
 
-      attr_reader :declared_collations, :default_collation
+      attr_reader :default_collation
 
       def define(block)
         DSL.define(block, args_hash)

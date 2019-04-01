@@ -33,17 +33,10 @@ EOS
 
     context "collations" do
       it "can have collations and default collation set" do
-        us_collation = java.text.Collator.getInstance(java.util.Locale::US)
-        uk_collation = java.text.Collator.getInstance(java.util.Locale::UK)
         compiler = Saxon::XPath::Compiler.create(processor) {
-          collation 'http://example.org/collation' => us_collation
-          collation 'http://example.org/collation-1' => uk_collation
           default_collation 'http://example.org/collation'
         }
 
-        expect(compiler.declared_collations).to eq({
-          'http://example.org/collation' => us_collation, 'http://example.org/collation-1' => uk_collation
-        })
         expect(compiler.default_collation).to eq('http://example.org/collation')
       end
     end
@@ -137,7 +130,6 @@ EOS
         described_class.create(processor) {
           namespace a: 'http://example.org/a'
           variable 'a:var', 'xs:string'
-          collation 'http://example.org/collation' => java.text.Collator.getInstance(java.util.Locale::UK)
           default_collation 'http://example.org/collation'
         }
       }
@@ -155,24 +147,18 @@ EOS
     end
 
     context "deriving a new Compiler from an existing one" do
-      let(:uk_collation) { java.text.Collator.getInstance(java.util.Locale::UK) }
-      let(:us_collation) { java.text.Collator.getInstance(java.util.Locale::US) }
       let(:base) {
-        ukc = uk_collation
         described_class.create(processor) {
           namespace a: 'http://example.org/a'
           variable 'a:var', 'xs:string'
-          collation 'http://example.org/collation' => ukc
           default_collation 'http://example.org/collation'
         }
       }
 
       specify "the existing properties are preserved" do
-        usc = us_collation
         compiler = base.create {
           namespace b: 'http://example.org/b'
           variable 'b:var', 'xs:string'
-          collation 'http://example.org/collation-1' => usc
         }
 
         expect(compiler.declared_namespaces).to eq({
@@ -190,14 +176,10 @@ EOS
           b_var_qname => Saxon::XPath::VariableDeclaration.new(qname: b_var_qname, one: 'xs:string')
         })
 
-        expect(compiler.declared_collations).to eq({
-          'http://example.org/collation' => uk_collation, 'http://example.org/collation-1' => us_collation
-        })
         expect(compiler.default_collation).to eq('http://example.org/collation')
       end
 
       specify "existing properties can be overwritten" do
-        usc = us_collation
         compiler = base.create {
           variable 'a:var', 'xs:string+'
           default_collation nil
@@ -227,10 +209,8 @@ EOS
     end
 
     specify "an XPath which makes use of collations" do
-      german = java.text.Collator.getInstance(java.util.Locale.new('de', 'DE'))
       compiler = described_class.create(processor) {
-        collation 'http://example.org/german' => german
-        default_collation 'http://example.org/german'
+        default_collation 'http://www.w3.org/2013/collation/UCA?lang=de-DE'
       }
       expect(compiler.compile('/doc/collation/e[1][compare(., /doc/collation/e[2]) = 1]').run(context_doc).to_a).to eq([])
     end

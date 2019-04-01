@@ -54,5 +54,19 @@ RSpec.describe Saxon::Processor do
         expect(subject.document_builder.to_java).to respond_to(:build)
       end
     end
+
+    context "Collations" do
+      specify "URIs can be bound to a Java Collator instance" do
+        us_collation = java.text.Collator.getInstance(java.util.Locale::US)
+        uk_collation = java.text.Collator.getInstance(java.util.Locale::UK)
+
+        expect {
+          subject.declare_collations({
+            'http://example.org/collation' => us_collation,
+            'http://example.org/collation-1' => uk_collation
+          })
+        }.to_not raise_error
+      end
+    end
   end
 end
