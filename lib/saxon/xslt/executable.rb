@@ -10,7 +10,7 @@ module Saxon
       attr_reader :static_context
 
       # @api private
-      # @param s9_xpath_executable [net.sf.saxon.s9api.XPathExecutable] the
+      # @param s9_xslt_executable [net.sf.saxon.s9api.XsltExecutable] the
       #   Saxon compiled XPath object
       # @param static_context [XPath::StaticContext] the XPath's static
       #   context

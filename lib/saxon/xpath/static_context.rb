@@ -91,7 +91,7 @@ module Saxon
       class DSL
         include Common
 
-        # Create an instance based on the args hash, and execute the passed in Proc/lambda against it using {#instance_exec} and return a
+        # Create an instance based on the args hash, and execute the passed in Proc/lambda against it using <tt>#instance_exec</tt> and return a
         # new {StaticContext} with the results
         # @param block [Proc] a Proc/lambda (or <tt>to_proc</tt>'d containing DSL calls
         # @return [Saxon::XPath::StaticContext]
@@ -135,7 +135,7 @@ module Saxon
         # <tt>as=""</tt> type definition, or as a hash of one key/value where
         # that key is a Symbol taken from {Saxon::OccurenceIndicator} and the
         # value is either a Class that {Saxon::ItemType} can convert to its
-        # XDM equivalent (e.g. {String}), or a string that {Saxon::ItemType}
+        # XDM equivalent (e.g. {::String}), or a string that {Saxon::ItemType}
         # can parse into an XDM type (e.g. <tt>xs:string</tthat
         # {Saxon::ItemType} can parse into an XDM type (e.g.
         # <tt>xs:string</tt> or <tt>element()</tt>).

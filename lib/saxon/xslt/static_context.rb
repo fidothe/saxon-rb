@@ -28,7 +28,7 @@ module Saxon
       class DSL
         include Common
 
-        # Create an instance based on the args hash, and execute the passed in Proc/lambda against it using {#instance_exec} and return a
+        # Create an instance based on the args hash, and execute the passed in Proc/lambda against it using <tt>#instance_exec</tt> and return a
         # new {StaticContext} with the results
         # @param block [Proc] a Proc/lambda (or <tt>to_proc</tt>'d containing DSL calls
         # @return [Saxon::XPath::StaticContext]
