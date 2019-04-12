@@ -47,11 +47,21 @@ RSpec.describe Saxon::XdmNode do
       end
     end
 
+    context "document nodes" do
+      specify "return their node_kind correctly" do
+        expect(subject.node_kind).to eq(:document)
+      end
+    end
+
     context "element nodes" do
       subject { doc_node.each.first }
 
-      it "can return their node name as a QName" do
+      specify "return their node name as a QName" do
         expect(subject.node_name).to eq(Saxon::QName.clark('doc'))
+      end
+
+      specify "return their node_kind correctly" do
+        expect(subject.node_kind).to eq(:element)
       end
     end
   end

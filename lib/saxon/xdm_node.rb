@@ -24,6 +24,25 @@ module Saxon
       @node_name = node_name.nil? ? nil : Saxon::QName.new(node_name)
     end
 
+    def node_kind
+      @node_kind ||= case s9_xdm_node.nodeKind
+      when Saxon::S9API::XdmNodeKind::ELEMENT
+        :element
+      when Saxon::S9API::XdmNodeKind::TEXT
+        :text
+      when Saxon::S9API::XdmNodeKind::ATTRIBUTE
+        :attribute
+      when Saxon::S9API::XdmNodeKind::NAMESPACE
+        :namespace
+      when Saxon::S9API::XdmNodeKind::COMMENT
+        :comment
+      when Saxon::S9API::XdmNodeKind::PROCESSING_INSTRUCTION
+        :processing_instruction
+      when Saxon::S9API::XdmNodeKind::DOCUMENT
+        :document
+      end
+    end
+
     def ==(other)
       return false unless other.is_a?(XdmNode)
       s9_xdm_node.equals(other.to_java)

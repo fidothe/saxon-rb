@@ -6,6 +6,29 @@ module Saxon
   class XdmValue
     include Enumerable
 
+    def self.wrap_s9_xdm_value(s9_xdm_value)
+      return new(s9_xdm_value) if s9_xdm_value.instance_of?(Saxon::S9API::XdmValue)
+      case s9_xdm_value
+      when Saxon::S9API::XdmEmptySequence
+        new([])
+      else
+        wrap_s9_xdm_item(s9_xdm_value)
+      end
+    end
+
+    def self.wrap_s9_xdm_item(s9_xdm_item)
+      if s9_xdm_item.isAtomicValue
+        XdmAtomicValue.new(s9_xdm_item)
+      else
+        case s9_xdm_item
+        when Saxon::S9API::XdmNode
+          XdmNode.new(s9_xdm_item)
+        else
+          XdmUnhandledItem.new(s9_xdm_item)
+        end
+      end
+    end
+
     # Create a new XdmValue sequence containing the items passed in as a Ruby enumerable.
     #
     # @param items [Enumerable] A list of XDM Item members

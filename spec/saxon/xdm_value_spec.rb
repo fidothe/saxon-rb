@@ -4,6 +4,8 @@ require 'saxon/xdm_atomic_value'
 
 module Saxon
   RSpec.describe XdmValue do
+    let(:processor) { Saxon::Processor.create }
+
     describe "being created" do
       it "allows the creation of XDM Values from an array of XDM Items" do
         o1 = XdmAtomicValue.new(1)
@@ -12,6 +14,30 @@ module Saxon
         value = XdmValue.create([o1, o2])
         expect(value).to be_a(XdmValue)
         expect(value.size).to eq(2)
+      end
+    end
+
+    describe "wrapping Saxon S9API XdmValues" do
+      let(:node) { fixture_doc(processor, 'eg.xml') }
+      let(:atomic_value) { XdmAtomicValue.create(1) }
+
+      specify "a single XDM node returns an XdmNode" do
+        expect(XdmValue.wrap_s9_xdm_value(node.to_java)).to be_a(XdmNode)
+      end
+
+      specify "a single-item sequence returns an XdmValue" do
+        sequence = Saxon::S9API::XdmValue.new([atomic_value.to_java])
+        expect(XdmValue.wrap_s9_xdm_value(sequence)).to be_a(XdmValue)
+      end
+
+      specify "a multi-item sequence returns an XdmValue" do
+        sequence = Saxon::S9API::XdmValue.new([atomic_value, atomic_value].map(&:to_java))
+        expect(XdmValue.wrap_s9_xdm_value(sequence)).to be_a(XdmValue)
+      end
+
+      specify "the empty sequence returns an XdmValue" do
+        sequence = Saxon::S9API::XdmEmptySequence.getInstance
+        expect(XdmValue.wrap_s9_xdm_value(sequence)).to be_a(XdmValue)
       end
     end
 
@@ -34,7 +60,6 @@ module Saxon
       end
 
       context "wrapping member items appropriately" do
-        let(:processor) { Saxon::Processor.create }
         let(:node) { fixture_doc(processor, 'eg.xml') }
         let(:atomic_value) { XdmAtomicValue.create(1) }
 

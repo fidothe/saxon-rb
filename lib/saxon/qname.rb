@@ -90,5 +90,8 @@ module Saxon
     def inspect
       "<Saxon::QName @prefix=#{prefix} @uri=#{uri} @local_name=#{local_name}>"
     end
+
+    class PrefixedStringWithoutNSURIError < RuntimeError
+    end
   end
 end
