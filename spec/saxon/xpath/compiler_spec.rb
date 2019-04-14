@@ -32,7 +32,7 @@ EOS
     end
 
     context "collations" do
-      it "can have collations and default collation set" do
+      it "can have default collation set" do
         compiler = Saxon::XPath::Compiler.create(processor) {
           default_collation 'http://example.org/collation'
         }

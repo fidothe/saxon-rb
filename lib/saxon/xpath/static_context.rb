@@ -41,49 +41,6 @@ module Saxon
         end
       end
 
-      # methods for resolving a QName represented as a <tt>prefix:local-name</tt> string into a {Saxon::QName} by looking the prefix up in declared namespaces
-      module Resolver
-        # Resolve a QName string into a {Saxon::QName}.
-        #
-        # If the arg is a {Saxon::QName} already, it just gets returned. If
-        # it's an instance of the underlying Saxon Java QName, it'll be wrapped
-        # into a {Saxon::QName}
-        #
-        # If the arg is a string, it's resolved by using {resolve_variable_name}
-        #
-        # @param qname_or_string [String, Saxon::QName] the qname to resolve
-        # @return [Saxon::QName]
-        def self.resolve_variable_qname(qname_or_string, namespaces)
-          case qname_or_string
-          when String
-            resolve_variable_name(qname_or_string, namespaces)
-          when Saxon::QName
-            qname_or_string
-          when Saxon::S9API::QName
-            Saxon::QName.new(qname_or_string)
-          end
-        end
-
-        # Resolve a QName string of the form <tt>"prefix:local-name"</tt> into a
-        # {Saxon::QName} by looking up the namespace URI in a hash of
-        # <tt>"prefix" => "namespace-uri"</tt>
-        #
-        # @param qname_string [String] the QName as a <tt>"prefix:local-name"</tt> string
-        # @param namespaces [Hash<String => String>] the set of namespaces as a hash of <tt>"prefix" => "namespace-uri"</tt>
-        # @return [Saxon::QName]
-        def self.resolve_variable_name(qname_string, namespaces)
-          local_name, prefix = qname_string.split(':').reverse
-          uri = nil
-
-          if prefix
-            uri = namespaces[prefix]
-            raise MissingVariableNamespaceError.new(qname_string, prefix) if uri.nil?
-          end
-
-          Saxon::QName.create(prefix: prefix, uri: uri, local_name: local_name)
-        end
-      end
-
       # Provides the hooks for constructing a {StaticContext} with a DSL.
       # @api private
       class DSL
@@ -141,7 +98,7 @@ module Saxon
         private
 
         def resolve_variable_qname(qname_or_string)
-          Resolver.resolve_variable_qname(qname_or_string, @declared_namespaces)
+          Saxon::QName.resolve(qname_or_string, @declared_namespaces)
         end
 
         def resolve_variable_type_decl(type_decl)

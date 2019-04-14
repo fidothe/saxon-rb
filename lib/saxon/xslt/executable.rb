@@ -1,23 +1,28 @@
-require_relative 'static_context'
+require 'forwardable'
+require_relative 'evaluation_context'
 require_relative '../serializer'
 require_relative '../xdm_value'
 require_relative '../qname'
 
 module Saxon
   module XSLT
-    # Represents a compiled XPaGth query ready to be executed
+    # Represents a compiled XSLT stylesheet ready to be executed
     class Executable
-      # @return [XSLT::StaticContext] the XPath's static context
-      attr_reader :static_context
+      extend Forwardable
+
+      attr_reader :evaluation_context
+      private :evaluation_context
 
       # @api private
       # @param s9_xslt_executable [net.sf.saxon.s9api.XsltExecutable] the
-      #   Saxon compiled XPath object
-      # @param static_context [XPath::StaticContext] the XPath's static
+      #   Saxon compiled XSLT object
+      # @param evaluation_context [XSLT::EvaluationContext] the XSLT's evaluation
       #   context
-      def initialize(s9_xslt_executable, static_context)
-        @s9_xslt_executable, @static_context = s9_xslt_executable, static_context
+      def initialize(s9_xslt_executable, evaluation_context)
+        @s9_xslt_executable, @evaluation_context = s9_xslt_executable, evaluation_context
       end
+
+      def_delegators :evaluation_context, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
 
       def apply_templates(source, opts = {})
         transformation(opts).apply_templates(source)
@@ -36,9 +41,31 @@ module Saxon
       private
 
       def transformation(opts)
-        Transformation.new(opts.merge({
+        Transformation.new(params_merged_opts(opts).merge({
           s9_transformer: @s9_xslt_executable.load30,
         }))
+      end
+
+      def params_merged_opts(opts)
+        merged_opts = params_hash.dup
+        opts.each do |key, value|
+          if [:global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters].include?(key)
+            merged_opts[key] = merged_opts.fetch(key, {}).merge(XSLT::ParameterHelper.process_parameters(value))
+          else
+            merged_opts[key] = value
+          end
+        end
+        merged_opts
+      end
+
+      def params_hash
+        @params_hash ||= begin
+          params_hash = {}
+          params_hash[:global_parameters] = global_parameters unless global_parameters.empty?
+          params_hash[:initial_template_parameters] = initial_template_parameters unless initial_template_parameters.empty?
+          params_hash[:initial_template_tunnel_parameters] = initial_template_tunnel_parameters unless initial_template_tunnel_parameters.empty?
+          params_hash
+        end.freeze
       end
     end
 
@@ -72,7 +99,7 @@ module Saxon
       end
 
       def call_template(template_name)
-        transformation_result(:callTemplate, resolve_qname(template_name))
+        transformation_result(:callTemplate, Saxon::QName.resolve(template_name))
       end
 
       private
@@ -110,17 +137,19 @@ module Saxon
       end
 
       def mode(mode_name)
-        s9_transformer.setInitialMode(resolve_qname(mode_name).to_java)
+        s9_transformer.setInitialMode(Saxon::QName.resolve(mode_name).to_java)
       end
 
-      def resolve_qname(qname)
-        case qname
-        when Saxon::QName
-          qname
-        else
-          raise Saxon::QName::PrefixedStringWithoutNSURIError if qname.to_s.include?(':')
-          Saxon::QName.create(local_name: qname.to_s)
-        end
+      def global_parameters(parameters)
+        s9_transformer.setStylesheetParameters(XSLT::ParameterHelper.to_java(parameters))
+      end
+
+      def initial_template_parameters(parameters)
+        s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters) , false)
+      end
+
+      def initial_template_tunnel_parameters(parameters)
+        s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters) , true)
       end
     end
   end

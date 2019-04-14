@@ -1,6 +1,6 @@
 require 'forwardable'
-require_relative './static_context'
-# require_relative './executable'
+require_relative './evaluation_context'
+require_relative './executable'
 
 module Saxon
   module XSLT
@@ -14,39 +14,45 @@ module Saxon
       # @yield An XSLT compiler DSL block
       # @return [Saxon::XSLT::Compiler] the new compiler instance
       def self.create(processor, &block)
-        static_context = XSLT::StaticContext.define(block)
-        new(processor.to_java, static_context)
+        evaluation_context = XSLT::EvaluationContext.define(block)
+        new(processor.to_java, evaluation_context)
       end
 
       extend Forwardable
 
-      attr_reader :static_context
-      private :static_context
+      attr_reader :evaluation_context
+      private :evaluation_context
 
       # @api private
       # @param s9_processor [net.sf.saxon.s9api.Processor] the Saxon
       #   <tt>Processor</tt> to wrap
-      # @param static_context [Saxon::XPath::StaticContext] the static context
+      # @param evaluation_context [Saxon::XSLT::EvaluationContext] the static context
       #   XPaths compiled using this compiler will have
-      def initialize(s9_processor, static_context)
-        @s9_processor, @static_context = s9_processor, static_context
+      def initialize(s9_processor, evaluation_context)
+        @s9_processor, @evaluation_context = s9_processor, evaluation_context
       end
 
-      def_delegators :static_context, :default_collation
+      def_delegators :evaluation_context, :default_collation, :static_parameters, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
       # @!attribute [r] declared_collations
       #   @return [Hash<String => java.text.Collator>] declared collations as URI => Collator hash
       # @!attribute [r] default_collation
       #   @return [String] the URI of the default declared collation
+      # @!attribute [r] static_parameters
+      #   @return [Hash<Saxon::QName => Saxon::XdmValue, Saxon::XdmNode,
+      #   Saxon::XdmAtomicValue>] parameters required at compile time as QName => value hash
 
-      # @param expression [String] the  expression to compile
-      # @return [Saxon::XSLT::Executable] the executable query
-      def compile(expression)
-        Saxon::XSLT::Executable.new(new_compiler.compile(expression), static_context)
+      # @param expression [Saxon::Source] the Source to compile
+      # @return [Saxon::XSLT::Executable] the executable stylesheet
+      def compile(source, &block)
+        Saxon::XSLT::Executable.new(
+          new_compiler.compile(source.to_java),
+          evaluation_context.define(block)
+        )
       end
 
       def create(&block)
-        new_static_context = static_context.define(block)
-        self.class.new(@s9_processor, new_static_context)
+        new_evaluation_context = evaluation_context.define(block)
+        self.class.new(@s9_processor, new_evaluation_context)
       end
 
       private
@@ -54,6 +60,9 @@ module Saxon
       def new_compiler
         compiler = @s9_processor.newXsltCompiler
         compiler.declareDefaultCollation(default_collation) unless default_collation.nil?
+        static_parameters.each do |qname, value|
+          compiler.setParameter(qname.to_java, value.to_java)
+        end
         compiler
       end
     end

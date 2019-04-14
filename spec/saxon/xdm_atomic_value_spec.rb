@@ -10,6 +10,15 @@ RSpec.describe Saxon::XdmAtomicValue do
 
         expect(value.type_name).to eq(Saxon::ItemType.get_type(::String).type_name)
       end
+
+      xspecify "a Ruby Fixnum produces an xs:integer" do
+        value = described_class.create(1)
+
+        # TODO: xs:long is kinda correct, but we probably want the more
+        # abstract xs:integer, which means a unification of the logic here and
+        # in Saxon::ItemType is needed
+        expect(value.type_name).to eq(Saxon::ItemType.get_type('xs:long').type_name)
+      end
     end
   end
 
