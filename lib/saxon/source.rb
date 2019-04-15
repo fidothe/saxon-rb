@@ -117,7 +117,7 @@ module Saxon
 
     def self.create(io_path_uri_or_string, opts = {})
       case io_path_uri_or_string
-      when IO, File, java.io.InputStream
+      when IO, File, java.io.InputStream, StringIO
         from_io(io_path_uri_or_string, opts)
       when Pathname, PathChecker
         from_path(io_path_uri_or_string, opts)

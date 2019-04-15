@@ -82,24 +82,28 @@ RSpec.describe Saxon::Source do
     end
 
     context "from any of the above" do
-      it "a String" do
+      specify "a String" do
         expect(Saxon::Source.create('<doc/>')).to be_a(Saxon::Source)
       end
 
-      it "a URI" do
+      specify "a URI" do
         expect(Saxon::Source.create('http://example.org/')).to be_a(Saxon::Source)
       end
 
-      it "a Path" do
+      specify "a Path" do
         expect(Saxon::Source.create(fixture_path('eg.xml'))).to be_a(Saxon::Source)
       end
 
-      it "a File" do
+      specify "a File" do
         expect(Saxon::Source.create(File.open(fixture_path('eg.xml')))).to be_a(Saxon::Source)
       end
 
-      it "a Java InputStream" do
+      specify "a Java InputStream" do
         expect(Saxon::Source.create(File.open(fixture_path('eg.xml')).to_inputstream, base_uri: 'http://example.org')).to be_a(Saxon::Source)
+      end
+
+      specify "a StringIO" do
+        expect(Saxon::Source.create(StringIO.new('<doc/>'))).to be_a(Saxon::Source)
       end
     end
   end
