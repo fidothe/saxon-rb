@@ -120,7 +120,7 @@ module Saxon
       when IO, File, java.io.InputStream
         from_io(io_path_uri_or_string, opts)
       when Pathname, PathChecker
-        from_file(io_path_uri_or_string, opts)
+        from_path(io_path_uri_or_string, opts)
       when URIChecker
         from_uri(io_path_uri_or_string, opts)
       else

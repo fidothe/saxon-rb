@@ -90,6 +90,10 @@ RSpec.describe Saxon::Source do
         expect(Saxon::Source.create('http://example.org/')).to be_a(Saxon::Source)
       end
 
+      it "a Path" do
+        expect(Saxon::Source.create(fixture_path('eg.xml'))).to be_a(Saxon::Source)
+      end
+
       it "a File" do
         expect(Saxon::Source.create(File.open(fixture_path('eg.xml')))).to be_a(Saxon::Source)
       end
