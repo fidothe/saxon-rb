@@ -150,7 +150,7 @@ module Saxon
       #   looking up the prefix in the {#declared_namespaces}
       #   @param qname_or_string [String] the name as a string
       def resolve_variable_qname(qname_or_string)
-        Resolver.resolve_variable_qname(qname_or_string, declared_namespaces)
+        Saxon::QName.resolve(qname_or_string, declared_namespaces)
       end
 
       def define(block)

@@ -121,7 +121,7 @@ EOS
       it "cannot be declared if a needed namespace binding isn't there" do
         expect {
           Saxon::XPath::Compiler.create(processor) { variable 'a:var' }
-        }.to raise_error(Saxon::XPath::MissingVariableNamespaceError)
+        }.to raise_error(Saxon::QName::PrefixedStringWithoutNSURIError)
       end
     end
 
