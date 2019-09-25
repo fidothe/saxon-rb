@@ -1,4 +1,6 @@
 require_relative 's9api'
+require_relative 'qname'
+require_relative 'item_type/lexical_string_conversion'
 
 module Saxon
   # Represent XDM types abstractly
@@ -19,60 +21,78 @@ module Saxon
       'Numeric' => :NUMERIC
     }.freeze
 
+    # A mapping of QNames to XDM type constants
+    QNAME_MAPPING = Hash[{
+      'anyAtomicType' => :ANY_ATOMIC_VALUE,
+      'anyURI' => :ANY_URI,
+      'base64Binary' => :BASE64_BINARY,
+      'boolean' => :BOOLEAN,
+      'byte' => :BYTE,
+      'date' => :DATE,
+      'dateTime' => :DATE_TIME,
+      'dateTimeStamp' => :DATE_TIME_STAMP,
+      'dayTimeDuration' => :DAY_TIME_DURATION,
+      'decimal' => :DECIMAL,
+      'double' => :DOUBLE,
+      'duration' => :DURATION,
+      'ENTITY' => :ENTITY,
+      'float' => :FLOAT,
+      'gDay' => :G_DAY,
+      'gMonth' => :G_MONTH,
+      'gMonthDay' => :G_MONTH_DAY,
+      'gYear' => :G_YEAR,
+      'gYearMonth' => :G_YEAR_MONTH,
+      'hexBinary' => :HEX_BINARY,
+      'ID' => :ID,
+      'IDREF' => :IDREF,
+      'int' => :INT,
+      'integer' => :INTEGER,
+      'language' => :LANGUAGE,
+      'long' => :LONG,
+      'Name' => :NAME,
+      'NCName' => :NCNAME,
+      'negativeInteger' => :NEGATIVE_INTEGER,
+      'NMTOKEN' => :NMTOKEN,
+      'nonNegativeInteger' => :NON_NEGATIVE_INTEGER,
+      'nonPositiveInteger' => :NON_POSITIVE_INTEGER,
+      'normalizedString' => :NORMALIZED_STRING,
+      'NOTATION' => :NOTATION,
+      'numeric' => :NUMERIC,
+      'positiveInteger' => :POSITIVE_INTEGER,
+      'QName' => :QNAME,
+      'short' => :SHORT,
+      'string' => :STRING,
+      'time' => :TIME,
+      'token' => :TOKEN,
+      'unsignedByte' => :UNSIGNED_BYTE,
+      'unsignedInt' => :UNSIGNED_INT,
+      'unsignedLong' => :UNSIGNED_LONG,
+      'unsignedShort' => :UNSIGNED_SHORT,
+      'untypedAtomic' => :UNTYPED_ATOMIC,
+      'yearMonthDuration' => :YEAR_MONTH_DURATION
+    }.map { |local_name, constant|
+      qname = Saxon::QName.create({
+        prefix: 'xs', uri: 'http://www.w3.org/2001/XMLSchema',
+        local_name: local_name
+      })
+      [qname, constant]
+    }].freeze
+
     # A mapping of type names/QNames to XDM type constants
     STR_MAPPING = {
       'array(*)' => :ANY_ARRAY,
-      'xs:anyAtomicType' => :ANY_ATOMIC_VALUE,
       'item()' => :ANY_ITEM,
       'map(*)' => :ANY_MAP,
-      'node()' => :ANY_NODE,
-      'xs:anyURI' => :ANY_URI,
-      'xs:base64Binary' => :BASE64_BINARY,
-      'xs:boolean' => :BOOLEAN,
-      'xs:byte' => :BYTE,
-      'xs:date' => :DATE,
-      'xs:dateTime' => :DATE_TIME,
-      'xs:dateTimeStamp' => :DATE_TIME_STAMP,
-      'xs:dayTimeDuration' => :DAY_TIME_DURATION,
-      'xs:decimal' => :DECIMAL,
-      'xs:double' => :DOUBLE,
-      'xs:duration' => :DURATION,
-      'xs:ENTITY' => :ENTITY,
-      'xs:float' => :FLOAT,
-      'xs:gDay' => :G_DAY,
-      'xs:gMonth' => :G_MONTH,
-      'xs:gMonthDay' => :G_MONTH_DAY,
-      'xs:gYear' => :G_YEAR,
-      'xs:gYearMonth' => :G_YEAR_MONTH,
-      'xs:hexBinary' => :HEX_BINARY,
-      'xs:ID' => :ID,
-      'xs:IDREF' => :IDREF,
-      'xs:int' => :INT,
-      'xs:integer' => :INTEGER,
-      'xs:language' => :LANGUAGE,
-      'xs:long' => :LONG,
-      'xs:Name' => :NAME,
-      'xs:NCName' => :NCNAME,
-      'xs:negativeInteger' => :NEGATIVE_INTEGER,
-      'xs:NMTOKEN' => :NMTOKEN,
-      'xs:nonNegativeInteger' => :NON_NEGATIVE_INTEGER,
-      'xs:nonPositiveInteger' => :NON_POSITIVE_INTEGER,
-      'xs:normalizedString' => :NORMALIZED_STRING,
-      'xs:NOTATION' => :NOTATION,
-      'xs:numeric' => :NUMERIC,
-      'xs:positiveInteger' => :POSITIVE_INTEGER,
-      'xs:QName' => :QNAME,
-      'xs:short' => :SHORT,
-      'xs:string' => :STRING,
-      'xs:time' => :TIME,
-      'xs:token' => :TOKEN,
-      'xs:unsignedByte' => :UNSIGNED_BYTE,
-      'xs:unsignedInt' => :UNSIGNED_INT,
-      'xs:unsignedLong' => :UNSIGNED_LONG,
-      'xs:unsignedShort' => :UNSIGNED_SHORT,
-      'xs:untypedAtomic' => :UNTYPED_ATOMIC,
-      'xs:yearMonthDuration' => :YEAR_MONTH_DURATION
-    }.freeze
+      'node()' => :ANY_NODE
+    }.merge(
+      Hash[QNAME_MAPPING.map { |qname, v| [qname.to_s, v] }]
+    ).freeze
+
+    ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS = Hash[
+      LexicalStringConversion::Convertors.constants.map { |const|
+        [S9API::ItemType.const_get(const), LexicalStringConversion::Convertors.const_get(const)]
+      }
+    ].freeze
 
     class << self
       # Get an appropriate {ItemType} for a Ruby type or given a type name as a
@@ -85,18 +105,36 @@ module Saxon
       # @overload get_type(type_name)
       #   Get the {ItemType} for the name
       #   @param type_name [String] name of the built-in {ItemType} to fetch
+      # @overload get_type(item_type)
+      #   Given an instance of ItemType, simply return the instance
+      #   @param item_type [Saxon::ItemType] an existing ItemType instance
       def get_type(arg)
-        new(get_s9_type(arg))
+        case arg
+        when Saxon::ItemType
+          arg
+        else
+          new(get_s9_type(arg))
+        end
       end
 
       private
 
       def get_s9_type(arg)
         case arg
+        when Saxon::QName
+          get_s9_qname_mapped_type(arg)
         when Class
           get_s9_class_mapped_type(arg)
         when String
           get_s9_str_mapped_type(arg)
+        end
+      end
+
+      def get_s9_qname_mapped_type(qname)
+        if mapped_type = QNAME_MAPPING.fetch(qname, false)
+          S9API::ItemType.const_get(mapped_type)
+        else
+          raise UnmappedXSDTypeNameError, qname.to_s
         end
       end
 
@@ -153,6 +191,19 @@ module Saxon
 
     def hash
       @hash ||= s9_item_type.hashCode
+    end
+
+    # Generate the appropriate lexical string representation of the value
+    # given the ItemType's schema definition.
+    #
+    # Types with no explcit formatter defined just get to_s called on them...
+    #
+    # @param value [Object] The Ruby value to generate the lexical string
+    #   representation of
+    # @return [String] The XML Schema-defined lexical string representation of
+    #   the value
+    def lexical_string(value)
+      ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS.fetch(s9_item_type, ->(value) { value.to_s }).call(value)
     end
 
     # Error raised when a Ruby class has no equivalent XDM type to be converted

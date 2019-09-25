@@ -7,8 +7,12 @@ module Saxon
     #
     # @param value the value to convert
     # @return [Saxon::XdmAtomicValue]
-    def self.create(value)
-      new(Saxon::S9API::XdmAtomicValue.new(value))
+    def self.create(value, item_type = nil)
+      item_type_lookup = item_type || value.class
+      item_type = ItemType.get_type(item_type_lookup)
+
+      value_lexical_string = item_type.lexical_string(value)
+      new(Saxon::S9API::XdmAtomicValue.new(value_lexical_string.to_java, item_type.to_java))
     end
 
     attr_reader :s9_xdm_atomic_value
