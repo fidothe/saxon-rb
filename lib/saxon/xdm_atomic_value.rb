@@ -1,4 +1,5 @@
 require_relative 'qname'
+require_relative 'item_type'
 
 module Saxon
   # An XPath Data Model Node object, representing an XML document, or an element or one of the other node chunks in the XDM.
@@ -33,6 +34,20 @@ module Saxon
     # @return [Saxon::S9API::XdmAtomicValue] The underlying Saxon Java XDM atomic value object.
     def to_java
       s9_xdm_atomic_value
+    end
+
+    # @return [Saxon::ItemType] The ItemType of the value
+    def item_type
+      @item_type ||= Saxon::ItemType.get_type(Saxon::QName.resolve(s9_xdm_atomic_value.getTypeName))
+    end
+
+    # Return the value as an instance of the Ruby class that best represents
+    # the type of the value. Types with no sensible equivalent are returned
+    # as their lexical string form
+    #
+    # @return [Object] A Ruby object representation of the value
+    def to_ruby
+      @ruby_value ||= item_type.ruby_value(self).freeze
     end
 
     # compares two {XdmAtomicValue}s using the underlying Saxon and XDM comparision rules

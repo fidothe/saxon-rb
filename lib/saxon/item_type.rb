@@ -1,10 +1,54 @@
 require_relative 's9api'
 require_relative 'qname'
 require_relative 'item_type/lexical_string_conversion'
+require_relative 'item_type/value_to_ruby'
 
 module Saxon
   # Represent XDM types abstractly
   class ItemType
+    # Error raised when a Ruby class has no equivalent XDM type to be converted
+    # into
+    class UnmappedRubyTypeError < StandardError
+      def initialize(class_name)
+        @class_name = class_name
+      end
+
+      def to_s
+        "Ruby class <#{@class_name}> has no XDM type equivalent"
+      end
+    end
+
+    # Error raise when an attempt to reify an <tt>xs:*</tt> type string is
+    # made, but the type string doesn't match any of the built-in <tt>xs:*</tt>
+    # types
+    class UnmappedXSDTypeNameError < StandardError
+      def initialize(type_str)
+        @type_str = type_str
+      end
+
+      def to_s
+        "'#{@type_str}' is not recognised as an XSD built-in type"
+      end
+    end
+
+    class Factory
+      DEFAULT_SEMAPHORE = Mutex.new
+
+      attr_reader :processor
+
+      def initialize(processor)
+        @processor = processor
+      end
+
+      def s9_factory
+        return @s9_factory if instance_variable_defined?(:@s9_factory)
+        DEFAULT_SEMAPHORE.synchronize do
+          @s9_factory = S9API::ItemTypeFactory.new(processor.to_java)
+        end
+      end
+    end
+
+    TYPE_CACHE_MUTEX = Mutex.new
     # A mapping of Ruby types to XDM type constants
     TYPE_MAPPING = {
       'String' => :STRING,
@@ -94,6 +138,12 @@ module Saxon
       }
     ].freeze
 
+    ATOMIC_VALUE_TO_RUBY_CONVERTORS = Hash[
+      ValueToRuby::Convertors.constants.map { |const|
+        [S9API::ItemType.const_get(const), ValueToRuby::Convertors.const_get(const)]
+      }
+    ].freeze
+
     class << self
       # Get an appropriate {ItemType} for a Ruby type or given a type name as a
       # string
@@ -106,18 +156,29 @@ module Saxon
       #   Get the {ItemType} for the name
       #   @param type_name [String] name of the built-in {ItemType} to fetch
       # @overload get_type(item_type)
-      #   Given an instance of ItemType, simply return the instance
+      #   Given an instance of {ItemType}, simply return the instance
       #   @param item_type [Saxon::ItemType] an existing ItemType instance
       def get_type(arg)
         case arg
         when Saxon::ItemType
           arg
         else
-          new(get_s9_type(arg))
+          fetch_type_instance(get_s9_type(arg))
         end
       end
 
       private
+
+      def fetch_type_instance(s9_type)
+        TYPE_CACHE_MUTEX.synchronize do
+          @type_instance_cache = {} if !instance_variable_defined?(:@type_instance_cache)
+          if type_instance = @type_instance_cache[s9_type]
+            type_instance
+          else
+            @type_instance_cache[s9_type] = new(s9_type)
+          end
+        end
+      end
 
       def get_s9_type(arg)
         case arg
@@ -203,49 +264,27 @@ module Saxon
     # @return [String] The XML Schema-defined lexical string representation of
     #   the value
     def lexical_string(value)
-      ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS.fetch(s9_item_type, ->(value) { value.to_s }).call(value)
+      lexical_string_convertor.call(value)
     end
 
-    # Error raised when a Ruby class has no equivalent XDM type to be converted
-    # into
-    class UnmappedRubyTypeError < StandardError
-      def initialize(class_name)
-        @class_name = class_name
-      end
-
-      def to_s
-        "Ruby class <#{@class_name}> has no XDM type equivalent"
-      end
+    # Convert an XDM Atomic Value to an instance of an appropriate Ruby class, or return the lexical string.
+    #
+    # It's assumed that the XdmAtomicValue is of this type, otherwise an error is raised.
+    # @param xdm_atomic_value [Saxon::XdmAtomicValue] The XDM atomic value to be converted.
+    def ruby_value(xdm_atomic_value)
+      value_to_ruby_convertor.call(xdm_atomic_value)
     end
 
-    # Error raise when an attempt to reify an <tt>xs:*</tt> type string is
-    # made, but the type string doesn't match any of the built-in <tt>xs:*</tt>
-    # types
-    class UnmappedXSDTypeNameError < StandardError
-      def initialize(type_str)
-        @type_str = type_str
-      end
+    private
 
-      def to_s
-        "'#{@type_str}' is not recognised as an XSD built-in type"
-      end
+    def lexical_string_convertor
+      @lexical_string_convertor ||= ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS.fetch(s9_item_type, ->(value) { value.to_s })
     end
 
-    class Factory
-      DEFAULT_SEMAPHORE = Mutex.new
-
-      attr_reader :processor
-
-      def initialize(processor)
-        @processor = processor
-      end
-
-      def s9_factory
-        return @s9_factory if instance_variable_defined?(:@s9_factory)
-        DEFAULT_SEMAPHORE.synchronize do
-          @s9_factory = S9API::ItemTypeFactory.new(processor.to_java)
-        end
-      end
+    def value_to_ruby_convertor
+      @value_to_ruby_convertor ||= ATOMIC_VALUE_TO_RUBY_CONVERTORS.fetch(s9_item_type, ->(xdm_atomic_value) {
+        xdm_atomic_value.to_java.toString
+      })
     end
   end
 end

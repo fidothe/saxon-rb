@@ -182,79 +182,94 @@ module Saxon
             expect(described_class.get_type(type_name).lexical_string(ruby_value)).to eq(expected_string)
           end
         end
+
+        context "raising errors when asked to generate a lexical string from bad data" do
+          [
+            ['xs:date', 'a', :BadRubyValue],
+            ['xs:date', '2004/04/01', :BadRubyValue],
+            ['xs:dateTime', 'a', :BadRubyValue],
+            ['xs:dateTime', '2004-04-0100:00:00', :BadRubyValue],
+            ['xs:dateTimeStamp', 'a', :BadRubyValue],
+            ['xs:dateTimeStamp', '2004-04-01T00:00', :BadRubyValue],
+            ['xs:integer', 'a', :BadRubyValue],
+            ['xs:decimal', 'a', :BadRubyValue],
+            ['xs:decimal', '1.0e4', :BadRubyValue],
+            ['xs:float', 'a', :BadRubyValue],
+            ['xs:float', '0.1E1.0', :BadRubyValue],
+            ['xs:float', 'inf', :BadRubyValue],
+            ['xs:float', 'Infinity', :BadRubyValue],
+            ['xs:double', 'a', :BadRubyValue],
+            ['xs:double', '0.1E1.0', :BadRubyValue],
+            ['xs:double', 'inf', :BadRubyValue],
+            ['xs:double', 'Infinity', :BadRubyValue],
+            ['xs:short', 32768, :RubyValueOutOfBounds],
+            ['xs:short', -32769, :RubyValueOutOfBounds],
+            ['xs:int', 2147483648, :RubyValueOutOfBounds],
+            ['xs:int', -2147483649, :RubyValueOutOfBounds],
+            ['xs:long', 9223372036854775808, :RubyValueOutOfBounds],
+            ['xs:long', -9223372036854775809, :RubyValueOutOfBounds],
+            ['xs:unsignedShort', 65536, :RubyValueOutOfBounds],
+            ['xs:unsignedShort', -1, :RubyValueOutOfBounds],
+            ['xs:unsignedInt', 4294967296, :RubyValueOutOfBounds],
+            ['xs:unsignedInt', -1, :RubyValueOutOfBounds],
+            ['xs:unsignedLong', 18446744073709551616, :RubyValueOutOfBounds],
+            ['xs:unsignedLong', -1, :RubyValueOutOfBounds],
+            ['xs:positiveInteger', 0, :RubyValueOutOfBounds],
+            ['xs:nonPositiveInteger', 1, :RubyValueOutOfBounds],
+            ['xs:negativeInteger', 0, :RubyValueOutOfBounds],
+            ['xs:nonNegativeInteger', -1, :RubyValueOutOfBounds],
+            ['xs:duration', 'P', :BadRubyValue],
+            ['xs:duration', '1', :BadRubyValue],
+            ['xs:dayTimeDuration', 'P1M', :BadRubyValue],
+            ['xs:yearMonthDuration', 1, :BadRubyValue],
+            ['xs:yearMonthDuration', 'P1Y1M1D', :BadRubyValue],
+            ['xs:yearMonthDuration', 'PT1H', :BadRubyValue],
+            ['xs:gDay', 0, :RubyValueOutOfBounds],
+            ['xs:gDay', 32, :RubyValueOutOfBounds],
+            ['xs:gDay', '---32', :RubyValueOutOfBounds],
+            ['xs:gDay', '---1', :BadRubyValue],
+            ['xs:gDay', '01', :BadRubyValue],
+            ['xs:gDay', '---01+0200', :BadRubyValue],
+            ['xs:gMonth', 0, :RubyValueOutOfBounds],
+            ['xs:gMonth', 13, :RubyValueOutOfBounds],
+            ['xs:gMonth', '--13', :RubyValueOutOfBounds],
+            ['xs:gMonth', '--1', :BadRubyValue],
+            ['xs:gMonth', '01', :BadRubyValue],
+            ['xs:gMonth', '--01+0200', :BadRubyValue],
+            ['xs:gYear', 0, :RubyValueOutOfBounds],
+            ['xs:gYear', '0000', :RubyValueOutOfBounds],
+            ['xs:gYear', '--1', :BadRubyValue],
+            ['xs:gYear', '01', :BadRubyValue],
+            ['xs:gYear', '--01+0200', :BadRubyValue],
+            ['xs:gYearMonth', '0000-01', :RubyValueOutOfBounds],
+            ['xs:gYearMonth', '2019-13', :RubyValueOutOfBounds],
+            ['xs:gYearMonth', '0001', :BadRubyValue],
+            ['xs:gYearMonth', '19-01', :BadRubyValue],
+            ['xs:gYearMonth', '2019-01+0200', :BadRubyValue],
+            ['xs:gMonthDay', '--01-32', :RubyValueOutOfBounds],
+            ['xs:gMonthDay', '--02-30', :RubyValueOutOfBounds],
+            ['xs:gMonthDay', '11-11+0200', :BadRubyValue],
+          ].each do |type_name, ruby_value, error_const|
+            specify "raises an #{error_const} error when asked to convert #{ruby_value.inspect} (#{ruby_value.class.name}) to #{type_name}" do
+              expect {
+                described_class.get_type(type_name).lexical_string(ruby_value)
+              }.to raise_error(ItemType::LexicalStringConversion::Errors.const_get(error_const))
+            end
+          end
+        end
       end
 
-      context "raising errors when asked to generate a lexical string from bad data" do
+      context "generating Ruby values from a typed XDM value" do
         [
-          ['xs:date', 'a', :BadRubyValue],
-          ['xs:date', '2004/04/01', :BadRubyValue],
-          ['xs:dateTime', 'a', :BadRubyValue],
-          ['xs:dateTime', '2004-04-0100:00:00', :BadRubyValue],
-          ['xs:dateTimeStamp', 'a', :BadRubyValue],
-          ['xs:dateTimeStamp', '2004-04-01T00:00', :BadRubyValue],
-          ['xs:integer', 'a', :BadRubyValue],
-          ['xs:decimal', 'a', :BadRubyValue],
-          ['xs:decimal', '1.0e4', :BadRubyValue],
-          ['xs:float', 'a', :BadRubyValue],
-          ['xs:float', '0.1E1.0', :BadRubyValue],
-          ['xs:float', 'inf', :BadRubyValue],
-          ['xs:float', 'Infinity', :BadRubyValue],
-          ['xs:double', 'a', :BadRubyValue],
-          ['xs:double', '0.1E1.0', :BadRubyValue],
-          ['xs:double', 'inf', :BadRubyValue],
-          ['xs:double', 'Infinity', :BadRubyValue],
-          ['xs:short', 32768, :RubyValueOutOfBounds],
-          ['xs:short', -32769, :RubyValueOutOfBounds],
-          ['xs:int', 2147483648, :RubyValueOutOfBounds],
-          ['xs:int', -2147483649, :RubyValueOutOfBounds],
-          ['xs:long', 9223372036854775808, :RubyValueOutOfBounds],
-          ['xs:long', -9223372036854775809, :RubyValueOutOfBounds],
-          ['xs:unsignedShort', 65536, :RubyValueOutOfBounds],
-          ['xs:unsignedShort', -1, :RubyValueOutOfBounds],
-          ['xs:unsignedInt', 4294967296, :RubyValueOutOfBounds],
-          ['xs:unsignedInt', -1, :RubyValueOutOfBounds],
-          ['xs:unsignedLong', 18446744073709551616, :RubyValueOutOfBounds],
-          ['xs:unsignedLong', -1, :RubyValueOutOfBounds],
-          ['xs:positiveInteger', 0, :RubyValueOutOfBounds],
-          ['xs:nonPositiveInteger', 1, :RubyValueOutOfBounds],
-          ['xs:negativeInteger', 0, :RubyValueOutOfBounds],
-          ['xs:nonNegativeInteger', -1, :RubyValueOutOfBounds],
-          ['xs:duration', 'P', :BadRubyValue],
-          ['xs:duration', '1', :BadRubyValue],
-          ['xs:dayTimeDuration', 'P1M', :BadRubyValue],
-          ['xs:yearMonthDuration', 1, :BadRubyValue],
-          ['xs:yearMonthDuration', 'P1Y1M1D', :BadRubyValue],
-          ['xs:yearMonthDuration', 'PT1H', :BadRubyValue],
-          ['xs:gDay', 0, :RubyValueOutOfBounds],
-          ['xs:gDay', 32, :RubyValueOutOfBounds],
-          ['xs:gDay', '---32', :RubyValueOutOfBounds],
-          ['xs:gDay', '---1', :BadRubyValue],
-          ['xs:gDay', '01', :BadRubyValue],
-          ['xs:gDay', '---01+0200', :BadRubyValue],
-          ['xs:gMonth', 0, :RubyValueOutOfBounds],
-          ['xs:gMonth', 13, :RubyValueOutOfBounds],
-          ['xs:gMonth', '--13', :RubyValueOutOfBounds],
-          ['xs:gMonth', '--1', :BadRubyValue],
-          ['xs:gMonth', '01', :BadRubyValue],
-          ['xs:gMonth', '--01+0200', :BadRubyValue],
-          ['xs:gYear', 0, :RubyValueOutOfBounds],
-          ['xs:gYear', '0000', :RubyValueOutOfBounds],
-          ['xs:gYear', '--1', :BadRubyValue],
-          ['xs:gYear', '01', :BadRubyValue],
-          ['xs:gYear', '--01+0200', :BadRubyValue],
-          ['xs:gYearMonth', '0000-01', :RubyValueOutOfBounds],
-          ['xs:gYearMonth', '2019-13', :RubyValueOutOfBounds],
-          ['xs:gYearMonth', '0001', :BadRubyValue],
-          ['xs:gYearMonth', '19-01', :BadRubyValue],
-          ['xs:gYearMonth', '2019-01+0200', :BadRubyValue],
-          ['xs:gMonthDay', '--01-32', :RubyValueOutOfBounds],
-          ['xs:gMonthDay', '--02-30', :RubyValueOutOfBounds],
-          ['xs:gMonthDay', '11-11+0200', :BadRubyValue],
-        ].each do |type_name, ruby_value, error_const|
-          specify "raises an #{error_const} error when asked to convert #{ruby_value.inspect} (#{ruby_value.class.name}) to #{type_name}" do
-            expect {
-              described_class.get_type(type_name).lexical_string(ruby_value)
-            }.to raise_error(ItemType::LexicalStringConversion::Errors.const_get(error_const))
+          ['xs:integer', '1', 1]
+        ].each do |type_name, lexical_string, expected|
+          specify "generate an appropriate Ruby value of class #{expected.class.name} from the XDM type #{type_name}" do
+            item_type = described_class.get_type(type_name)
+            value = Saxon::XdmAtomicValue.create(lexical_string, item_type)
+            ruby_value = item_type.ruby_value(value)
+
+            expect(ruby_value).to eq(expected)
+            expect(ruby_value.class).to be(expected.class)
           end
         end
       end

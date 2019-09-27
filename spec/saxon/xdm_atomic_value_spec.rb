@@ -70,5 +70,21 @@ RSpec.describe Saxon::XdmAtomicValue do
         expect(subject.hash).to eq(n2.hash)
       end
     end
+
+    context "returning native-Ruby values" do
+      specify "XDM types with a sensible Ruby equivalent return their value as an instance of that class" do
+        value = described_class.create('1', 'xs:integer')
+
+        expect(value.to_ruby).to eq(1)
+        expect(value.to_ruby.class).to be(::Integer)
+      end
+
+      specify "XDM types with no sensible Ruby equivalent return their lexical string representation" do
+        value = described_class.create('PT1H', 'xs:duration')
+
+        expect(value.to_ruby).to eq('PT1H')
+        expect(value.to_ruby.class).to be(::String)
+      end
+    end
   end
 end
