@@ -104,6 +104,9 @@ module Saxon
           ['xs:dateTime', '2001-04-01T00:00:00Z', '2001-04-01T00:00:00Z'],
           ['xs:dateTimeStamp', Time.utc(2001, 4, 1), '2001-04-01T00:00:00+00:00'],
           ['xs:dateTimeStamp', DateTime.new(2001, 4, 1, 0, 0, 0, '+02:00'), '2001-04-01T00:00:00+02:00'],
+          ['xs:time', '00:00:00', '00:00:00'],
+          ['xs:time', '00:00:00Z', '00:00:00Z'],
+          ['xs:time', '00:00:00+02:00', '00:00:00+02:00'],
           ['xs:integer', 1, '1'],
           ['xs:integer', -1, '-1'],
           ['xs:integer', 1.0, '1'],
@@ -126,6 +129,7 @@ module Saxon
           ['xs:float', 1.0, '1.0'],
           ['xs:float', 0, '0'],
           ['xs:float', 1, '1'],
+          ['xs:float', '1', '1'],
           ['xs:float', BigDecimal('1'), '0.1e1'],
           ['xs:float', '1.0E15', '1.0E15'],
           ['xs:float', 'NaN', 'NaN'],
@@ -177,6 +181,17 @@ module Saxon
           ['xs:gMonthDay', '--01-01', '--01-01'],
           ['xs:gMonthDay', '--01-01Z', '--01-01Z'],
           ['xs:gMonthDay', '--01-01+02:00', '--01-01+02:00'],
+          ['xs:boolean', true, 'true'],
+          ['xs:boolean', '', 'true'],
+          ['xs:boolean', '1', 'true'],
+          ['xs:boolean', '0', 'true'],
+          ['xs:boolean', 'false', 'true'],
+          ['xs:boolean', false, 'false'],
+          ['xs:boolean', nil, 'false'],
+          ['xs:NCName', 'a-name', 'a-name'],
+          ['xs:NCName', 'a-name', 'a-name'],
+          ['xs:Name', 'a-name', 'a-name'],
+          ['xs:Name', 'a:name', 'a:name'],
         ].each do |type_name, ruby_value, expected_string|
           specify "generate an appropriate string for #{type_name} from <#{ruby_value.inspect}> (#{ruby_value.class.name})" do
             expect(described_class.get_type(type_name).lexical_string(ruby_value)).to eq(expected_string)
@@ -191,6 +206,8 @@ module Saxon
             ['xs:dateTime', '2004-04-0100:00:00', :BadRubyValue],
             ['xs:dateTimeStamp', 'a', :BadRubyValue],
             ['xs:dateTimeStamp', '2004-04-01T00:00', :BadRubyValue],
+            ['xs:time', 'a', :BadRubyValue],
+            ['xs:time', '2004-04-01T00:00:00', :BadRubyValue],
             ['xs:integer', 'a', :BadRubyValue],
             ['xs:decimal', 'a', :BadRubyValue],
             ['xs:decimal', '1.0e4', :BadRubyValue],
@@ -249,6 +266,9 @@ module Saxon
             ['xs:gMonthDay', '--01-32', :RubyValueOutOfBounds],
             ['xs:gMonthDay', '--02-30', :RubyValueOutOfBounds],
             ['xs:gMonthDay', '11-11+0200', :BadRubyValue],
+            ['xs:NCName', 'a:name', :BadRubyValue],
+            ['xs:NCName', '1name', :BadRubyValue],
+            ['xs:Name', '1name', :BadRubyValue],
           ].each do |type_name, ruby_value, error_const|
             specify "raises an #{error_const} error when asked to convert #{ruby_value.inspect} (#{ruby_value.class.name}) to #{type_name}" do
               expect {
@@ -261,16 +281,44 @@ module Saxon
 
       context "generating Ruby values from a typed XDM value" do
         [
-          ['xs:integer', '1', 1]
+          ['xs:integer', '1', 1],
+          ['xs:decimal', '1', BigDecimal('1')],
+          ['xs:float', '1', 1.0],
+          ['xs:double', '1', 1.0],
+          ['xs:int', '1', 1],
+          ['xs:short', '-1', -1],
+          ['xs:long', '1', 1],
+          ['xs:unsignedInt', '1', 1],
+          ['xs:unsignedShort', '1', 1],
+          ['xs:unsignedLong', '1', 1],
+          ['xs:positiveInteger', '1', 1],
+          ['xs:nonPositiveInteger', '-1', -1],
+          ['xs:negativeInteger', '-1', -1],
+          ['xs:nonNegativeInteger', '1', 1],
+          ['xs:dateTime', '2019-09-27T14:42:00', Time.local(2019, 9, 27, 14, 42, 0)],
+          ['xs:dateTime', '2019-09-27T14:42:00Z', Time.new(2019, 9, 27, 14, 42, 0, '+00:00')],
+          ['xs:dateTimeStamp', '2019-09-27T14:42:00Z', Time.new(2019, 9, 27, 14, 42, 0, '+00:00')],
+          ['xs:boolean', 'true', true],
+          ['xs:boolean', '1', true],
+          ['xs:boolean', 'false', false],
+          ['xs:boolean', '0', false],
         ].each do |type_name, lexical_string, expected|
           specify "generate an appropriate Ruby value of class #{expected.class.name} from the XDM type #{type_name}" do
             item_type = described_class.get_type(type_name)
-            value = Saxon::XdmAtomicValue.create(lexical_string, item_type)
+            value = Saxon::XdmAtomicValue.from_lexical_string(lexical_string, item_type)
             ruby_value = item_type.ruby_value(value)
 
             expect(ruby_value).to eq(expected)
             expect(ruby_value.class).to be(expected.class)
           end
+        end
+
+        specify "return a Saxon::QName for an XDM Atomic Value containing a QName" do
+          item_type = described_class.get_type('xs:QName')
+          qname = Saxon::QName.clark('{http://example.org/#ns}el')
+          value = Saxon::XdmAtomicValue.create(qname)
+
+          expect(item_type.ruby_value(value)).to eq(qname)
         end
       end
     end

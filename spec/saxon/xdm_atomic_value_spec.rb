@@ -2,88 +2,139 @@ require 'saxon/xdm_atomic_value'
 require 'saxon/qname'
 require 'saxon/item_type'
 
-RSpec.describe Saxon::XdmAtomicValue do
-  describe "creating from Ruby objects" do
-    context "using primitives" do
-      specify "a Ruby String produces an xs:string" do
-        value = described_class.create('a')
+module Saxon
+  RSpec.describe XdmAtomicValue do
+    describe "creating from Ruby objects" do
+      context "using primitives" do
+        specify "a Ruby String produces an xs:string" do
+          value = described_class.create('a')
 
-        expect(value.type_name).to eq(Saxon::ItemType.get_type(::String).type_name)
+          expect(value.type_name).to eq(ItemType.get_type(::String).type_name)
+        end
+
+        specify "a Ruby Integer produces an xs:integer" do
+          value = described_class.create(1)
+
+          expect(value.type_name).to eq(ItemType.get_type('xs:integer').type_name)
+        end
       end
 
-      specify "a Ruby Integer produces an xs:integer" do
-        value = described_class.create(1)
+      context "specifying value type" do
+        specify "an explicit ItemType can be used to produce a specific typed value" do
+          item_type = ItemType.get_type('xs:positiveInteger')
+          value = described_class.create(1, item_type)
 
-        expect(value.type_name).to eq(Saxon::ItemType.get_type('xs:integer').type_name)
+          expect(value.type_name).to eq(item_type.type_name)
+        end
+
+        specify "an xs:X type name can be used to produce a specific typed value" do
+          item_type = ItemType.get_type('xs:negativeInteger')
+          value = described_class.create(-1, 'xs:negativeInteger')
+
+          expect(value.type_name).to eq(item_type.type_name)
+        end
+      end
+
+      context "using implied lexical form with specified type" do
+        specify "a string can be used to produce an xs:Date" do
+          item_type = ItemType.get_type('xs:date')
+          value = described_class.create('2019-09-25', item_type)
+
+          expect(value.type_name).to eq(item_type.type_name)
+        end
+
+        specify "the string 'false' produces an xs:boolean value of true" do
+          item_type = ItemType.get_type('xs:boolean')
+          value = described_class.create('false', item_type)
+
+          expect(value.type_name).to eq(item_type.type_name)
+          expect(value.to_ruby).to be(true)
+        end
+      end
+
+      context "using explicit lexical form with specified type" do
+        specify "the string 'false' produces an xs:boolean value of false" do
+          item_type = ItemType.get_type('xs:boolean')
+          value = described_class.from_lexical_string('false', item_type)
+
+          expect(value.type_name).to eq(item_type.type_name)
+          expect(value.to_ruby).to be(false)
+        end
+      end
+
+      context "XDM Atomic Values holding QNames" do
+        let(:qname) { QName.create(prefix: 'a', uri: 'http://example.org/#ns', local_name: 'name') }
+        let(:qname_type) { ItemType.get_type('xs:QName') }
+
+        specify "can be created by passing a Saxon::QName" do
+          value = described_class.create(qname)
+
+          expect(value.type_name).to eq(qname_type.type_name)
+          expect(value.to_ruby).to eq(qname)
+        end
+
+        specify "can be created by passing a Saxon Java QName" do
+          value = described_class.create(qname.to_java)
+
+          expect(value.type_name).to eq(qname_type.type_name)
+          expect(value.to_ruby).to eq(qname)
+        end
+
+        specify "does not allow creation via string/explicit type name" do
+          expect {
+            described_class.create('name', 'xs:QName')
+          }.to raise_error(XdmAtomicValue::CannotCreateQNameFromLiteral)
+        end
+
+        specify "does not allow creation via the explicit lexical form method, even without prefix" do
+          expect {
+            described_class.from_lexical_string('name', 'xs:QName')
+          }.to raise_error(XdmAtomicValue::CannotCreateQNameFromLiteral)
+        end
       end
     end
 
-    context "specifying value type" do
-      specify "an explicit ItemType can be used to produce a specific typed value" do
-        item_type = Saxon::ItemType.get_type('xs:positiveInteger')
-        value = described_class.create(1, item_type)
+    describe "instances" do
+      subject { described_class.create('a') }
 
-        expect(value.type_name).to eq(item_type.type_name)
+      specify "return the underlying Java XdmAtomicValue" do
+        expect(subject.to_java).to be_a(Saxon::S9API::XdmAtomicValue)
       end
 
-      specify "an xs:X type name can be used to produce a specific typed value" do
-        item_type = Saxon::ItemType.get_type('xs:negativeInteger')
-        value = described_class.create(-1, 'xs:negativeInteger')
-
-        expect(value.type_name).to eq(item_type.type_name)
-      end
-    end
-
-    context "using lexical form with specified type" do
-      specify "a string can be used to produce an xs:Date" do
-        item_type = Saxon::ItemType.get_type('xs:date')
-        value = described_class.create('2019-09-25', item_type)
-
-        expect(value.type_name).to eq(item_type.type_name)
-      end
-    end
-  end
-
-  describe "instances" do
-    subject { described_class.create('a') }
-
-    specify "return the underlying Java XdmAtomicValue" do
-      expect(subject.to_java).to be_a(Saxon::S9API::XdmAtomicValue)
-    end
-
-    specify "return the QName describing their Item type" do
-      expect(subject.type_name.to_s).to eq('xs:string')
-    end
-
-    context "when compared, atomic values" do
-      let(:n2) { described_class.create('a') }
-
-      specify "are #== equal to another instance representing the same node" do
-        expect(subject == n2).to be(true)
+      specify "return the QName describing their Item type" do
+        expect(subject.type_name.to_s).to eq('xs:string')
       end
 
-      specify "are #eql? equal to another instance representing the same node" do
-        expect(subject.eql?(n2)).to be(true)
+      context "when compared, atomic values" do
+        let(:n2) { described_class.create('a') }
+
+        specify "are #== equal to another instance representing the same node" do
+          expect(subject == n2).to be(true)
+        end
+
+        specify "are #eql? equal to another instance representing the same node" do
+          expect(subject.eql?(n2)).to be(true)
+        end
+
+        specify "have the same hash as another instance representing the same underlying Java object" do
+          expect(subject.hash).to eq(n2.hash)
+        end
       end
 
-      specify "have the same hash as another instance representing the same underlying Java object" do
-        expect(subject.hash).to eq(n2.hash)
-      end
-    end
+      context "returning native-Ruby values" do
+        specify "XDM types with a sensible Ruby equivalent return their value as an instance of that class" do
+          value = described_class.create('1', 'xs:integer')
 
-    context "returning native-Ruby values" do
-      specify "XDM types with a sensible Ruby equivalent return their value as an instance of that class" do
-        value = described_class.create('1', 'xs:integer')
+          expect(value.to_ruby).to eq(1)
+          expect(value.to_ruby.class).to be(::Integer)
+        end
 
-        expect(value.to_ruby).to eq(1)
-        expect(value.to_ruby.class).to be(::Integer)
-      end
+        specify "XDM types with no sensible Ruby equivalent return their lexical string representation" do
+          value = described_class.create('PT1H', 'xs:duration')
 
-      specify "XDM types with no sensible Ruby equivalent return their lexical string representation" do
-        value = described_class.create('PT1H', 'xs:duration')
-
-        expect(value.to_ruby).to eq('PT1H')
-        expect(value.to_ruby.class).to be(::String)
+          expect(value.to_ruby).to eq('PT1H')
+          expect(value.to_ruby.class).to be(::String)
+        end
       end
     end
   end

@@ -123,15 +123,22 @@ module Saxon
             [0-9]+H[0-9]+M[0-9]+(?:\.[0-9]+)?S
           )
         )?/x
+        DATE = /-?[0-9]{4}-[0-9]{2}-[0-9]{2}/
+        TIME = /[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?/
         TIME_ZONE = /(?:[\-+][0-9]{2}:[0-9]{2}|Z)?/
+        NCNAME_START_CHAR = '[A-Z]|_|[a-z]|[\u{C0}-\u{D6}]|[\u{D8}-\u{F6}]|[\u{F8}-\u{2FF}]|[\u{370}-\u{37D}]|[\u{37F}-\u{1FFF}]|[\u{200C}-\u{200D}]|[\u{2070}-\u{218F}]|[\u{2C00}-\u{2FEF}]|[\u{3001}-\u{D7FF}]|[\u{F900}-\u{FDCF}]|[\u{FDF0}-\u{FFFD}]|[\u{10000}-\u{EFFFF}]'
+        NAME_START_CHAR = ":|" + NCNAME_START_CHAR
+        NCNAME_CHAR = NCNAME_START_CHAR + '|-|\.|[0-9]|\u{B7}|[\u{0300}-\u{036F}]|[\u{203F}-\u{2040}]'
+        NAME_CHAR = ":|" + NCNAME_CHAR
       end
 
       module Patterns
         def self.build(*patterns)
           Regexp.new((['\A'] + patterns.map(&:to_s) + ['\z']).join(''))
         end
-        DATE = build(/-?[0-9]{4}-[0-9]{2}-[0-9]{2}/, PatternFragments::TIME_ZONE)
-        DATETIME = build(/-?[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?/, PatternFragments::TIME_ZONE)
+        DATE = build(PatternFragments::DATE, PatternFragments::TIME_ZONE)
+        DATE_TIME = build(PatternFragments::DATE, 'T', PatternFragments::TIME, PatternFragments::TIME_ZONE)
+        TIME = build(PatternFragments::TIME, PatternFragments::TIME_ZONE)
         DURATION = build(/-?P(?!\z)(?:[0-9]+Y)?(?:[0-9]+M)?(?:[0-9]+D)?/, PatternFragments::TIME_DURATION)
         DAY_TIME_DURATION = build(/-?P(?!\z)(?:[0-9]+D)?/, PatternFragments::TIME_DURATION)
         YEAR_MONTH_DURATION = /\A-?P(?!\z)(?:[0-9]+Y)?(?:[0-9]+M)?\z/
@@ -142,14 +149,18 @@ module Saxon
         G_MONTH_DAY = build(/--([0-9]{2})-([0-9]{2})/, PatternFragments::TIME_ZONE)
         INTEGER = /\A[+-]?[0-9]+\z/
         DECIMAL = /\A[+-]?[0-9]+(?:\.[0-9]+)?\z/
-        FLOAT = /\A(?:[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][0-9]+)|-?INF|NaN)\z/
+        FLOAT = /\A(?:[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][0-9]+)?|-?INF|NaN)\z/
+        NCNAME = build("(?:#{PatternFragments::NCNAME_START_CHAR})", "(?:#{PatternFragments::NCNAME_CHAR})*")
+        NAME = build("(?:#{PatternFragments::NAME_START_CHAR})", "(?:#{PatternFragments::NAME_CHAR})*")
       end
 
       module Convertors
         # :ANY_ATOMIC_VALUE,
         # :ANY_URI,
         # :BASE64_BINARY,
-        # :BOOLEAN,
+        BOOLEAN = ->(value) {
+          value ? 'true' : 'false'
+        }
         # :BYTE,
         DATE = ->(value) {
           if value.respond_to?(:strftime)
@@ -162,8 +173,11 @@ module Saxon
           if value.respond_to?(:strftime)
             value.strftime('%FT%T%:z')
           else
-            LexicalStringConversion.validate(value, Patterns::DATETIME)
+            LexicalStringConversion.validate(value, Patterns::DATE_TIME)
           end
+        }
+        TIME = ->(value) {
+          LexicalStringConversion.validate(value, Patterns::TIME)
         }
         DATE_TIME_STAMP = DATE_TIME
         DAY_TIME_DURATION = ->(value) {
@@ -267,8 +281,12 @@ module Saxon
         INTEGER = IntegerConversion.new(nil, nil)
         # :LANGUAGE,
         LONG = IntegerConversion.new(-9223372036854775808, 9223372036854775807)
-        # :NAME,
-        # :NCNAME,
+        NAME = ->(value) {
+          LexicalStringConversion.validate(value, Patterns::NAME)
+        }
+        NCNAME = ->(value) {
+          LexicalStringConversion.validate(value, Patterns::NCNAME)
+        }
         NEGATIVE_INTEGER = IntegerConversion.new(nil, -1)
         # :NMTOKEN,
         NON_NEGATIVE_INTEGER = IntegerConversion.new(0, nil)
@@ -279,7 +297,6 @@ module Saxon
         # :QNAME,
         SHORT = IntegerConversion.new(-32768, 32767)
         # :STRING,
-        # :TIME,
         # :TOKEN,
         # :UNSIGNED_BYTE,
         UNSIGNED_INT = IntegerConversion.new(0, 4294967295)

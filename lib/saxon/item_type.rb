@@ -283,7 +283,7 @@ module Saxon
 
     def value_to_ruby_convertor
       @value_to_ruby_convertor ||= ATOMIC_VALUE_TO_RUBY_CONVERTORS.fetch(s9_item_type, ->(xdm_atomic_value) {
-        xdm_atomic_value.to_java.toString
+        xdm_atomic_value.to_s
       })
     end
   end
