@@ -1,9 +1,9 @@
-require 'saxon/xdm_atomic_value'
+require 'saxon/xdm/atomic_value'
 require 'saxon/qname'
 require 'saxon/item_type'
 
 module Saxon
-  RSpec.describe XdmAtomicValue do
+  RSpec.describe XDM::AtomicValue do
     describe "creating from Ruby objects" do
       context "using primitives" do
         specify "a Ruby String produces an xs:string" do
@@ -90,7 +90,7 @@ module Saxon
           specify "explicit lexical form creation is prevented in the class" do
             expect {
               described_class.from_lexical_string('name', 'xs:QName')
-            }.to raise_error(XdmAtomicValue::CannotCreateQNameFromString)
+            }.to raise_error(XDM::AtomicValue::CannotCreateQNameFromString)
           end
         end
 
@@ -101,13 +101,13 @@ module Saxon
           specify "cannot be created by passing a Saxon::QName and explicit type" do
             expect {
               described_class.create(qname, 'xs:NOTATION')
-            }.to raise_error(XdmAtomicValue::NotationCannotBeDirectlyCreated)
+            }.to raise_error(XDM::AtomicValue::NotationCannotBeDirectlyCreated)
           end
 
           specify "does not allow creation via string/explicit type name" do
             expect {
               described_class.create('name', 'xs:NOTATION')
-            }.to raise_error(XdmAtomicValue::NotationCannotBeDirectlyCreated)
+            }.to raise_error(XDM::AtomicValue::NotationCannotBeDirectlyCreated)
           end
         end
       end

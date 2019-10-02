@@ -1,9 +1,10 @@
-require_relative 'xdm_node'
-require_relative 'xdm_atomic_value'
+require_relative 'node'
+require_relative 'atomic_value'
 
 module Saxon
+  module XDM
   # An XPath Data Model Value object, representing a Sequence.
-  class XdmValue
+  class Value
     include Enumerable
 
     def self.wrap_s9_xdm_value(s9_xdm_value)
@@ -18,21 +19,21 @@ module Saxon
 
     def self.wrap_s9_xdm_item(s9_xdm_item)
       if s9_xdm_item.isAtomicValue
-        XdmAtomicValue.new(s9_xdm_item)
+        XDM::AtomicValue.new(s9_xdm_item)
       else
         case s9_xdm_item
         when Saxon::S9API::XdmNode
-          XdmNode.new(s9_xdm_item)
+          XDM::Node.new(s9_xdm_item)
         else
-          XdmUnhandledItem.new(s9_xdm_item)
+          XDM::UnhandledItem.new(s9_xdm_item)
         end
       end
     end
 
-    # Create a new XdmValue sequence containing the items passed in as a Ruby enumerable.
+    # Create a new XDM::Value sequence containing the items passed in as a Ruby enumerable.
     #
     # @param items [Enumerable] A list of XDM Item members
-    # @return [Saxon::XdmValue] The XDM value
+    # @return [Saxon::XDM::Value] The XDM value
     def self.create(items)
       new(Saxon::S9API::XdmValue.makeSequence(items.map(&:to_java)))
     end
@@ -57,7 +58,7 @@ module Saxon
     #
     # @overload
     #   @yield [item] The current XDM Item
-    #   @yieldparam item [Saxon::XdmAtomicValue, Saxon::XdmNode] the item.
+    #   @yieldparam item [Saxon::XDM::AtomicValue, Saxon::XDM::Node] the item.
     def each(&block)
       to_enum.each(&block)
     end
@@ -67,14 +68,14 @@ module Saxon
       @s9_xdm_value
     end
 
-    # Compare this XdmValue with another. Currently this requires iterating
+    # Compare this XDM::Value with another. Currently this requires iterating
     # across the sequence, and the other sequence and comparing each member
     # with the corresponding member in the other sequence.
     #
-    # @param other [Saxon::XdmValue] The XdmValue to be compare against
-    # @return [Boolean] whether the two XdmValues are equal
+    # @param other [Saxon::XDM::Value] The XDM::Value to be compare against
+    # @return [Boolean] whether the two XDM::Values are equal
     def ==(other)
-      return false unless other.is_a?(XdmValue)
+      return false unless other.is_a?(XDM::Value)
       return false unless other.size == size
       not_okay = to_enum.zip(other.to_enum).find { |mine, theirs|
         mine != theirs
@@ -84,7 +85,7 @@ module Saxon
 
     alias_method :eql?, :==
 
-    # The hash code for the XdmValue
+    # The hash code for the XDM::Value
     # @return [Fixnum] The hash code
     def hash
       @hash ||= to_a.hash
@@ -102,7 +103,7 @@ module Saxon
   end
 
   # Placeholder class for Saxon Items that we haven't gotten to yet
-  class XdmUnhandledItem
+  class XDM::UnhandledItem
     def initialize(s9_xdm_item)
       @s9_xdm_item = s9_xdm_item
     end
@@ -111,4 +112,5 @@ module Saxon
       @s9_xdm_item
     end
   end
+end
 end

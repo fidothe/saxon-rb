@@ -1,8 +1,9 @@
-require_relative 'axis_iterator'
+require_relative '../axis_iterator'
 
 module Saxon
+  module XDM
   # An XPath Data Model Node object, representing an XML document, or an element or one of the other node chunks in the XDM.
-  class XdmNode
+  class Node
     include Enumerable
 
     attr_reader :s9_xdm_node
@@ -44,7 +45,7 @@ module Saxon
     end
 
     def ==(other)
-      return false unless other.is_a?(XdmNode)
+      return false unless other.is_a?(XDM::Node)
       s9_xdm_node.equals(other.to_java)
     end
 
@@ -62,4 +63,5 @@ module Saxon
       AxisIterator.new(self, axis)
     end
   end
+end
 end

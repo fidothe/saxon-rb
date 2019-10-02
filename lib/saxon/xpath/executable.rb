@@ -1,5 +1,5 @@
-require_relative '../xdm_node'
-require_relative '../xdm_atomic_value'
+require_relative '../xdm/node'
+require_relative '../xdm/atomic_value'
 
 module Saxon
   module XPath
@@ -18,14 +18,14 @@ module Saxon
       end
 
       # Run the compiled query using a passed-in node as the context item.
-      # @param context_item [Saxon::XdmNode] the context item node
+      # @param context_item [Saxon::XDM::Node] the context item node
       # @return [Saxon::XPath::Result] the result of the query as an
       #   enumerable
       def run(context_item, variables = {})
         selector = to_java.load
         selector.setContextItem(context_item.to_java)
         variables.each do |qname_or_string, value|
-          selector.setVariable(static_context.resolve_variable_qname(qname_or_string).to_java, Saxon::XdmAtomicValue.create(value).to_java)
+          selector.setVariable(static_context.resolve_variable_qname(qname_or_string).to_java, Saxon::XDM::AtomicValue.create(value).to_java)
         end
         Result.new(selector.iterator)
       end
@@ -48,11 +48,11 @@ module Saxon
         @result_iterator = result_iterator
       end
 
-      # Yields <tt>XdmNode</tt>s from the query result. If no block is passed,
-      # returns an <tt>Enumerator</tt> 
-      # @yieldparam xdm_node [Saxon::XdmNode] the name that is yielded
+      # Yields <tt>XDM::Node</tt>s from the query result. If no block is passed,
+      # returns an <tt>Enumerator</tt>
+      # @yieldparam xdm_node [Saxon::XDM::Node] the name that is yielded
       def each(&block)
-        @result_iterator.lazy.map { |s9_xdm_node| Saxon::XdmNode.new(s9_xdm_node) }.each(&block)
+        @result_iterator.lazy.map { |s9_xdm_node| Saxon::XDM::Node.new(s9_xdm_node) }.each(&block)
       end
     end
   end

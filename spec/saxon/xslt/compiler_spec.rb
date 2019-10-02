@@ -33,14 +33,14 @@ module Saxon
             static_parameters({
               'no_ns_param_1' => 'inferred string type',
               :no_ns_param_2 => 1,
-              QName.clark('{http://example.org/#ns}param') => XdmAtomicValue.create(1.0)
+              QName.clark('{http://example.org/#ns}param') => XDM::AtomicValue.create(1.0)
             })
           }
 
           expect(compiler.static_parameters).to eq({
-            QName.clark('no_ns_param_1') => XdmAtomicValue.create('inferred string type'),
-            QName.clark('no_ns_param_2') => XdmAtomicValue.create(1),
-            QName.clark('{http://example.org/#ns}param') => XdmAtomicValue.create(1.0)
+            QName.clark('no_ns_param_1') => XDM::AtomicValue.create('inferred string type'),
+            QName.clark('no_ns_param_2') => XDM::AtomicValue.create(1),
+            QName.clark('{http://example.org/#ns}param') => XDM::AtomicValue.create(1.0)
           })
         end
       end
@@ -53,7 +53,7 @@ module Saxon
             }
 
             expect(compiler.global_parameters).to eq({
-              QName.clark('a') => XdmAtomicValue.create('string')
+              QName.clark('a') => XDM::AtomicValue.create('string')
             })
           end
 
@@ -73,7 +73,7 @@ module Saxon
           }
 
           expect(compiler.initial_template_parameters).to eq({
-            QName.clark('a') => XdmAtomicValue.create('string')
+            QName.clark('a') => XDM::AtomicValue.create('string')
           })
         end
 
@@ -83,7 +83,7 @@ module Saxon
           }
 
           expect(compiler.initial_template_tunnel_parameters).to eq({
-            QName.clark('a') => XdmAtomicValue.create('string')
+            QName.clark('a') => XDM::AtomicValue.create('string')
           })
         end
       end
@@ -102,8 +102,8 @@ module Saxon
           }
 
           expect(compiler.static_parameters).to eq({
-            Saxon::QName.clark('a') => Saxon::XdmAtomicValue.create(1),
-            Saxon::QName.clark('b') => Saxon::XdmAtomicValue.create(2)
+            Saxon::QName.clark('a') => Saxon::XDM::AtomicValue.create(1),
+            Saxon::QName.clark('b') => Saxon::XDM::AtomicValue.create(2)
           })
 
           expect(compiler.default_collation).to eq('http://example.org/collation')
@@ -116,7 +116,7 @@ module Saxon
           }
 
           expect(compiler.static_parameters).to eq({
-            Saxon::QName.clark('a') => Saxon::XdmAtomicValue.create(2)
+            Saxon::QName.clark('a') => Saxon::XDM::AtomicValue.create(2)
           })
 
           expect(compiler.default_collation).to be_nil
@@ -157,7 +157,7 @@ module Saxon
         }
 
         expect(executable.global_parameters).to eq({
-          Saxon::QName.clark('a') => Saxon::XdmAtomicValue.create(1)
+          Saxon::QName.clark('a') => Saxon::XDM::AtomicValue.create(1)
         })
 
         expect(subject.global_parameters).to eq({})

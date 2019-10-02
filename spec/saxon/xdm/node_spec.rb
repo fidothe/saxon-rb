@@ -1,9 +1,9 @@
-require 'saxon/xdm_node'
+require 'saxon/xdm/node'
 require 'saxon/processor'
 require 'saxon/source'
 require 'saxon/qname'
 
-RSpec.describe Saxon::XdmNode do
+RSpec.describe Saxon::XDM::Node do
   let(:doc_builder) { Saxon::Processor.create.document_builder }
   let(:source) { Saxon::Source.from_string("<doc/>", base_uri: "http://example.org/") }
   let(:doc_node) { doc_builder.build(source) }
@@ -12,14 +12,14 @@ RSpec.describe Saxon::XdmNode do
     it "parses a document given a Source" do
       doc = doc_builder.build(source)
 
-      expect(doc).to be_a(Saxon::XdmNode)
+      expect(doc).to be_a(Saxon::XDM::Node)
     end
   end
 
   describe "instances" do
     subject { doc_node }
 
-    it "returns the underlying Java XdmNode" do
+    it "returns the underlying Java XDM::Node" do
       expect(subject.to_java).to be_a(Saxon::S9API::XdmNode)
     end
 
@@ -32,7 +32,7 @@ RSpec.describe Saxon::XdmNode do
     end
 
     context "when compared, nodes" do
-      let(:n2) { Saxon::XdmNode.new(subject.to_java) }
+      let(:n2) { Saxon::XDM::Node.new(subject.to_java) }
 
       specify "are #== equal to another instance representing the same node" do
         expect(subject == n2).to be(true)

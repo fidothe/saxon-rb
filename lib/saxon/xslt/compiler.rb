@@ -38,8 +38,8 @@ module Saxon
       # @!attribute [r] default_collation
       #   @return [String] the URI of the default declared collation
       # @!attribute [r] static_parameters
-      #   @return [Hash<Saxon::QName => Saxon::XdmValue, Saxon::XdmNode,
-      #   Saxon::XdmAtomicValue>] parameters required at compile time as QName => value hash
+      #   @return [Hash<Saxon::QName => Saxon::XDM::Value, Saxon::XDM::Node,
+      #   Saxon::XDM::AtomicValue>] parameters required at compile time as QName => value hash
 
       # @param source [Saxon::Source] the Source to compile
       # @return [Saxon::XSLT::Executable] the executable stylesheet

@@ -1,21 +1,22 @@
-require_relative 'qname'
-require_relative 'item_type'
+require_relative '../qname'
+require_relative '../item_type'
 
 module Saxon
+  module XDM
   # An XPath Data Model Node object, representing an XML document, or an element
   # or one of the other node chunks in the XDM.
-  class XdmAtomicValue
-    # Error thrown when an attempt to create QName-holding XdmAtomicValue is
+  class AtomicValue
+    # Error thrown when an attempt to create QName-holding XDM::AtomicValue is
     # made using anything other than a {Saxon::QName} or s9api.QName instance.
     #
     # QNames are dependent on the namespace URI, which isn't present in the
     # lexical string you normally see (e.g. <tt>prefix:name</tt>). Prefixes are
     # only bound to a URI in the context of a particular document, so creating
-    # them imlpicitly through the XdmAtomicValue creation process doesn't really
+    # them imlpicitly through the XDM::AtomicValue creation process doesn't really
     # work. They need to be created explicitly and then handed in to be wrapped.
     class CannotCreateQNameFromString < StandardError
       def to_s
-        "QName XdmAtomicValues must be created using an instance of Saxon::QName, not a string like 'prefix:name': Prefix URI binding is undefined at this point"
+        "QName XDM::AtomicValues must be created using an instance of Saxon::QName, not a string like 'prefix:name': Prefix URI binding is undefined at this point"
       end
     end
 
@@ -24,7 +25,7 @@ module Saxon
     # Saxon, so attempting to do so raises this error.
     class NotationCannotBeDirectlyCreated < StandardError
       def to_s
-        "xs:NOTATION XdmAtomicValues cannot be directly created outside of XML parsing."
+        "xs:NOTATION XDM::AtomicValues cannot be directly created outside of XML parsing."
       end
     end
 
@@ -32,7 +33,7 @@ module Saxon
     XS_NOTATION = ItemType.get_type('xs:NOTATION')
 
     class << self
-      # Convert a single Ruby value into an XdmAtomicValue
+      # Convert a single Ruby value into an XDM::AtomicValue
       #
       # If no explicit {ItemType} is passed, the correct type is guessed based
       # on the class of the value. (e.g. <tt>xs:date</tt> for {Date}.)
@@ -42,14 +43,14 @@ module Saxon
       # value. This means that the Ruby string <tt>'false'</tt> will produce an
       # <tt>xs:boolean</tt> whose value is <tt>true</tt>, because all strings
       # are truthy. If you need to pass lexical strings unchanged, use
-      # {XdmAtomicValue.from_lexical_string}.
+      # {XDM::AtomicValue.from_lexical_string}.
       #
       # @param value [Object] the value to convert
       #
       # @param item_type [Saxon::ItemType, String] the value's type, as either
       #   an {ItemType} or a name (<tt>xs:date</tt>)
       #
-      # @return [Saxon::XdmAtomicValue]
+      # @return [Saxon::XDM::AtomicValue]
       def create(value, item_type = nil)
         return create_implying_item_type(value) if item_type.nil?
 
@@ -63,7 +64,7 @@ module Saxon
       end
 
       # convert a lexical string representation of an XDM Atomic Value into an
-      # XdmAtomicValue.
+      # XDM::AtomicValue.
       #
       # Note that this skips all conversion and checking of the string before
       # handing it off to Saxon.
@@ -71,7 +72,7 @@ module Saxon
       # @param value [String] the lexical string representation of the value
       # @param item_type [Saxon::ItemType, String] the value's type, as either
       #   an {ItemType} or a name (<tt>xs:date</tt>)
-      # @return [Saxon::XdmAtomicValue]
+      # @return [Saxon::XDM::AtomicValue]
       def from_lexical_string(value, item_type)
         item_type = ItemType.get_type(item_type)
         raise CannotCreateQNameFromString if item_type == XS_QNAME
@@ -140,13 +141,13 @@ module Saxon
       @ruby_value ||= item_type.ruby_value(self).freeze
     end
 
-    # compares two {XdmAtomicValue}s using the underlying Saxon and XDM
+    # compares two {XDM::AtomicValue}s using the underlying Saxon and XDM
     # comparision rules
     #
-    # @param other [Saxon::XdmAtomicValue]
+    # @param other [Saxon::XDM::AtomicValue]
     # @return [Boolean]
     def ==(other)
-      return false unless other.is_a?(XdmAtomicValue)
+      return false unless other.is_a?(XDM::AtomicValue)
       s9_xdm_atomic_value.equals(other.to_java)
     end
 
@@ -156,4 +157,5 @@ module Saxon
       @hash ||= s9_xdm_atomic_value.hashCode
     end
   end
+end
 end

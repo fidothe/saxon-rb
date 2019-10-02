@@ -1,7 +1,7 @@
 require 'forwardable'
 require_relative 'evaluation_context'
 require_relative '../serializer'
-require_relative '../xdm_value'
+require_relative '../xdm/value'
 require_relative '../qname'
 
 module Saxon
@@ -111,7 +111,7 @@ module Saxon
       end
 
       def result_xdm_value(transformer_return_value)
-        XdmValue.wrap_s9_xdm_value(
+        XDM::Value.wrap_s9_xdm_value(
           transformer_return_value.nil? ? destination.getXdmNode : transformer_return_value
         )
       end

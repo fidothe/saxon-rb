@@ -15,7 +15,7 @@ RSpec.describe Saxon::DocumentBuilder do
       source = Saxon::Source.from_string("<doc/>", base_uri: "http://example.org/")
       doc = subject.build(source)
 
-      expect(doc).to be_a(Saxon::XdmNode)
+      expect(doc).to be_a(Saxon::XDM::Node)
     end
   end
 end

@@ -1,5 +1,5 @@
-require 'saxon/s9api'
-require 'saxon/xdm_node'
+require_relative 's9api'
+require_relative 'xdm/node'
 
 module Saxon
   # An XPath Data Model Node object, representing an XML document, or an element or one of the other node chunks in the XDM.
@@ -20,7 +20,7 @@ module Saxon
     end
 
     def each(&block)
-      s9_sequence_iterator.lazy.map { |s9_xdm_node| Saxon::XdmNode.new(s9_xdm_node) }.each(&block)
+      s9_sequence_iterator.lazy.map { |s9_xdm_node| Saxon::XDM::Node.new(s9_xdm_node) }.each(&block)
     end
 
     private
