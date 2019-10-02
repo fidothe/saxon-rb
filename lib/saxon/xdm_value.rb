@@ -94,26 +94,11 @@ module Saxon
     # @return [Enumerator::Lazy] the enumerator
     def to_enum
       s9_xdm_value.each.lazy.map { |s9_xdm_item|
-        wrap_s9_xdm_item(s9_xdm_item)
+        self.class.wrap_s9_xdm_item(s9_xdm_item)
       }.each
     end
 
     alias_method :enum_for, :to_enum
-
-    private
-
-    def wrap_s9_xdm_item(s9_xdm_item)
-      if s9_xdm_item.isAtomicValue
-        XdmAtomicValue.new(s9_xdm_item)
-      else
-        case s9_xdm_item
-        when Saxon::S9API::XdmNode
-          XdmNode.new(s9_xdm_item)
-        else
-          XdmUnhandledItem.new(s9_xdm_item)
-        end
-      end
-    end
   end
 
   # Placeholder class for Saxon Items that we haven't gotten to yet

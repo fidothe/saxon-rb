@@ -18,7 +18,7 @@ module Saxon::XSLT
     end
 
     describe "instances" do
-      specify "return the underlying Java XPathExecutable when asked" do
+      specify "return the underlying Java XsltExecutable when asked" do
         instance = described_class.new(xslte, evaluation_context)
 
         expect(instance.to_java).to be(xslte)

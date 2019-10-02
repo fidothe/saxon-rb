@@ -41,7 +41,7 @@ module Saxon
       #   @return [Hash<Saxon::QName => Saxon::XdmValue, Saxon::XdmNode,
       #   Saxon::XdmAtomicValue>] parameters required at compile time as QName => value hash
 
-      # @param expression [Saxon::Source] the Source to compile
+      # @param source [Saxon::Source] the Source to compile
       # @return [Saxon::XSLT::Executable] the executable stylesheet
       def compile(source, &block)
         Saxon::XSLT::Executable.new(
