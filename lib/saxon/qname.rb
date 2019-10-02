@@ -120,10 +120,16 @@ module Saxon
       @hash ||= (local_name + uri).hash
     end
 
+    # @return [Saxon::S9API::QName] the underlying Saxon QName object
     def to_java
       s9_qname
     end
 
+    # convert the QName to a lexical string, using the prefix (if there is one).
+    # So, <tt>Saxon::QName.clark('{http://example.org/#ns}hello').to_s</tt>
+    # returns <tt>'hello'</tt>, and <tt>Saxon::QName.create(prefix: 'pre', uri:
+    # 'http://example.org/#ns', local_name: 'hello').to_s</tt> returns
+    # <tt>'pre:hello'</tt>
     def to_s
       s9_qname.to_s
     end
@@ -132,6 +138,8 @@ module Saxon
       "<Saxon::QName @prefix=#{prefix} @uri=#{uri} @local_name=#{local_name}>"
     end
 
+    # Raised when an attempt is made to resolve a <tt>prefix:local-name</tt>
+    # into a QName, and the prefix has not been bound to a namespace URI.
     class PrefixedStringWithoutNSURIError < RuntimeError
       def initialize(qname_string, prefix)
         @qname_string, @prefix = qname_string, prefix
