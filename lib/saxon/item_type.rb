@@ -264,7 +264,7 @@ module Saxon
     # @return [String] The XML Schema-defined lexical string representation of
     #   the value
     def lexical_string(value)
-      lexical_string_convertor.call(value)
+      lexical_string_convertor.call(value, self)
     end
 
     # Convert an XDM Atomic Value to an instance of an appropriate Ruby class, or return the lexical string.
@@ -278,7 +278,7 @@ module Saxon
     private
 
     def lexical_string_convertor
-      @lexical_string_convertor ||= ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS.fetch(s9_item_type, ->(value) { value.to_s })
+      @lexical_string_convertor ||= ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS.fetch(s9_item_type, ->(value, item) { value.to_s })
     end
 
     def value_to_ruby_convertor

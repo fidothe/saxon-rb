@@ -62,34 +62,53 @@ module Saxon
         end
       end
 
-      context "XDM Atomic Values holding QNames" do
-        let(:qname) { QName.create(prefix: 'a', uri: 'http://example.org/#ns', local_name: 'name') }
-        let(:qname_type) { ItemType.get_type('xs:QName') }
+      context "Namespace-sensitive XDM Atomic Values containing" do
+        context "QNames" do
+          let(:qname) { QName.create(prefix: 'a', uri: 'http://example.org/#ns', local_name: 'name') }
+          let(:qname_type) { ItemType.get_type('xs:QName') }
 
-        specify "can be created by passing a Saxon::QName" do
-          value = described_class.create(qname)
+          specify "can be created by passing a Saxon::QName" do
+            value = described_class.create(qname)
 
-          expect(value.type_name).to eq(qname_type.type_name)
-          expect(value.to_ruby).to eq(qname)
+            expect(value.type_name).to eq(qname_type.type_name)
+            expect(value.to_ruby).to eq(qname)
+          end
+
+          specify "can be created by passing a Saxon Java QName" do
+            value = described_class.create(qname.to_java)
+
+            expect(value.type_name).to eq(qname_type.type_name)
+            expect(value.to_ruby).to eq(qname)
+          end
+
+          specify "does not allow creation via string/explicit type name" do
+            expect {
+              described_class.create('name', 'xs:QName')
+            }.to raise_error(ItemType::LexicalStringConversion::Errors::UnconvertableNamespaceSensitveItemType)
+          end
+
+          specify "explicit lexical form creation is prevented in the class" do
+            expect {
+              described_class.from_lexical_string('name', 'xs:QName')
+            }.to raise_error(XdmAtomicValue::CannotCreateQNameFromString)
+          end
         end
 
-        specify "can be created by passing a Saxon Java QName" do
-          value = described_class.create(qname.to_java)
+        context "xs:NOTATION" do
+          let(:qname) { QName.create(prefix: 'a', uri: 'http://example.org/#ns', local_name: 'name') }
+          let(:notation_type) { ItemType.get_type('xs:NOTATION') }
 
-          expect(value.type_name).to eq(qname_type.type_name)
-          expect(value.to_ruby).to eq(qname)
-        end
+          specify "cannot be created by passing a Saxon::QName and explicit type" do
+            expect {
+              described_class.create(qname, 'xs:NOTATION')
+            }.to raise_error(XdmAtomicValue::NotationCannotBeDirectlyCreated)
+          end
 
-        specify "does not allow creation via string/explicit type name" do
-          expect {
-            described_class.create('name', 'xs:QName')
-          }.to raise_error(XdmAtomicValue::CannotCreateQNameFromLiteral)
-        end
-
-        specify "does not allow creation via the explicit lexical form method, even without prefix" do
-          expect {
-            described_class.from_lexical_string('name', 'xs:QName')
-          }.to raise_error(XdmAtomicValue::CannotCreateQNameFromLiteral)
+          specify "does not allow creation via string/explicit type name" do
+            expect {
+              described_class.create('name', 'xs:NOTATION')
+            }.to raise_error(XdmAtomicValue::NotationCannotBeDirectlyCreated)
+          end
         end
       end
     end
@@ -134,6 +153,12 @@ module Saxon
 
           expect(value.to_ruby).to eq('PT1H')
           expect(value.to_ruby.class).to be(::String)
+        end
+
+        specify "the original XML string value can still be obtained if needed" do
+          value = described_class.create(1)
+
+          expect(value.to_s).to eq('1')
         end
       end
     end

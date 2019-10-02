@@ -192,6 +192,22 @@ module Saxon
           ['xs:NCName', 'a-name', 'a-name'],
           ['xs:Name', 'a-name', 'a-name'],
           ['xs:Name', 'a:name', 'a:name'],
+          ['xs:anyURI', '/uri', '/uri'],
+          ['xs:anyURI', URI('http://example.org/'), 'http://example.org/'],
+          ['xs:ID', 'an-id', 'an-id'],
+          ['xs:IDREF', 'an-id', 'an-id'],
+          ['xs:token', 'token token', 'token token'],
+          ['xs:NMTOKEN', 'an:nmtoken', 'an:nmtoken'],
+          ['xs:normalizedString', 'normalized string', 'normalized string'],
+          ['xs:ENTITY', 'entity-name', 'entity-name'],
+          ['xs:language', 'de', 'de'],
+          ['xs:language', 'zh-cmn-Hans-CN', 'zh-cmn-Hans-CN'],
+          ['xs:base64Binary', 'encoded bytes', 'ZW5jb2RlZCBieXRlcw=='],
+          ['xs:hexBinary', 'encoded bytes', '656e636f646564206279746573'],
+          ['xs:byte', 'e', '101'],
+          ['xs:byte', "\x92", '-110'],
+          ['xs:unsignedByte', 'e', '101'],
+          ['xs:unsignedByte', "\xb4", '180'],
         ].each do |type_name, ruby_value, expected_string|
           specify "generate an appropriate string for #{type_name} from <#{ruby_value.inspect}> (#{ruby_value.class.name})" do
             expect(described_class.get_type(type_name).lexical_string(ruby_value)).to eq(expected_string)
@@ -269,6 +285,21 @@ module Saxon
             ['xs:NCName', 'a:name', :BadRubyValue],
             ['xs:NCName', '1name', :BadRubyValue],
             ['xs:Name', '1name', :BadRubyValue],
+            ['xs:anyURI', '<%>', :BadRubyValue],
+            ['xs:ID', 'an:id', :BadRubyValue],
+            ['xs:IDREF', 'an:id', :BadRubyValue],
+            ['xs:token', "token  token", :BadRubyValue],
+            ['xs:token', "token\ttoken", :BadRubyValue],
+            ['xs:token', " token ", :BadRubyValue],
+            ['xs:token', "token\ntoken", :BadRubyValue],
+            ['xs:NMTOKEN', "nmtoken nmtoken", :BadRubyValue],
+            ['xs:normalizedString', "not\nnormalized", :BadRubyValue],
+            ['xs:ENTITY', "entity:name", :BadRubyValue],
+            ['xs:language', "morethaneightletters", :BadRubyValue],
+            ['xs:QName', "a:thingy", :UnconvertableNamespaceSensitveItemType],
+            ['xs:NOTATION', "thingy", :UnconvertableNamespaceSensitveItemType],
+            ['xs:byte', "AA", :RubyValueOutOfBounds],
+            ['xs:unsignedByte', "AA", :RubyValueOutOfBounds],
           ].each do |type_name, ruby_value, error_const|
             specify "raises an #{error_const} error when asked to convert #{ruby_value.inspect} (#{ruby_value.class.name}) to #{type_name}" do
               expect {
@@ -319,6 +350,44 @@ module Saxon
           value = Saxon::XdmAtomicValue.create(qname)
 
           expect(item_type.ruby_value(value)).to eq(qname)
+        end
+
+        context "encoded binary datatypes return an ASCII-8bit encoded string" do
+          specify "from an xs:base64Binary" do
+            item_type = described_class.get_type('xs:base64Binary')
+            value = Saxon::XdmAtomicValue.from_lexical_string('ZGVjb2RlZCBieXRlcw==', item_type)
+            ruby_value = item_type.ruby_value(value)
+
+            expect(ruby_value).to eq('decoded bytes')
+            expect(ruby_value.encoding).to be(Encoding::ASCII_8BIT)
+          end
+
+          specify "from an xs:hexBinary" do
+            item_type = described_class.get_type('xs:hexBinary')
+            value = Saxon::XdmAtomicValue.from_lexical_string('6465636f646564206279746573', item_type)
+            ruby_value = item_type.ruby_value(value)
+
+            expect(ruby_value).to eq('decoded bytes')
+            expect(ruby_value.encoding).to be(Encoding::ASCII_8BIT)
+          end
+
+          specify "from an xs:byte" do
+            item_type = described_class.get_type('xs:byte')
+            value = Saxon::XdmAtomicValue.from_lexical_string('-110', item_type)
+            ruby_value = item_type.ruby_value(value)
+
+            expect(ruby_value).to eq("\x92".force_encoding(Encoding::ASCII_8BIT))
+            expect(ruby_value.encoding).to be(Encoding::ASCII_8BIT)
+          end
+
+          specify "from an xs:unsignedByte" do
+            item_type = described_class.get_type('xs:unsignedByte')
+            value = Saxon::XdmAtomicValue.from_lexical_string('180', item_type)
+            ruby_value = item_type.ruby_value(value)
+
+            expect(ruby_value).to eq("\xb4".force_encoding(Encoding::ASCII_8BIT))
+            expect(ruby_value.encoding).to be(Encoding::ASCII_8BIT)
+          end
         end
       end
     end

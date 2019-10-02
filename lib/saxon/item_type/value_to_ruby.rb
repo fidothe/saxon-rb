@@ -55,8 +55,22 @@ module Saxon
         BOOLEAN = ->(xdm_atomic_value) {
           xdm_atomic_value.to_java.getValue
         }
-        QNAME = ->(xdm_atomic_value) {
+        NOTATION = QNAME = ->(xdm_atomic_value) {
           Saxon::QName.new(xdm_atomic_value.to_java.getQNameValue)
+        }
+        BASE64_BINARY = ->(xdm_atomic_value) {
+          Base64.decode64(xdm_atomic_value.to_s)
+        }
+        HEX_BINARY = ->(xdm_atomic_value) {
+          bytes = []
+          xdm_atomic_value.to_s.scan(/../) { |x| bytes << x.hex.chr(Encoding::ASCII_8BIT) }
+          bytes.join
+        }
+        BYTE = ->(xdm_atomic_value) {
+          [xdm_atomic_value.to_java.getLongValue].pack('c')
+        }
+        UNSIGNED_BYTE = ->(xdm_atomic_value) {
+          [xdm_atomic_value.to_java.getLongValue].pack('C')
         }
       end
     end
