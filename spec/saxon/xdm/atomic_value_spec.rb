@@ -1,6 +1,7 @@
-require 'saxon/xdm/atomic_value'
+require 'saxon/xdm'
 require 'saxon/qname'
 require 'saxon/item_type'
+require_relative 'sequence_like_examples'
 
 module Saxon
   RSpec.describe XDM::AtomicValue do
@@ -161,6 +162,8 @@ module Saxon
           expect(value.to_s).to eq('1')
         end
       end
+
+      it_should_behave_like "an XDM Value hierarchy sequence-like"
     end
   end
 end

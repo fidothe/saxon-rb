@@ -1,43 +1,111 @@
-require 'saxon/xdm/value'
+require 'saxon/xdm'
 require 'saxon/processor'
-require 'saxon/xdm/atomic_value'
+require_relative 'sequence_like_examples'
+require 'set'
 
 module Saxon
   RSpec.describe XDM::Value do
     let(:processor) { Saxon::Processor.create }
 
     describe "being created" do
-      it "allows the creation of XDM Values from an array of XDM Items" do
-        o1 = XDM::AtomicValue.new(1)
-        o2 = XDM::AtomicValue.new(2)
-
-        value = XDM::Value.create([o1, o2])
-        expect(value).to be_a(XDM::Value)
-        expect(value.size).to eq(2)
-      end
-    end
-
-    describe "wrapping Saxon S9API XDM::Values" do
       let(:node) { fixture_doc(processor, 'eg.xml') }
-      let(:atomic_value) { XDM::AtomicValue.create(1) }
+      let(:atomic_value) { XDM.AtomicValue(1) }
 
-      specify "a single XDM node returns an XDM::Node" do
-        expect(XDM::Value.wrap_s9_xdm_value(node.to_java)).to be_a(XDM::Node)
+      context "when handed a multi-item array" do
+        it "from an array of XDM Items" do
+          o1 = XDM.AtomicValue(1)
+          o2 = XDM.AtomicValue(2)
+
+          value = XDM::Value.create([o1, o2])
+
+          expect(value).to be_a(XDM::Value)
+          expect(value.size).to eq(2)
+        end
+
+        it "from an array of regular ruby objects" do
+          value = XDM::Value.create([1, 2])
+
+          expect(value).to be_a(XDM::Value)
+          expect(value.size).to eq(2)
+          expect(value.first).to eq(XDM::AtomicValue.create(1))
+        end
       end
 
-      specify "a single-item sequence returns an XDM::Value" do
-        sequence = Saxon::S9API::XdmValue.new([atomic_value.to_java])
-        expect(XDM::Value.wrap_s9_xdm_value(sequence)).to be_a(XDM::Value)
+      context "when handed a single-item array" do
+        specify "an XDM::Node returns itself" do
+          value = XDM::Value.create([node])
+          expect(value).to be_a(XDM::Node)
+        end
+
+        specify "an XDM::AtomicValue returns itself" do
+          value = XDM::Value.create([atomic_value])
+          expect(value).to be_a(XDM::AtomicValue)
+        end
+
+        specify "an XDM::Value returns a new itself" do
+          value = XDM::Value.create([atomic_value, node])
+
+          expect(XDM::Value.create([value])).to eq(value)
+        end
+
+        specify "a plain Ruby value returns an XDM::AtomicValue" do
+          value = XDM::Value.create([1])
+
+          expect(value).to eq(atomic_value)
+        end
       end
 
-      specify "a multi-item sequence returns an XDM::Value" do
-        sequence = Saxon::S9API::XdmValue.new([atomic_value, atomic_value].map(&:to_java))
-        expect(XDM::Value.wrap_s9_xdm_value(sequence)).to be_a(XDM::Value)
+      context "when handed a single item" do
+        specify "an XDM::Value returns a new itself" do
+          value = XDM::Value.create([atomic_value, node])
+
+          expect(XDM::Value.create(value)).to eq(value)
+        end
+
+        specify "a plain Ruby value returns an XDM::AtomicValue" do
+          value = XDM::Value.create(1)
+
+          expect(value).to eq(atomic_value)
+        end
       end
 
-      specify "the empty sequence returns an XDM::Value" do
-        sequence = Saxon::S9API::XdmEmptySequence.getInstance
-        expect(XDM::Value.wrap_s9_xdm_value(sequence)).to be_a(XDM::Value)
+      context "when handed multiple items" do
+        specify "returns a new XDM::Value" do
+          value = XDM::Value.create(atomic_value, node)
+
+          expect(value).to be_a(XDM::Value)
+          expect(value.size).to eq(2)
+        end
+
+        specify "if one of the items is an XDM::Value it is unwrapped correctly into the new sequence" do
+          other_value = XDM::Value.create(atomic_value, node)
+
+          value = XDM::Value.create('a', other_value, 'b')
+
+          expect(value).to be_a(XDM::Value)
+          expect(value.size).to eq(4)
+          expect(value.to_a).to eq([XDM.AtomicValue('a'), atomic_value, node, XDM.AtomicValue('b')])
+        end
+
+        specify "if one of the items is a Ruby array it is unwrapped correctly into the new sequence" do
+          value = XDM::Value.create('a', [atomic_value, node], 'b')
+
+          expect(value).to be_a(XDM::Value)
+          expect(value.size).to eq(4)
+          expect(value.to_a).to eq([XDM.AtomicValue('a'), atomic_value, node, XDM.AtomicValue('b')])
+        end
+
+        specify "if one of the items is a non-Array Ruby Enumerable it is unwrapped correctly into the new sequence" do
+          value = XDM::Value.create('a', [atomic_value, node].to_enum, Set.new([4, 5]), 'b')
+
+          expect(value).to be_a(XDM::Value)
+          expect(value.size).to eq(6)
+          expect(value.to_a).to eq([XDM.AtomicValue('a'), atomic_value, node, XDM.AtomicValue(4), XDM.AtomicValue(5), XDM.AtomicValue('b')])
+        end
+      end
+
+      specify "returns EmptySequence if given empty input" do
+        expect(XDM::Value.create([])).to be(XDM.EmptySequence())
       end
     end
 
@@ -89,6 +157,8 @@ module Saxon
           expect(subject.hash).to eq(v2.hash)
         end
       end
+
+      it_should_behave_like "an XDM Value hierarchy sequence-like"
     end
   end
 end

@@ -1,9 +1,12 @@
 require_relative '../axis_iterator'
+require_relative '../s9api'
+require_relative 'sequence_like'
 
 module Saxon
   module XDM
   # An XPath Data Model Node object, representing an XML document, or an element or one of the other node chunks in the XDM.
   class Node
+    include XDM::SequenceLike
     include Enumerable
 
     attr_reader :s9_xdm_node
@@ -61,6 +64,14 @@ module Saxon
 
     def axis_iterator(axis)
       AxisIterator.new(self, axis)
+    end
+
+    def sequence_enum
+      [self].to_enum
+    end
+
+    def sequence_size
+      1
     end
   end
 end

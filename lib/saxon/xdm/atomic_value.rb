@@ -1,3 +1,5 @@
+require_relative 'sequence_like'
+require_relative '../s9api'
 require_relative '../qname'
 require_relative '../item_type'
 
@@ -6,6 +8,8 @@ module Saxon
   # An XPath Data Model Node object, representing an XML document, or an element
   # or one of the other node chunks in the XDM.
   class AtomicValue
+    include XDM::SequenceLike
+
     # Error thrown when an attempt to create QName-holding XDM::AtomicValue is
     # made using anything other than a {Saxon::QName} or s9api.QName instance.
     #
@@ -155,6 +159,14 @@ module Saxon
 
     def hash
       @hash ||= s9_xdm_atomic_value.hashCode
+    end
+
+    def sequence_enum
+      [self].to_enum
+    end
+
+    def sequence_size
+      1
     end
   end
 end

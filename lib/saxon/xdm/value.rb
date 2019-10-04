@@ -1,41 +1,77 @@
-require_relative 'node'
-require_relative 'atomic_value'
+require_relative '../s9api'
+require_relative 'sequence_like'
 
 module Saxon
   module XDM
+    def self.Item(item)
+      case item
+      when Value, AtomicValue, Node
+        item
+      when Saxon::S9API::XdmNode
+        Node.new(item)
+      when Saxon::S9API::XdmAtomicValue
+        AtomicValue.new(item)
+      when Saxon::S9API::XdmValue
+        new(item)
+      else
+        AtomicValue.create(item)
+      end
+    end
+
   # An XPath Data Model Value object, representing a Sequence.
   class Value
+    include XDM::SequenceLike
     include Enumerable
 
-    def self.wrap_s9_xdm_value(s9_xdm_value)
-      return new(s9_xdm_value) if s9_xdm_value.instance_of?(Saxon::S9API::XdmValue)
-      case s9_xdm_value
-      when Saxon::S9API::XdmEmptySequence
-        new([])
-      else
-        wrap_s9_xdm_item(s9_xdm_value)
-      end
-    end
-
-    def self.wrap_s9_xdm_item(s9_xdm_item)
-      if s9_xdm_item.isAtomicValue
-        XDM::AtomicValue.new(s9_xdm_item)
-      else
-        case s9_xdm_item
-        when Saxon::S9API::XdmNode
-          XDM::Node.new(s9_xdm_item)
+    class << self
+      # Create a new XDM::Value sequence containing the items passed in as a Ruby enumerable.
+      #
+      # @param items [Enumerable] A list of members
+      # @return [Saxon::XDM::Value] The XDM value
+      def create(*items)
+        items = items.flatten
+        case items.size
+        when 0
+          XDM.EmptySequence()
+        when 1
+          if existing_value = is_xdm_value?(items.first)
+            return existing_value
+          end
+          XDM.Item(items.first)
         else
-          XDM::UnhandledItem.new(s9_xdm_item)
+          new(Saxon::S9API::XdmValue.new(wrap_items(items)))
         end
       end
-    end
 
-    # Create a new XDM::Value sequence containing the items passed in as a Ruby enumerable.
-    #
-    # @param items [Enumerable] A list of XDM Item members
-    # @return [Saxon::XDM::Value] The XDM value
-    def self.create(items)
-      new(Saxon::S9API::XdmValue.makeSequence(items.map(&:to_java)))
+      private
+
+      def is_xdm_value?(item)
+        return item if item.is_a?(self)
+        return new(item) if item.instance_of?(Saxon::S9API::XdmValue)
+        false
+      end
+
+      def wrap_items(items)
+        result = []
+        items.map { |item|
+          wrap_item(item, result)
+        }
+        result
+      end
+
+      def wrap_item(item, result)
+        if item.respond_to?(:sequence_enum)
+          item.sequence_enum.each do |item|
+            result << item.to_java
+          end
+        elsif item.respond_to?(:each)
+          item.each do |item|
+            result << XDM.Item(item).to_java
+          end
+        else
+          result << XDM.Item(item).to_java
+        end
+      end
     end
 
     attr_reader :s9_xdm_value
@@ -95,11 +131,19 @@ module Saxon
     # @return [Enumerator::Lazy] the enumerator
     def to_enum
       s9_xdm_value.each.lazy.map { |s9_xdm_item|
-        self.class.wrap_s9_xdm_item(s9_xdm_item)
+        XDM.Item(s9_xdm_item)
       }.each
     end
 
     alias_method :enum_for, :to_enum
+
+    def sequence_enum
+      to_enum
+    end
+
+    def sequence_size
+      s9_xdm_value.size
+    end
   end
 
   # Placeholder class for Saxon Items that we haven't gotten to yet

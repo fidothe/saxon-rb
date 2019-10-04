@@ -1,5 +1,4 @@
-require_relative '../xdm/node'
-require_relative '../xdm/atomic_value'
+require_relative '../xdm'
 
 module Saxon
   module XPath
@@ -25,7 +24,7 @@ module Saxon
         selector = to_java.load
         selector.setContextItem(context_item.to_java)
         variables.each do |qname_or_string, value|
-          selector.setVariable(static_context.resolve_variable_qname(qname_or_string).to_java, Saxon::XDM::AtomicValue.create(value).to_java)
+          selector.setVariable(static_context.resolve_variable_qname(qname_or_string).to_java, Saxon::XDM.Value(value).to_java)
         end
         Result.new(selector.iterator)
       end

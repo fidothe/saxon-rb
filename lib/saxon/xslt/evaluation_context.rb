@@ -153,17 +153,8 @@ module Saxon
     module ParameterHelper
       def self.process_parameters(parameters)
         Hash[parameters.map { |qname, value|
-          [Saxon::QName.resolve(qname), process_xdm_value(value)]
+          [Saxon::QName.resolve(qname), Saxon::XDM.Value(value)]
         }]
-      end
-
-      def self.process_xdm_value(value)
-        case value
-        when Saxon::XDM::Value, Saxon::XDM::Node, Saxon::XDM::AtomicValue
-          value
-        else
-          Saxon::XDM::AtomicValue.create(value)
-        end
       end
 
       def self.to_java(parameters)

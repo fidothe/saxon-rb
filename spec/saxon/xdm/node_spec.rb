@@ -1,7 +1,8 @@
-require 'saxon/xdm/node'
+require 'saxon/xdm'
 require 'saxon/processor'
 require 'saxon/source'
 require 'saxon/qname'
+require_relative 'sequence_like_examples'
 
 RSpec.describe Saxon::XDM::Node do
   let(:doc_builder) { Saxon::Processor.create.document_builder }
@@ -64,5 +65,7 @@ RSpec.describe Saxon::XDM::Node do
         expect(subject.node_kind).to eq(:element)
       end
     end
+
+    it_should_behave_like "an XDM Value hierarchy sequence-like"
   end
 end

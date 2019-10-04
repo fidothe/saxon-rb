@@ -1,4 +1,4 @@
-require 'saxon/xdm/node'
+require 'saxon/xdm'
 
 module Saxon
   # Builds XDM objects from XML sources, for use in XSLT or for query and
