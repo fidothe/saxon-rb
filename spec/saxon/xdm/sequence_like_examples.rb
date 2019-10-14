@@ -56,3 +56,13 @@ RSpec.shared_examples "an XDM Value hierarchy sequence-like" do
     end
   end
 end
+
+RSpec.shared_examples "an XDM Item hierarchy sequence-like" do
+  specify "sequence_enum yields only self" do
+    expect(subject.sequence_enum.to_a).to eq([subject])
+  end
+
+  specify "sequence_size is 1" do
+    expect(subject.sequence_size).to eq(1)
+  end
+end

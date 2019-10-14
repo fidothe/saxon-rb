@@ -67,5 +67,6 @@ RSpec.describe Saxon::XDM::Node do
     end
 
     it_should_behave_like "an XDM Value hierarchy sequence-like"
+    it_should_behave_like "an XDM Item hierarchy sequence-like"
   end
 end

@@ -56,7 +56,7 @@ module Saxon
       end
 
       context "when handed a single item" do
-        specify "an XDM::Value returns a new itself" do
+        specify "an XDM::Value is returned unchanged" do
           value = XDM::Value.create([atomic_value, node])
 
           expect(XDM::Value.create(value)).to eq(value)

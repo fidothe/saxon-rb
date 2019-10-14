@@ -16,5 +16,15 @@ module Saxon
       alias_method :<<, :append
       alias_method :+, :append
     end
+
+    module ItemSequenceLike
+      def sequence_enum
+        [self].to_enum
+      end
+
+      def sequence_size
+        1
+      end
+    end
   end
 end

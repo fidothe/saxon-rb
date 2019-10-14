@@ -6,6 +6,19 @@ require_relative 'sequence_like_examples'
 module Saxon
   RSpec.describe XDM::AtomicValue do
     describe "creating from Ruby objects" do
+      specify "handles being passed an existing net.sf.saxon.s9api.XdmAtomicValue correctly" do
+        s9_value = S9API::XdmAtomicValue.new(1)
+        value = described_class.create(s9_value)
+
+        expect(value.to_java).to be(s9_value)
+      end
+
+      specify "handles being passed an existing XDM::AtomicValue correctly" do
+        value = described_class.create(1)
+
+        expect(described_class.create(value)).to be(value)
+      end
+
       context "using primitives" do
         specify "a Ruby String produces an xs:string" do
           value = described_class.create('a')
@@ -164,6 +177,7 @@ module Saxon
       end
 
       it_should_behave_like "an XDM Value hierarchy sequence-like"
+      it_should_behave_like "an XDM Item hierarchy sequence-like"
     end
   end
 end

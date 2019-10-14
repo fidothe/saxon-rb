@@ -18,15 +18,15 @@ RSpec.describe Saxon::XDM::EmptySequence do
     context "all instances compare equal" do
       let(:other) { described_class.new }
 
-      specify "are #== equal to another instance representing the same node" do
+      specify "are #== equal to another instance" do
         expect(subject == other).to be(true)
       end
 
-      specify "are #eql? equal to another instance representing the same node" do
+      specify "are #eql? equal to another instance" do
         expect(subject.eql?(other)).to be(true)
       end
 
-      specify "have the same hash as another instance representing the same node" do
+      specify "have the same hash as another instance" do
         expect(subject.hash).to eq(other.hash)
       end
     end

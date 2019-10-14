@@ -26,6 +26,11 @@ module FixtureHelpers
   end
 end
 
+module SaxonEditionHelpers
+  def requires_pe(&block)
+  end
+end
+
 VCR.configure do |c|
   c.cassette_library_dir = 'spec/fixtures/cassettes'
   c.hook_into :webmock
@@ -44,4 +49,5 @@ RSpec.configure do |config|
   end
 
   config.include FixtureHelpers
+  config.extend SaxonEditionHelpers
 end

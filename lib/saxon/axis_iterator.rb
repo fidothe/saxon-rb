@@ -1,5 +1,4 @@
 require_relative 's9api'
-require_relative 'xdm'
 
 module Saxon
   # An XPath Data Model Node object, representing an XML document, or an element or one of the other node chunks in the XDM.
