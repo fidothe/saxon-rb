@@ -3,6 +3,13 @@ require 'vcr'
 require 'simplecov'
 SimpleCov.start
 
+# Handle loading alternate Saxon JARs for testing
+if ENV['ALTERNATE_SAXON_HOME']
+  puts "Alternate Saxon requested at: #{ENV['ALTERNATE_SAXON_HOME']}"
+  require 'saxon/loader'
+  Saxon::Loader.load!(ENV['ALTERNATE_SAXON_HOME'])
+end
+
 require 'saxon/source'
 
 module FixtureHelpers
