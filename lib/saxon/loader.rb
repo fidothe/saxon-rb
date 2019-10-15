@@ -38,7 +38,7 @@ module Saxon
     # @return [true, false] Returns true if Saxon had not been loaded and
     #   is now, and false if Saxon was already loaded
     def self.load!(saxon_home = nil)
-      return false if @saxon_loaded
+      return false if instance_variable_defined?(:@saxon_loaded) && @saxon_loaded
       LOAD_SEMAPHORE.synchronize do
         if Saxon::S9API.const_defined?(:Processor)
           false
@@ -56,7 +56,6 @@ module Saxon
               add_jars_to_classpath!(saxon_home, jars)
             end
           end
-          import_classes_to_namespace!
 
           @saxon_loaded = true
           true
@@ -88,15 +87,6 @@ module Saxon
     def self.add_jars_to_classpath!(saxon_home, jars)
       jars.each do |jar|
         $CLASSPATH << jar.to_s
-      end
-    end
-
-    def self.import_classes_to_namespace!
-      Saxon::S9API.class_eval do
-        include_package 'net.sf.saxon.s9api'
-        java_import 'net.sf.saxon.Configuration'
-        java_import 'net.sf.saxon.lib.FeatureKeys'
-        java_import 'net.sf.saxon.lib.ParseOptions'
       end
     end
   end
