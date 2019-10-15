@@ -115,7 +115,7 @@ module Saxon
       # Returns a lazy Enumerator over the sequence
       # @return [Enumerator::Lazy] the enumerator
       def to_enum
-        s9_xdm_value.each.lazy.map { |s9_xdm_item|
+        s9_xdm_value.to_enum.lazy.map { |s9_xdm_item|
           XDM.Item(s9_xdm_item)
         }.each
       end
