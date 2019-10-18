@@ -26,6 +26,10 @@ module Saxon
       def Array(*args)
         XDM::Array.create(*args)
       end
+
+      def Map(*args)
+        XDM::Map.create(*args)
+      end
     end
   end
 end

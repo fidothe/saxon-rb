@@ -11,6 +11,19 @@ module Saxon
       let(:node) { fixture_doc(processor, 'eg.xml') }
       let(:atomic_value) { XDM.AtomicValue(1) }
 
+      specify "handles being passed an existing net.sf.saxon.s9api.XdmValue correctly" do
+        s9_value = described_class.create([1,2]).to_java
+        value = described_class.create(s9_value)
+
+        expect(value.to_java).to be(s9_value)
+      end
+
+      specify "handles being passed an existing XDM::Value correctly" do
+        value = described_class.create([1,2])
+
+        expect(described_class.create(value)).to be(value)
+      end
+
       context "when handed a multi-item array" do
         it "from an array of XDM Items" do
           o1 = XDM.AtomicValue(1)

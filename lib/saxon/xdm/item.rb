@@ -16,8 +16,16 @@ module Saxon
         Map.new(item)
       when Saxon::S9API::XdmValue
         Value.new(item)
+      when ::Array
+        Array.create(item)
+      when ::Hash
+        Map.create(item)
       else
-        AtomicValue.create(item)
+        if item.respond_to?(:each)
+          Array.create(item)
+        else
+          AtomicValue.create(item)
+        end
       end
     end
   end

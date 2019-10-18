@@ -7,11 +7,21 @@ module Saxon
       context "from a Ruby Hash" do
         specify "a hash of simple values gets correctly created" do
           hash = {'a' => 1, 'b' => 2}
-          map = XDM::Map.create(hash)
+          map = described_class.create(hash)
 
           expect(map.to_java.asImmutableMap.to_hash).to eq({
             S9API::XdmAtomicValue.new('a') => S9API::XdmAtomicValue.new(1),
             S9API::XdmAtomicValue.new('b') => S9API::XdmAtomicValue.new(2)
+          })
+        end
+
+        specify "a hash of arrays becomes a map of XDM Values" do
+          hash = {'a' => [1, 2], 'b' => [3, 4]}
+          map = described_class.create(hash)
+
+          expect(map.to_h).to eq({
+            XDM.AtomicValue('a') => XDM::Value.create(1, 2),
+            XDM.AtomicValue('b') => XDM::Value.create(3, 4)
           })
         end
       end
