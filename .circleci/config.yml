@@ -1,10 +1,11 @@
 version: 2
 jobs:
-  test:
+  test_vendored_saxon:
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
       BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
     docker:
       - image: circleci/jruby:9.2.8.0-jdk
     steps:
@@ -21,8 +22,41 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
           destination: test-results
+  test_saxon_98:
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      ALTERNATE_SAXON_HOME: /tmp/saxon
+      JRUBY_OPTS: "--dev --debug"
+    docker:
+      - image: circleci/jruby:9.2.8.0-jdk
+    steps:
+      - checkout
+      - run:
+          name: Download Saxon 9.8
+          command: |
+            mkdir /tmp/saxon
+            cd /tmp/saxon
+            curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
+            unzip SaxonHE9-8-0-15J.zip
+            rm -f SaxonHE9-8-0-15J.zip
+      - run:
+          name: Bundle Install
+          command: bundle check || bundle install
+      - run:
+          command: |
+            mkdir /tmp/test-results
+            bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: test-results
+
 workflows:
   version: 2
   build_and_test:
     jobs:
-      - test
+      - test_vendored_saxon
+      - test_saxon_98

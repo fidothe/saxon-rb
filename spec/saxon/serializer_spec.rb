@@ -60,21 +60,21 @@ RSpec.describe Saxon::Serializer do
       context "to an IO-like" do
         let(:io) { StringIO.new }
 
-        it "writes an XdmNode" do
+        it "writes an XDM::Node" do
           subject.serialize(xdm_node, io)
 
           expect(io.string).to eq('<?xml version="1.0" encoding="UTF-8"?><doc/>')
         end
 
-        xit "writes an XdmValue" do
+        xit "writes an XDM::Value" do
         end
 
-        xit "writes an XdmItem" do
+        xit "writes an XDM::Item" do
         end
       end
 
       context "to a string" do
-        it "writes an XdmNode" do
+        it "writes an XDM::Node" do
           expect(subject.serialize(xdm_node)).to eq(
             '<?xml version="1.0" encoding="UTF-8"?><doc/>'
           )
@@ -88,15 +88,15 @@ RSpec.describe Saxon::Serializer do
           expect(result).to eq('<?xml version="1.0" encoding="UTF-16"?><doc/>'.encode(Encoding::UTF_16))
         end
 
-        xit "writes an XdmValue" do
+        xit "writes an XDM::Value" do
         end
 
-        xit "writes an XdmItem" do
+        xit "writes an XDM::Item" do
         end
       end
 
       context "to a file path" do
-        it "writes an XdmNode" do
+        it "writes an XDM::Node" do
           Dir.mktmpdir do |dir|
             path = File.join(dir, 'f.xml')
 
@@ -106,10 +106,10 @@ RSpec.describe Saxon::Serializer do
           end
         end
 
-        xit "writes an XdmValue" do
+        xit "writes an XDM::Value" do
         end
 
-        xit "writes an XdmItem" do
+        xit "writes an XDM::Item" do
         end
       end
     end

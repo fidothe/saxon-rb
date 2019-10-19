@@ -14,8 +14,8 @@ RSpec.describe Saxon::AxisIterator do
   describe "instances" do
     subject { Saxon::AxisIterator.new(xdm_node, :child) }
 
-    specify "yield Saxon::XdmNodes" do
-      expect(subject.each.first).to be_a(Saxon::XdmNode)
+    specify "yield Saxon::XDM::Nodes" do
+      expect(subject.each.first).to be_a(Saxon::XDM::Node)
     end
 
     specify "can return an Array" do

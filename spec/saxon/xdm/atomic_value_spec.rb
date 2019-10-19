@@ -1,10 +1,24 @@
-require 'saxon/xdm_atomic_value'
+require 'saxon/xdm'
 require 'saxon/qname'
 require 'saxon/item_type'
+require_relative 'sequence_like_examples'
 
 module Saxon
-  RSpec.describe XdmAtomicValue do
+  RSpec.describe XDM::AtomicValue do
     describe "creating from Ruby objects" do
+      specify "handles being passed an existing net.sf.saxon.s9api.XdmAtomicValue correctly" do
+        s9_value = S9API::XdmAtomicValue.new(1)
+        value = described_class.create(s9_value)
+
+        expect(value.to_java).to be(s9_value)
+      end
+
+      specify "handles being passed an existing XDM::AtomicValue correctly" do
+        value = described_class.create(1)
+
+        expect(described_class.create(value)).to be(value)
+      end
+
       context "using primitives" do
         specify "a Ruby String produces an xs:string" do
           value = described_class.create('a')
@@ -90,7 +104,7 @@ module Saxon
           specify "explicit lexical form creation is prevented in the class" do
             expect {
               described_class.from_lexical_string('name', 'xs:QName')
-            }.to raise_error(XdmAtomicValue::CannotCreateQNameFromString)
+            }.to raise_error(XDM::AtomicValue::CannotCreateQNameFromString)
           end
         end
 
@@ -101,13 +115,13 @@ module Saxon
           specify "cannot be created by passing a Saxon::QName and explicit type" do
             expect {
               described_class.create(qname, 'xs:NOTATION')
-            }.to raise_error(XdmAtomicValue::NotationCannotBeDirectlyCreated)
+            }.to raise_error(XDM::AtomicValue::NotationCannotBeDirectlyCreated)
           end
 
           specify "does not allow creation via string/explicit type name" do
             expect {
               described_class.create('name', 'xs:NOTATION')
-            }.to raise_error(XdmAtomicValue::NotationCannotBeDirectlyCreated)
+            }.to raise_error(XDM::AtomicValue::NotationCannotBeDirectlyCreated)
           end
         end
       end
@@ -161,6 +175,9 @@ module Saxon
           expect(value.to_s).to eq('1')
         end
       end
+
+      it_should_behave_like "an XDM Value hierarchy sequence-like"
+      it_should_behave_like "an XDM Item hierarchy sequence-like"
     end
   end
 end

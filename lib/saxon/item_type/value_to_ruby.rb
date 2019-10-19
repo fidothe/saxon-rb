@@ -2,7 +2,7 @@ require 'bigdecimal'
 
 module Saxon
   class ItemType
-    # A collection of lamba-like objects for converting XdmAtomicValues into
+    # A collection of lamba-like objects for converting XDM::AtomicValues into
     # appropriate Ruby values
     module ValueToRuby
       module Patterns

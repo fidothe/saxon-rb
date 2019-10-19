@@ -269,8 +269,8 @@ module Saxon
 
     # Convert an XDM Atomic Value to an instance of an appropriate Ruby class, or return the lexical string.
     #
-    # It's assumed that the XdmAtomicValue is of this type, otherwise an error is raised.
-    # @param xdm_atomic_value [Saxon::XdmAtomicValue] The XDM atomic value to be converted.
+    # It's assumed that the XDM::AtomicValue is of this type, otherwise an error is raised.
+    # @param xdm_atomic_value [Saxon::XDM::AtomicValue] The XDM atomic value to be converted.
     def ruby_value(xdm_atomic_value)
       value_to_ruby_convertor.call(xdm_atomic_value)
     end

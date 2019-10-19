@@ -38,7 +38,7 @@ module Saxon::XSLT
           specify "returns a result which provides the output, and gives access to the XDM document node" do
             result = subject.apply_templates(xml_source)
 
-            expect(result.xdm_value).to be_a(Saxon::XdmNode)
+            expect(result.xdm_value).to be_a(Saxon::XDM::Node)
             expect(result.xdm_value.node_kind).to be(:document)
           end
 
@@ -71,7 +71,7 @@ module Saxon::XSLT
           specify "returns a result which provides the raw XDM value" do
             result = subject.apply_templates(xml_source, raw: true)
 
-            expect(result.xdm_value).to be_a(Saxon::XdmNode)
+            expect(result.xdm_value).to be_a(Saxon::XDM::Node)
             expect(result.xdm_value.node_kind).to be(:element)
           end
         end
@@ -85,7 +85,7 @@ module Saxon::XSLT
           specify "returns a result which provides the output, and gives access to the XDM document node" do
             result = subject.call_template(template)
 
-            expect(result.xdm_value).to be_a(Saxon::XdmNode)
+            expect(result.xdm_value).to be_a(Saxon::XDM::Node)
             expect(result.xdm_value.node_kind).to be(:document)
           end
 
@@ -110,7 +110,7 @@ module Saxon::XSLT
           specify "returns a result which provides the raw XDM value" do
             result = subject.call_template(template, raw: true)
 
-            expect(result.xdm_value).to be_a(Saxon::XdmNode)
+            expect(result.xdm_value).to be_a(Saxon::XDM::Node)
             expect(result.xdm_value.node_kind).to be(:element)
           end
         end

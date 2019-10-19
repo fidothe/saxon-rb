@@ -11,7 +11,7 @@ module Saxon
         # @param args [Hash]
         # @option args [String] default_collation URI of the default collation
         # @option args [Hash<String,Symbol,Saxon::QName =>
-        #   Object,Saxon::XdmValue] static_parameters Hash of QName => value
+        #   Object,Saxon::XDM::Value] static_parameters Hash of QName => value
         #   bindings for static (compile-time) parameters for this compiler
         def initialize(args = {})
           @default_collation = args.fetch(:default_collation, nil).freeze
@@ -76,13 +76,13 @@ module Saxon
         # compile-time to avoid an error), as a hash of QName => Value pairs.
         # Parameter QNames can be declared as Strings or Symbols if they are
         # not in any namespace, otherwise an explicit {Saxon::QName} must be
-        # used. Values can be provided as explicit XdmValues:
-        # {Saxon::XdmValue}, {Saxon::XdmNode}, and {Saxon::XdmAtomicValue}, or
-        # as Ruby objects which will be converted to {Saxon::XdmAtomicValue}s
+        # used. Values can be provided as explicit XDM::Values:
+        # {Saxon::XDM::Value}, {Saxon::XDM::Node}, and {Saxon::XDM::AtomicValue}, or
+        # as Ruby objects which will be converted to {Saxon::XDM::AtomicValue}s
         # in the usual way.
         #
         # @param parameters [Hash<String,Symbol,Saxon::QName =>
-        #   Object,Saxon::XdmValue>] Hash of QName => value
+        #   Object,Saxon::XDM::Value>] Hash of QName => value
         def static_parameters(parameters = {})
           @static_parameters = @static_parameters.merge(process_parameters(parameters)).freeze
         end
@@ -92,7 +92,7 @@ module Saxon
         # @see EvaluationContext#static_parameters for details of the argument format
         #
         # @param parameters [Hash<String,Symbol,Saxon::QName =>
-        #   Object,Saxon::XdmValue>] Hash of QName => value
+        #   Object,Saxon::XDM::Value>] Hash of QName => value
         def global_parameters(parameters = {})
           @global_parameters = @global_parameters.merge(process_parameters(parameters)).freeze
         end
@@ -104,7 +104,7 @@ module Saxon
         # @see EvaluationContext#static_parameters for details of the argument format
         #
         # @param parameters [Hash<String,Symbol,Saxon::QName =>
-        #   Object,Saxon::XdmValue>] Hash of QName => value
+        #   Object,Saxon::XDM::Value>] Hash of QName => value
         def initial_template_parameters(parameters = {})
           @initial_template_parameters = @initial_template_parameters.merge(process_parameters(parameters))
         end
@@ -116,7 +116,7 @@ module Saxon
         # @see EvaluationContext#static_parameters for details of the argument format
         #
         # @param parameters [Hash<String,Symbol,Saxon::QName =>
-        #   Object,Saxon::XdmValue>] Hash of QName => value
+        #   Object,Saxon::XDM::Value>] Hash of QName => value
         def initial_template_tunnel_parameters(parameters = {})
           @initial_template_tunnel_parameters = @initial_template_tunnel_parameters.merge(process_parameters(parameters))
         end
@@ -153,17 +153,8 @@ module Saxon
     module ParameterHelper
       def self.process_parameters(parameters)
         Hash[parameters.map { |qname, value|
-          [Saxon::QName.resolve(qname), process_xdm_value(value)]
+          [Saxon::QName.resolve(qname), Saxon::XDM.Value(value)]
         }]
-      end
-
-      def self.process_xdm_value(value)
-        case value
-        when Saxon::XdmValue, Saxon::XdmNode, Saxon::XdmAtomicValue
-          value
-        else
-          Saxon::XdmAtomicValue.create(value)
-        end
       end
 
       def self.to_java(parameters)

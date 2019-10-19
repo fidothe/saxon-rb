@@ -336,7 +336,7 @@ module Saxon
         ].each do |type_name, lexical_string, expected|
           specify "generate an appropriate Ruby value of class #{expected.class.name} from the XDM type #{type_name}" do
             item_type = described_class.get_type(type_name)
-            value = Saxon::XdmAtomicValue.from_lexical_string(lexical_string, item_type)
+            value = Saxon::XDM::AtomicValue.from_lexical_string(lexical_string, item_type)
             ruby_value = item_type.ruby_value(value)
 
             expect(ruby_value).to eq(expected)
@@ -347,7 +347,7 @@ module Saxon
         specify "return a Saxon::QName for an XDM Atomic Value containing a QName" do
           item_type = described_class.get_type('xs:QName')
           qname = Saxon::QName.clark('{http://example.org/#ns}el')
-          value = Saxon::XdmAtomicValue.create(qname)
+          value = Saxon::XDM::AtomicValue.create(qname)
 
           expect(item_type.ruby_value(value)).to eq(qname)
         end
@@ -355,7 +355,7 @@ module Saxon
         context "encoded binary datatypes return an ASCII-8bit encoded string" do
           specify "from an xs:base64Binary" do
             item_type = described_class.get_type('xs:base64Binary')
-            value = Saxon::XdmAtomicValue.from_lexical_string('ZGVjb2RlZCBieXRlcw==', item_type)
+            value = Saxon::XDM::AtomicValue.from_lexical_string('ZGVjb2RlZCBieXRlcw==', item_type)
             ruby_value = item_type.ruby_value(value)
 
             expect(ruby_value).to eq('decoded bytes')
@@ -364,7 +364,7 @@ module Saxon
 
           specify "from an xs:hexBinary" do
             item_type = described_class.get_type('xs:hexBinary')
-            value = Saxon::XdmAtomicValue.from_lexical_string('6465636f646564206279746573', item_type)
+            value = Saxon::XDM::AtomicValue.from_lexical_string('6465636f646564206279746573', item_type)
             ruby_value = item_type.ruby_value(value)
 
             expect(ruby_value).to eq('decoded bytes')
@@ -373,7 +373,7 @@ module Saxon
 
           specify "from an xs:byte" do
             item_type = described_class.get_type('xs:byte')
-            value = Saxon::XdmAtomicValue.from_lexical_string('-110', item_type)
+            value = Saxon::XDM::AtomicValue.from_lexical_string('-110', item_type)
             ruby_value = item_type.ruby_value(value)
 
             expect(ruby_value).to eq("\x92".force_encoding(Encoding::ASCII_8BIT))
@@ -382,7 +382,7 @@ module Saxon
 
           specify "from an xs:unsignedByte" do
             item_type = described_class.get_type('xs:unsignedByte')
-            value = Saxon::XdmAtomicValue.from_lexical_string('180', item_type)
+            value = Saxon::XDM::AtomicValue.from_lexical_string('180', item_type)
             ruby_value = item_type.ruby_value(value)
 
             expect(ruby_value).to eq("\xb4".force_encoding(Encoding::ASCII_8BIT))

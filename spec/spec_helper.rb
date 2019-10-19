@@ -3,6 +3,13 @@ require 'vcr'
 require 'simplecov'
 SimpleCov.start
 
+# Handle loading alternate Saxon JARs for testing
+if ENV['ALTERNATE_SAXON_HOME']
+  puts "Alternate Saxon requested at: #{ENV['ALTERNATE_SAXON_HOME']}"
+  require 'saxon/loader'
+  Saxon::Loader.load!(ENV['ALTERNATE_SAXON_HOME'])
+end
+
 require 'saxon/source'
 
 module FixtureHelpers
@@ -26,6 +33,11 @@ module FixtureHelpers
   end
 end
 
+module SaxonEditionHelpers
+  def requires_pe(&block)
+  end
+end
+
 VCR.configure do |c|
   c.cassette_library_dir = 'spec/fixtures/cassettes'
   c.hook_into :webmock
@@ -44,4 +56,5 @@ RSpec.configure do |config|
   end
 
   config.include FixtureHelpers
+  config.extend SaxonEditionHelpers
 end
