@@ -54,6 +54,12 @@ module Saxon
           expect(subject.hash).to eq(a2.hash)
         end
       end
+
+      context "immutability" do
+        specify "the Ruby array we use to hold the wrapped array cannot be altered" do
+          expect { subject.to_a.append(1) }.to raise_error(FrozenError)
+        end
+      end
     end
   end
 end

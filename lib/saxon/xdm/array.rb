@@ -53,6 +53,10 @@ module Saxon
         cached_array == other.to_a
       end
 
+      def to_a
+        cached_array
+      end
+
       alias_method :eql?, :==
 
       def hash

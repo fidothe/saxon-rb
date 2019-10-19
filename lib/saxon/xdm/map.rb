@@ -22,6 +22,9 @@ module Saxon
       include ItemSequenceLike
       include Enumerable
 
+      attr_reader :s9_xdm_map
+      private :s9_xdm_map
+
       # @api private
       def initialize(s9_xdm_map)
         @s9_xdm_map = s9_xdm_map
@@ -33,11 +36,15 @@ module Saxon
       end
 
       def [](key)
-        XDM.Value(@s9_xdm_map.get(XDM.AtomicValue(key).to_java))
+        cached_hash[XDM.AtomicValue(key)]
+      end
+
+      def fetch(key, *args, &block)
+        cached_hash.fetch(XDM.AtomicValue(key), *args, &block)
       end
 
       def each(&block)
-        @s9_xdm_map.entrySet.map { |entry| [XDM.AtomicValue(entry.getKey), XDM.Value(entry.getValue)] }.each(&block)
+        cached_hash.each(&block)
       end
 
       def select(&block)
@@ -54,6 +61,16 @@ module Saxon
 
       def to_java
         @s9_xdm_map
+      end
+
+      def to_h
+        cached_hash
+      end
+
+      private
+
+      def cached_hash
+        @cached_hash ||= s9_xdm_map.entrySet.map { |entry| [XDM.AtomicValue(entry.getKey), XDM.Value(entry.getValue)] }.to_h.freeze
       end
     end
   end

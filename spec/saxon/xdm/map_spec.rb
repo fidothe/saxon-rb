@@ -48,6 +48,24 @@ module Saxon
         end
       end
 
+      context "accessing members using #fetch" do
+        specify "works as #[] does" do
+          expect(subject.fetch('a')).to eq(XDM.AtomicValue(1))
+        end
+
+        specify "raises KeyError when a non-existent key is fetched without a default value specified" do
+          expect { subject.fetch('b') }.to raise_error(KeyError)
+        end
+
+        specify "returns the default value specified if key is not found" do
+          expect(subject.fetch('b', 2)).to eq(2)
+        end
+
+        specify "returns the block result if block arg given and key not found. Key is handed to block converted to XDM::AtomicValue" do
+          expect(subject.fetch('b') { |key| key }).to eq(XDM.AtomicValue('b'))
+        end
+      end
+
       context "comparison" do
         specify "two maps compare equal if they have the same keys and values" do
           map_1 = XDM::Map.create('a' => 1, 'b' => 2)
@@ -94,6 +112,12 @@ module Saxon
 
         specify "#reject returns a new Map" do
           expect(subject.reject { |k, v| k == XDM.AtomicValue('a') }).to eq(XDM::Map.create({'b' => 2}))
+        end
+      end
+
+      context "immutability" do
+        specify "the Ruby hash we use to hold the wrapped Map cannot be altered" do
+          expect { subject.to_h['a'] = 'b' }.to raise_error(FrozenError)
         end
       end
 
