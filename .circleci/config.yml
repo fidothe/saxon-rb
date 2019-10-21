@@ -1,62 +1,97 @@
-version: 2
+version: 2.1
+executors:
+  jruby-stable:
+    docker:
+      - image: circleci/jruby:9.2.8.0-jdk
+
 jobs:
-  test_vendored_saxon:
+  build_and_test:
+    executor: jruby-stable
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
       BUNDLE_PATH: vendor/bundle
       JRUBY_OPTS: "--dev --debug"
-    docker:
-      - image: circleci/jruby:9.2.8.0-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
           name: Bundle Install
           command: bundle check || bundle install
+      - run: &install_codeclimate
+          name: Install Code Climate Test Reporter
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
+
       - run:
           command: |
-            mkdir /tmp/test-results
+            mkdir -p /tmp/test-results
             bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+      - run:
+          name: Code Climate Test Coverage
+          command: |
+            ./cc-test-reporter format-coverage -t simplecov -o "coverage/codeclimate.json"
+      - persist_to_workspace:
+          root: ./coverage
+          paths:
+            - codeclimate.json
       - store_test_results:
           path: /tmp/test-results
       - store_artifacts:
           path: /tmp/test-results
           destination: test-results
-  test_saxon_98:
-    environment:
-      BUNDLE_JOBS: 3
-      BUNDLE_RETRY: 3
-      BUNDLE_PATH: vendor/bundle
-      ALTERNATE_SAXON_HOME: /tmp/saxon
-      JRUBY_OPTS: "--dev --debug"
-    docker:
-      - image: circleci/jruby:9.2.8.0-jdk
+  install_saxon_98:
+    executor: jruby-stable
     steps:
-      - checkout
       - run:
           name: Download Saxon 9.8
           command: |
-            mkdir /tmp/saxon
-            cd /tmp/saxon
+            mkdir -p /tmp/workspace/saxon
+            cd /tmp/workspace/saxon
             curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
             unzip SaxonHE9-8-0-15J.zip
             rm -f SaxonHE9-8-0-15J.zip
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - saxon
+  notify_codeclimate_before_build:
+    executor: jruby-stable
+    steps:
       - run:
-          name: Bundle Install
-          command: bundle check || bundle install
+          <<: *install_codeclimate
       - run:
+          name: Notify Code Climate of impending report
           command: |
-            mkdir /tmp/test-results
-            bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
-      - store_test_results:
-          path: /tmp/test-results
-      - store_artifacts:
-          path: /tmp/test-results
-          destination: test-results
+            ./cc-test-reporter before-build
+  upload_codeclimate_coverage:
+    executor: jruby-stable
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          <<: *install_codeclimate
+      - run:
+          name: Upload code coverage to Code Climate
+          command: |
+            ./cc-test-reporter upload-coverage -i "/tmp/workspace/codeclimate.json"
 
 workflows:
   version: 2
-  build_and_test:
+  vendored_saxon:
     jobs:
-      - test_vendored_saxon
-      - test_saxon_98
+      - notify_codeclimate_before_build
+      - build_and_test:
+          requires:
+            - notify_codeclimate_before_build
+      - upload_codeclimate_coverage:
+          requires:
+            - build_and_test
+  alternate_saxon_he:
+    jobs:
+      - install_saxon_98
+      - build_and_test:
+          requires:
+            - install_saxon_98
