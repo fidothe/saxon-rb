@@ -84,18 +84,19 @@ module Saxon
         end
 
         def call(value, item_type)
+          return numeric(value) if Numeric === value
+          LexicalStringConversion.validate(value, item_type, pattern)
+        end
+
+        def numeric(value)
+          sign = value.negative? ? '-' : ''
           case value
           when Integer
-            sign = value.negative? ? '-' : ''
             "#{sign}PT#{value.abs}S"
           when BigDecimal
-            sign = value.negative? ? '-' : ''
             "#{sign}PT#{value.abs.to_s('F')}S"
-          when Numeric
-            sign = value.negative? ? '-' : ''
-            sprintf("%sPT%0.9fS", sign, value.abs)
           else
-            LexicalStringConversion.validate(value, item_type, pattern)
+            sprintf("%sPT%0.9fS", sign, value.abs)
           end
         end
       end
