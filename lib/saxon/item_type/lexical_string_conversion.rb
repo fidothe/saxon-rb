@@ -76,6 +76,30 @@ module Saxon
         end
       end
 
+      class DurationConversion
+        attr_reader :pattern
+
+        def initialize(pattern)
+          @pattern = pattern
+        end
+
+        def call(value, item_type)
+          case value
+          when Integer
+            sign = value.negative? ? '-' : ''
+            "#{sign}PT#{value.abs}S"
+          when BigDecimal
+            sign = value.negative? ? '-' : ''
+            "#{sign}PT#{value.abs.to_s('F')}S"
+          when Numeric
+            sign = value.negative? ? '-' : ''
+            sprintf("%sPT%0.9fS", sign, value.abs)
+          else
+            LexicalStringConversion.validate(value, item_type, pattern)
+          end
+        end
+      end
+
       class GDateConversion
         attr_reader :bounds, :integer_formatter, :validation_pattern
 
@@ -108,6 +132,20 @@ module Saxon
             extract_and_check_value_bounds!(formatted_value, item_type)
             formatted_value
           end
+        end
+      end
+
+      class ByteConversion
+        attr_reader :unpack_format
+
+        def initialize(kind = :signed)
+          @unpack_format = kind == :unsigned ? 'C' : 'c'
+        end
+
+        def call(value, item_type)
+          raise Errors::RubyValueOutOfBounds.new(value, item_type) if value.bytesize != 1
+          value = value.to_s.force_encoding(Encoding::ASCII_8BIT)
+          value.unpack(unpack_format).first.to_s
         end
       end
 
@@ -179,11 +217,7 @@ module Saxon
         BOOLEAN = ->(value, item_type) {
           value ? 'true' : 'false'
         }
-        BYTE = ->(value, item_type) {
-          raise Errors::RubyValueOutOfBounds.new(value, item_type) if value.bytesize != 1
-          value = value.to_s.force_encoding(Encoding::ASCII_8BIT)
-          value.unpack('c').first.to_s
-        }
+        BYTE = ByteConversion.new
         DATE = ->(value, item_type) {
           if value.respond_to?(:strftime)
             value.strftime('%F')
@@ -202,21 +236,7 @@ module Saxon
           LexicalStringConversion.validate(value, item_type, Patterns::TIME)
         }
         DATE_TIME_STAMP = DATE_TIME
-        DAY_TIME_DURATION = ->(value, item_type) {
-          case value
-          when Integer
-            sign = value.negative? ? '-' : ''
-            "#{sign}PT#{value.abs}S"
-          when BigDecimal
-            sign = value.negative? ? '-' : ''
-            "#{sign}PT#{value.abs.to_s('F')}S"
-          when Numeric
-            sign = value.negative? ? '-' : ''
-            sprintf("%sPT%0.9fS", sign, value.abs)
-          else
-            LexicalStringConversion.validate(value, item_type, Patterns::DAY_TIME_DURATION)
-          end
-        }
+        DAY_TIME_DURATION = DurationConversion.new(Patterns::DAY_TIME_DURATION)
         DECIMAL = ->(value, item_type) {
           case value
           when ::Integer
@@ -230,21 +250,7 @@ module Saxon
           end
         }
         DOUBLE = FloatConversion.new(:single)
-        DURATION = ->(value, item_type) {
-          case value
-          when Integer
-            sign = value.negative? ? '-' : ''
-            "#{sign}PT#{value.abs}S"
-          when BigDecimal
-            sign = value.negative? ? '-' : ''
-            "#{sign}PT#{value.abs.to_s('F')}S"
-          when Numeric
-            sign = value.negative? ? '-' : ''
-            sprintf("%sPT%0.9fS", sign, value.abs)
-          else
-            LexicalStringConversion.validate(value, item_type, Patterns::DURATION)
-          end
-        }
+        DURATION = DurationConversion.new(Patterns::DURATION)
         FLOAT = FloatConversion.new
         G_DAY = GDateConversion.new({
           bounds: 1..31,
@@ -325,11 +331,7 @@ module Saxon
         TOKEN = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::TOKEN)
         }
-        UNSIGNED_BYTE = ->(value, item_type) {
-          raise Errors::RubyValueOutOfBounds.new(value, item_type) if value.bytesize != 1
-          value = value.to_s.force_encoding(Encoding::ASCII_8BIT)
-          value.unpack('C').first.to_s
-        }
+        UNSIGNED_BYTE = ByteConversion.new(:unsigned)
         UNSIGNED_INT = IntegerConversion.new(0, 4294967295)
         UNSIGNED_LONG = IntegerConversion.new(0, 18446744073709551615)
         UNSIGNED_SHORT = IntegerConversion.new(0, 65535)
