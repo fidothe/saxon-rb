@@ -46,11 +46,28 @@ task :circleci do
       ["9.2.8.0", "8-jdk-slim", nil]
     end
 
+    def all_job_variants
+      jruby_image_tags.product(jdk_image_tags.keys, alt_saxon_urls.keys << nil)
+    end
+
+    def job_name(jruby_image_tag, jdk_image_tag, alt_saxon_url)
+      [
+        "JRuby #{jruby_image_tag}, #{jdk_image_tags[jdk_image_tag]}",
+        alt_saxon_urls[alt_saxon_url]
+      ].compact.join(' ')
+    end
+
+    def all_job_names
+      all_job_variants.map { |jruby_image_tag, jdk_image_tag, alt_saxon_url|
+        job_name(jruby_image_tag, jdk_image_tag, alt_saxon_url)
+      }
+    end
+
     def jobs
-      jruby_image_tags.product(jdk_image_tags.keys, alt_saxon_urls.keys << nil).map { |jruby_image_tag, jdk_image_tag, alt_saxon_url|
+      all_job_variants.map { |jruby_image_tag, jdk_image_tag, alt_saxon_url|
         run_codeclimate = codeclimate_job == [jruby_image_tag, jdk_image_tag, alt_saxon_url]
         [
-          "JRuby #{jruby_image_tag}, #{jdk_image_tags[jdk_image_tag]}",
+          job_name(jruby_image_tag, jdk_image_tag, alt_saxon_url),
           job_config({
             run_codeclimate: run_codeclimate, alt_saxon_url: alt_saxon_url,
             docker_image: docker_image(jruby_image_tag, jdk_image_tag)
@@ -154,7 +171,13 @@ task :circleci do
     def config
       {
         "version" => 2,
-        "jobs" => jobs
+        "jobs" => jobs,
+        "workflows" => {
+          "version" => 2,
+          "build_and_test" => {
+            "jobs" => all_job_names
+          }
+        }
       }
     end
   end
