@@ -15,8 +15,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -77,8 +77,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -132,8 +132,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -187,8 +187,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -242,8 +242,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -297,8 +297,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -352,8 +352,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -407,8 +407,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
@@ -462,8 +462,8 @@ jobs:
     - run:
         name: Download SaxonHE9-8-0-15J.zip
         command: |-
-          mkdir -p /tmp/workspace/saxon
-          cd /tmp/workspace/saxon
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip

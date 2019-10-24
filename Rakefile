@@ -129,8 +129,8 @@ task :circleci do
         "run" => {
           "name" => "Download #{saxon_file}",
           "command" => [
-            "mkdir -p /tmp/workspace/saxon",
-            "cd /tmp/workspace/saxon",
+            "mkdir -p /tmp/saxon",
+            "cd /tmp/saxon",
             "curl -L -O #{opts[:alt_saxon_url]}",
             "unzip #{saxon_file}",
             "rm -f #{saxon_file}"
