@@ -134,7 +134,7 @@ task :circleci do
             "curl -L -O #{opts[:alt_saxon_url]}",
             "unzip #{saxon_file}",
             "rm -f #{saxon_file}"
-          ]
+          ].join("\n")
         }
       }
     end
