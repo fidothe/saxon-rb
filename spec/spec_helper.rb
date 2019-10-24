@@ -58,3 +58,25 @@ RSpec.configure do |config|
   config.include FixtureHelpers
   config.extend SaxonEditionHelpers
 end
+
+# We need to cope with JRuby 9.1 (2.3) / 9.2 (>= 2.4) and therefore Ruby 2.4's Fixnum/Bignum unification
+RSpec::Matchers.define :match_ruby_value_and_class do |expected|
+  if 1.class == Integer # 2.4+
+    match do |actual|
+      actual == expected && actual.class == expected.class
+    end
+  else # 2.3
+    match do |actual|
+      case expected
+      when Fixnum, Bignum
+        actual == expected && [Fixnum, Bignum].member?(actual.class)
+      else
+        actual == expected && actual.class == expected.class
+      end
+    end
+  end
+
+  failure_message do |actual|
+    "expected that #{actual.inspect} (#{actual.class}) would ==, and have the same class as, #{expected.inspect} (#{expected.class})"
+  end
+end

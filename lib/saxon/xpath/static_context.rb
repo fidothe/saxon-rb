@@ -70,7 +70,7 @@ module Saxon
         #
         # @param namespaces [Hash{String, Symbol => String}]
         def namespace(namespaces = {})
-          @declared_namespaces = @declared_namespaces.merge(namespaces.transform_keys(&:to_s)).freeze
+          @declared_namespaces = @declared_namespaces.merge(namespaces.map { |k, v| [k.to_s, v] }.to_h).freeze
         end
 
         # Declare a XPath variable's existence in the context

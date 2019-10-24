@@ -47,8 +47,9 @@ module Saxon
       end
 
       context "existing XDM::* objects get passed through" do
-        [XDM.AtomicValue(1), XDM.Array([1,2])].each do |xdm_item|
-          specify "#{xdm_item.class.name} should be passed through unchanged" do
+        [->() { XDM.AtomicValue(1) }, ->() { XDM.Array([1,2]) } ].each do |xdm_item_proc|
+          specify "XDM Item classes should be passed through unchanged" do
+            xdm_item = xdm_item_proc.call()
             expect(XDM.Item(xdm_item)).to be(xdm_item)
           end
         end

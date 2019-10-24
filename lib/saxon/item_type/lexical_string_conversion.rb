@@ -7,7 +7,7 @@ module Saxon
     module LexicalStringConversion
       def self.validate(value, item_type, pattern)
         str = value.to_s
-        raise Errors::BadRubyValue.new(value, item_type) unless str.match?(pattern)
+        raise Errors::BadRubyValue.new(value, item_type) if str.match(pattern).nil?
         str
       end
 

@@ -130,7 +130,7 @@ module Saxon
           ['xs:float', 0, '0'],
           ['xs:float', 1, '1'],
           ['xs:float', '1', '1'],
-          ['xs:float', BigDecimal('1'), '0.1e1'],
+          ['xs:float', BigDecimal('1'), /^0.1E1$/i], # JRuby 9.1 generates 0.1E1, 9.2 0.1e1
           ['xs:float', '1.0E15', '1.0E15'],
           ['xs:float', 'NaN', 'NaN'],
           ['xs:float', ::Float::NAN, 'NaN'],
@@ -210,7 +210,11 @@ module Saxon
           ['xs:unsignedByte', "\xb4", '180'],
         ].each do |type_name, ruby_value, expected_string|
           specify "generate an appropriate string for #{type_name} from <#{ruby_value.inspect}> (#{ruby_value.class.name})" do
-            expect(described_class.get_type(type_name).lexical_string(ruby_value)).to eq(expected_string)
+            if expected_string.is_a?(Regexp)
+              expect(described_class.get_type(type_name).lexical_string(ruby_value)).to match(expected_string)
+            else
+              expect(described_class.get_type(type_name).lexical_string(ruby_value)).to eq(expected_string)
+            end
           end
         end
 
@@ -339,8 +343,7 @@ module Saxon
             value = Saxon::XDM::AtomicValue.from_lexical_string(lexical_string, item_type)
             ruby_value = item_type.ruby_value(value)
 
-            expect(ruby_value).to eq(expected)
-            expect(ruby_value.class).to be(expected.class)
+            expect(ruby_value).to match_ruby_value_and_class(expected)
           end
         end
 

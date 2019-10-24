@@ -61,6 +61,8 @@ module Saxon
       'Time' => :DATE_TIME,
       'BigDecimal' => :DECIMAL,
       'Integer' => :INTEGER,
+      'Fixnum' => :INTEGER, # Fixnum/Bignum needed for JRuby 9.1/Ruby 2.3
+      'Bignum' => :INTEGER,
       'Float' => :FLOAT,
       'Numeric' => :NUMERIC
     }.freeze

@@ -135,7 +135,7 @@ EOS
       }
 
       specify "the declared_variables hash is frozen" do
-        expect { subject.declared_variables['a'] = :a }.to raise_error(FrozenError)
+        expect { subject.declared_variables['a'] = :a }.to raise_error.with_message(/can't modify frozen/)
       end
 
       specify "the default collation cannot be changed" do

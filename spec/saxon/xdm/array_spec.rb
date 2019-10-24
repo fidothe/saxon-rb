@@ -57,7 +57,7 @@ module Saxon
 
       context "immutability" do
         specify "the Ruby array we use to hold the wrapped array cannot be altered" do
-          expect { subject.to_a.append(1) }.to raise_error(FrozenError)
+          expect { subject.to_a << 1 }.to raise_error.with_message(/can't modify frozen/)
         end
       end
     end

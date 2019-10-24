@@ -158,15 +158,13 @@ module Saxon
         specify "XDM types with a sensible Ruby equivalent return their value as an instance of that class" do
           value = described_class.create('1', 'xs:integer')
 
-          expect(value.to_ruby).to eq(1)
-          expect(value.to_ruby.class).to be(::Integer)
+          expect(value.to_ruby).to match_ruby_value_and_class(1)
         end
 
         specify "XDM types with no sensible Ruby equivalent return their lexical string representation" do
           value = described_class.create('PT1H', 'xs:duration')
 
-          expect(value.to_ruby).to eq('PT1H')
-          expect(value.to_ruby.class).to be(::String)
+          expect(value.to_ruby).to match_ruby_value_and_class('PT1H')
         end
 
         specify "the original XML string value can still be obtained if needed" do

@@ -117,7 +117,7 @@ module Saxon
 
       context "immutability" do
         specify "the Ruby hash we use to hold the wrapped Map cannot be altered" do
-          expect { subject.to_h['a'] = 'b' }.to raise_error(FrozenError)
+          expect { subject.to_h['a'] = 'b' }.to raise_error.with_message(/can't modify frozen/)
         end
       end
 
