@@ -1,9 +1,9 @@
 ---
 version: 2
 jobs:
-  JRuby 9.2.8.0, JDK 8 Saxon HE 9.8:
+  JRuby 9.2.9.0, JDK 8 Saxon HE 9.8:
     docker:
-    - image: fidothe/circleci:jruby-9.2.8.0-8-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.9.0-8-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -33,9 +33,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.8.0, JDK 8:
+  JRuby 9.2.9.0, JDK 8:
     docker:
-    - image: fidothe/circleci:jruby-9.2.8.0-8-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.9.0-8-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -63,9 +63,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.8.0, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.9.0, JDK 11 Saxon HE 9.8:
     docker:
-    - image: fidothe/circleci:jruby-9.2.8.0-11-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.9.0-11-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -95,9 +95,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.8.0, JDK 11:
+  JRuby 9.2.9.0, JDK 11:
     docker:
-    - image: fidothe/circleci:jruby-9.2.8.0-11-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.9.0-11-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -118,9 +118,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.8.0, JDK 13 Saxon HE 9.8:
+  JRuby 9.2.9.0, JDK 13 Saxon HE 9.8:
     docker:
-    - image: fidothe/circleci:jruby-9.2.8.0-13-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.9.0-13-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -150,9 +150,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.8.0, JDK 13:
+  JRuby 9.2.9.0, JDK 13:
     docker:
-    - image: fidothe/circleci:jruby-9.2.8.0-13-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.9.0-13-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -228,9 +228,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.1.17.0, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.10.0-SNAPSHOT-latest, JDK 8 Saxon HE 9.8:
     docker:
-    - image: fidothe/circleci:jruby-9.1.17.0-11-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.10.0-SNAPSHOT-latest-8-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -260,9 +260,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.1.17.0, JDK 11:
+  JRuby 9.2.10.0-SNAPSHOT-latest, JDK 8:
     docker:
-    - image: fidothe/circleci:jruby-9.1.17.0-11-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.10.0-SNAPSHOT-latest-8-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -283,64 +283,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.1.17.0, JDK 13 Saxon HE 9.8:
+  JRuby 9.2.10.0-SNAPSHOT-latest, JDK 11 Saxon HE 9.8:
     docker:
-    - image: fidothe/circleci:jruby-9.1.17.0-13-jdk-slim
-    environment:
-      BUNDLE_JOBS: 3
-      BUNDLE_RETRY: 3
-      BUNDLE_PATH: vendor/bundle
-      JRUBY_OPTS: "--dev --debug"
-      ALTERNATE_SAXON_HOME: "/tmp/saxon"
-    steps:
-    - checkout
-    - run:
-        name: Download SaxonHE9-8-0-15J.zip
-        command: |-
-          mkdir -p /tmp/saxon
-          cd /tmp/saxon
-          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
-          unzip SaxonHE9-8-0-15J.zip
-          rm -f SaxonHE9-8-0-15J.zip
-    - run:
-        name: Bundle Install
-        command: bundle check || bundle install
-    - run:
-        name: Run the tests
-        command: |-
-          mkdir -p /tmp/test-results
-          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
-    - store_test_results:
-        path: "/tmp/test-results"
-    - store_artifacts:
-        path: "/tmp/test-results"
-        destination: test-results
-  JRuby 9.1.17.0, JDK 13:
-    docker:
-    - image: fidothe/circleci:jruby-9.1.17.0-13-jdk-slim
-    environment:
-      BUNDLE_JOBS: 3
-      BUNDLE_RETRY: 3
-      BUNDLE_PATH: vendor/bundle
-      JRUBY_OPTS: "--dev --debug"
-    steps:
-    - checkout
-    - run:
-        name: Bundle Install
-        command: bundle check || bundle install
-    - run:
-        name: Run the tests
-        command: |-
-          mkdir -p /tmp/test-results
-          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
-    - store_test_results:
-        path: "/tmp/test-results"
-    - store_artifacts:
-        path: "/tmp/test-results"
-        destination: test-results
-  JRuby 9.2.9.0-SNAPSHOT-latest, JDK 8 Saxon HE 9.8:
-    docker:
-    - image: fidothe/circleci:jruby-9.2.9.0-SNAPSHOT-latest-8-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.10.0-SNAPSHOT-latest-11-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -370,9 +315,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.9.0-SNAPSHOT-latest, JDK 8:
+  JRuby 9.2.10.0-SNAPSHOT-latest, JDK 11:
     docker:
-    - image: fidothe/circleci:jruby-9.2.9.0-SNAPSHOT-latest-8-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.10.0-SNAPSHOT-latest-11-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -393,64 +338,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.9.0-SNAPSHOT-latest, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.10.0-SNAPSHOT-latest, JDK 13 Saxon HE 9.8:
     docker:
-    - image: fidothe/circleci:jruby-9.2.9.0-SNAPSHOT-latest-11-jdk-slim
-    environment:
-      BUNDLE_JOBS: 3
-      BUNDLE_RETRY: 3
-      BUNDLE_PATH: vendor/bundle
-      JRUBY_OPTS: "--dev --debug"
-      ALTERNATE_SAXON_HOME: "/tmp/saxon"
-    steps:
-    - checkout
-    - run:
-        name: Download SaxonHE9-8-0-15J.zip
-        command: |-
-          mkdir -p /tmp/saxon
-          cd /tmp/saxon
-          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
-          unzip SaxonHE9-8-0-15J.zip
-          rm -f SaxonHE9-8-0-15J.zip
-    - run:
-        name: Bundle Install
-        command: bundle check || bundle install
-    - run:
-        name: Run the tests
-        command: |-
-          mkdir -p /tmp/test-results
-          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
-    - store_test_results:
-        path: "/tmp/test-results"
-    - store_artifacts:
-        path: "/tmp/test-results"
-        destination: test-results
-  JRuby 9.2.9.0-SNAPSHOT-latest, JDK 11:
-    docker:
-    - image: fidothe/circleci:jruby-9.2.9.0-SNAPSHOT-latest-11-jdk-slim
-    environment:
-      BUNDLE_JOBS: 3
-      BUNDLE_RETRY: 3
-      BUNDLE_PATH: vendor/bundle
-      JRUBY_OPTS: "--dev --debug"
-    steps:
-    - checkout
-    - run:
-        name: Bundle Install
-        command: bundle check || bundle install
-    - run:
-        name: Run the tests
-        command: |-
-          mkdir -p /tmp/test-results
-          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
-    - store_test_results:
-        path: "/tmp/test-results"
-    - store_artifacts:
-        path: "/tmp/test-results"
-        destination: test-results
-  JRuby 9.2.9.0-SNAPSHOT-latest, JDK 13 Saxon HE 9.8:
-    docker:
-    - image: fidothe/circleci:jruby-9.2.9.0-SNAPSHOT-latest-13-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.10.0-SNAPSHOT-latest-13-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -480,9 +370,9 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.9.0-SNAPSHOT-latest, JDK 13:
+  JRuby 9.2.10.0-SNAPSHOT-latest, JDK 13:
     docker:
-    - image: fidothe/circleci:jruby-9.2.9.0-SNAPSHOT-latest-13-jdk-slim
+    - image: fidothe/circleci:jruby-9.2.10.0-SNAPSHOT-latest-13-jdk-slim
     environment:
       BUNDLE_JOBS: 3
       BUNDLE_RETRY: 3
@@ -507,21 +397,17 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-    - JRuby 9.2.8.0, JDK 8 Saxon HE 9.8
-    - JRuby 9.2.8.0, JDK 8
-    - JRuby 9.2.8.0, JDK 11 Saxon HE 9.8
-    - JRuby 9.2.8.0, JDK 11
-    - JRuby 9.2.8.0, JDK 13 Saxon HE 9.8
-    - JRuby 9.2.8.0, JDK 13
+    - JRuby 9.2.9.0, JDK 8 Saxon HE 9.8
+    - JRuby 9.2.9.0, JDK 8
+    - JRuby 9.2.9.0, JDK 11 Saxon HE 9.8
+    - JRuby 9.2.9.0, JDK 11
+    - JRuby 9.2.9.0, JDK 13 Saxon HE 9.8
+    - JRuby 9.2.9.0, JDK 13
     - JRuby 9.1.17.0, JDK 8 Saxon HE 9.8
     - JRuby 9.1.17.0, JDK 8
-    - JRuby 9.1.17.0, JDK 11 Saxon HE 9.8
-    - JRuby 9.1.17.0, JDK 11
-    - JRuby 9.1.17.0, JDK 13 Saxon HE 9.8
-    - JRuby 9.1.17.0, JDK 13
-    - JRuby 9.2.9.0-SNAPSHOT-latest, JDK 8 Saxon HE 9.8
-    - JRuby 9.2.9.0-SNAPSHOT-latest, JDK 8
-    - JRuby 9.2.9.0-SNAPSHOT-latest, JDK 11 Saxon HE 9.8
-    - JRuby 9.2.9.0-SNAPSHOT-latest, JDK 11
-    - JRuby 9.2.9.0-SNAPSHOT-latest, JDK 13 Saxon HE 9.8
-    - JRuby 9.2.9.0-SNAPSHOT-latest, JDK 13
+    - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 8 Saxon HE 9.8
+    - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 8
+    - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 11 Saxon HE 9.8
+    - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 11
+    - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 13 Saxon HE 9.8
+    - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 13

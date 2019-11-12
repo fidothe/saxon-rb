@@ -25,7 +25,7 @@ task :circleci do
       end
     end
     def jruby_image_tags
-      %w{9.2.8.0 9.1.17.0 9.2.9.0-SNAPSHOT-latest}
+      %w{9.2.9.0 9.1.17.0 9.2.10.0-SNAPSHOT-latest}
     end
 
     def jdk_image_tags
@@ -42,12 +42,21 @@ task :circleci do
       }
     end
 
+    def skip_jdk_versions
+      [
+        %w{9.1.17.0 11-jdk-slim},
+        %w{9.1.17.0 13-jdk-slim},
+      ]
+    end
+
     def codeclimate_job
-      ["9.2.8.0", "8-jdk-slim", nil]
+      ["9.2.9.0", "8-jdk-slim", nil]
     end
 
     def all_job_variants
-      jruby_image_tags.product(jdk_image_tags.keys, alt_saxon_urls.keys << nil)
+      jruby_image_tags.product(jdk_image_tags.keys, alt_saxon_urls.keys << nil).reject { |jruby, jdk, _|
+        skip_jdk_versions.include?([jruby, jdk])
+      }
     end
 
     def job_name(jruby_image_tag, jdk_image_tag, alt_saxon_url)
