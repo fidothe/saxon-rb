@@ -32,7 +32,7 @@ module Saxon
     # it's an instance of the underlying Saxon Java QName, it'll be wrapped
     # into a {Saxon::QName}
     #
-    # If the arg is a string, it's resolved by using {resolve_variable_name}
+    # If the arg is a string, it's resolved by using {resolve_qname_string}
     #
     # @param qname_or_string [String, Symbol, Saxon::QName] the qname to resolve
     # @param namespaces [Hash<String => String>] the set of namespaces as a hash of <tt>"prefix" => "namespace-uri"</tt>

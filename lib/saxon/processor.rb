@@ -98,5 +98,24 @@ module Saxon
     def config
       @config ||= Saxon::Configuration.create(self)
     end
+
+    # Create a {DocumentBuilder} and construct a {Source} and parse some XML.
+    # The args are passed to {Saxon::Source.create}, and the returned {Source}
+    # is parsed using {DocumentBuilder#build}. If a {Source} is passed in, parse
+    # that. Any options in +opts+ will be ignored in that case.
+    #
+    # @param input [Saxon::Source, IO, File, String, Pathname, URI] the input to
+    #   be turned into a {Source} and parsed.
+    # @param opts [Hash] for Source creation. See {Saxon::Source.create}.
+    # @return [Saxon::XDM::Node] The XML document
+    def XML(input, opts = {})
+      case input
+      when Saxon::Source
+        source = input
+      else
+        source = Source.create(input, opts)
+      end
+      document_builder.build(source)
+    end
   end
 end

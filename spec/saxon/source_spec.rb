@@ -5,37 +5,43 @@ require 'open-uri'
 RSpec.describe Saxon::Source do
   context "instantiating" do
     context "from IO and IO-like objects" do
-      it "an IO-like with a path" do
+      specify "an IO-like with a path" do
         source = Saxon::Source.from_io(File.open(fixture_path('eg.xml')))
 
         expect(source.base_uri).to eq(fixture_path('eg.xml'))
       end
 
-      it "an open-uri'd file URI" do
+      specify "an open-uri'd file URI" do
         uri = "file://#{fixture_path('eg.xml')}"
         source = Saxon::Source.from_io(open(uri))
 
         expect(source.base_uri).to eq(uri)
       end
 
-      it "an open-uri'd http URI", :vcr do
+      specify "an open-uri'd http URI", :vcr do
         uri = "http://example.org/"
         source = Saxon::Source.from_io(open(uri))
 
         expect(source.base_uri).to eq(uri)
       end
 
-      it "an IO-like, without a base URI" do
+      specify "an IO-like, without a base URI" do
         input = StringIO.new("<doc/>")
         source = Saxon::Source.from_io(input)
 
         expect(source.base_uri).to be_nil
       end
 
-      it "an IO-like, with an explicitly-set base URI, the inherent base URI is overridden" do
+      specify "an IO-like, with an explicitly-set base URI, the inherent base URI is overridden" do
         source = Saxon::Source.from_io(File.open(fixture_path('eg.xml')), base_uri: '/path/elsewhere')
 
         expect(source.base_uri).to eq('/path/elsewhere')
+      end
+
+      specify "an IO, with an explicit Encoding" do
+        source = Saxon::Source.from_io(File.open(fixture_path('eg.xml')), encoding: 'ISO-8859-1')
+
+        expect(source.to_java).to be_a(Saxon::JAXP::StreamSource)
       end
     end
 
@@ -51,6 +57,12 @@ RSpec.describe Saxon::Source do
 
         expect(source.base_uri).to eq('/path/elsewhere')
       end
+
+      it "allows an explicit Encoding" do
+        source = Saxon::Source.from_path(fixture_path('eg.xml'), encoding: 'ISO-8859-1')
+
+        expect(source.to_java).to be_a(Saxon::JAXP::StreamSource)
+      end
     end
 
     context "from a URI" do
@@ -64,6 +76,12 @@ RSpec.describe Saxon::Source do
         source = Saxon::Source.from_uri('http://example.org/', base_uri: 'http://example.org/other')
 
         expect(source.base_uri).to eq('http://example.org/other')
+      end
+
+      it "allows an explicit Encoding", :vcr do
+        source = Saxon::Source.from_uri('http://example.org/', encoding: 'ISO-8859-1')
+
+        expect(source.to_java).to be_a(Saxon::JAXP::StreamSource)
       end
     end
 

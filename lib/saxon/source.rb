@@ -1,6 +1,7 @@
 require 'java'
 require 'saxon/jaxp'
 require 'uri'
+require 'open-uri'
 require 'pathname'
 
 module Saxon
@@ -23,17 +24,24 @@ module Saxon
         io.path if io.respond_to?(:path)
       end
 
-      # Given a File or IO return a Java InputStream
-      # @param [File, IO, org.jruby.util.IOInputStream, java.io.InputStream]
-      #   io input to be converted to an input stream
+      # Given a File or IO return a Java InputStream, or an InputStreamReader if
+      # the Encoding is explicitly specified (rather than inferred from the
+      # <?xml charset="..."?>) declaration in the source.
+      # @param io [File, IO, org.jruby.util.IOInputStream, java.io.InputStream]
+      #   input to be converted to an input stream
+      # @param encoding [Encoding, String] the character encoding to be used to
+      #   for the stream, overriding the XML parser.
       # @return [java.io.InputStream] the wrapped input
-      def self.inputstream(io)
-        case io
+      def self.inputstream(io, encoding = nil)
+        stream = case io
         when org.jruby.util.IOInputStream, java.io.InputStream
           io
         else
           io.to_inputstream if io.respond_to?(:read)
         end
+
+        return stream if encoding.nil?
+        java.io.InputStreamReader.new(stream, ruby_encoding_to_charset(encoding))
       end
 
       # Given a path return a Java File object
@@ -41,6 +49,29 @@ module Saxon
       # @return [java.io.File] the Java File object
       def self.file(path)
         java.io.File.new(path.to_s)
+      end
+
+      def self.file_reader(path, encoding)
+        java.io.InputStreamReader.new(java.io.FileInputStream.new(file(path)), ruby_encoding_to_charset(encoding))
+      end
+
+      def self.file_or_reader(path, encoding = nil)
+        encoding.nil? ? file(path) : file_reader(path, encoding)
+      end
+
+      def self.string_reader(string, encoding)
+        inputstream = StringIO.new(string).to_inputstream
+        encoding = ruby_encoding(encoding)
+        return inputstream if encoding == ::Encoding::ASCII_8BIT
+        java.io.InputStreamReader.new(inputstream, ruby_encoding_to_charset(encoding))
+      end
+
+      def self.ruby_encoding_to_charset(encoding)
+        ruby_encoding(encoding).to_java.getEncoding.getCharset
+      end
+
+      def self.ruby_encoding(encoding)
+        encoding.nil? ? nil : ::Encoding.find(encoding)
       end
     end
 
@@ -56,75 +87,141 @@ module Saxon
       end
     }
 
-    # Generate a Saxon::Source given an IO-like
-    #
-    # @param [IO, File] io The IO-like containing XML to be parsed
-    # @param [Hash] opts
-    # @option opts [String] :base_uri The Base URI for the Source - an
-    #   absolute URI or relative path that will be used to resolve relative
-    #   URLs in the XML. Setting this will override any path or URI derived
-    #   from the IO-like.
-    # @return [Saxon::Source] the Saxon::Source wrapping the input
-    def self.from_io(io, opts = {})
-      base_uri = opts.fetch(:base_uri) { Helpers.base_uri(io) }
-      inputstream = Helpers.inputstream(io)
-      stream_source = Saxon::JAXP::StreamSource.new(inputstream, base_uri)
-      new(stream_source, inputstream)
-    end
+    class << self
+      # Generate a Saxon::Source given an IO-like
+      #
+      # @param [IO, File] io The IO-like containing XML to be parsed
+      # @param [Hash] opts
+      # @option opts [String] :base_uri The Base URI for the Source - an
+      #   absolute URI or relative path that will be used to resolve relative
+      #   URLs in the XML. Setting this will override any path or URI derived
+      #   from the IO-like.
+      # @option opts [String, Encoding] :encoding The encoding of the source.
+      #   Note that specifying this will force the parser to ignore the charset
+      #   if it's set in the XML declaration of the source. Only really useful
+      #   if there's a discrepancy between the source's declared and actual
+      #   encoding. Defaults to the <?xml charset="..."?> declaration in the
+      #   source.
+      # @return [Saxon::Source] the Saxon::Source wrapping the input
+      def from_io(io, opts = {})
+        base_uri = opts.fetch(:base_uri) { Helpers.base_uri(io) }
+        encoding = opts.fetch(:encoding, nil)
+        inputstream = Helpers.inputstream(io, encoding)
+        stream_source = Saxon::JAXP::StreamSource.new(inputstream, base_uri)
+        new(stream_source, inputstream)
+      end
 
-    # Generate a Saxon::Source given a path to a file
-    #
-    # @param [String, Pathname] path The path to the XML file to be parsed
-    # @param [Hash] opts
-    # @option opts [String] :base_uri The Base URI for the Source - an
-    #   absolute URI or relative path that will be used to resolve relative
-    #   URLs in the XML. Setting this will override the file path.
-    # @return [Saxon::Source] the Saxon::Source wrapping the input
-    def self.from_path(path, opts = {})
-      stream_source = Saxon::JAXP::StreamSource.new(Helpers.file(path))
-      stream_source.setSystemId(opts[:base_uri]) if opts[:base_uri]
-      new(stream_source)
-    end
+      # Generate a Saxon::Source given a path to a file
+      #
+      # @param [String, Pathname] path The path to the XML file to be parsed
+      # @param [Hash] opts
+      # @option opts [String] :base_uri The Base URI for the Source - an
+      #   absolute URI or relative path that will be used to resolve relative
+      #   URLs in the XML. Setting this will override the file path.
+      # @option opts [String, Encoding] :encoding The encoding of the source.
+      #   Note that specifying this will force the parser to ignore the charset
+      #   if it's set in the XML declaration of the source. Only really useful
+      #   if there's a discrepancy between the source's declared and actual
+      #   encoding. Defaults to the <?xml charset="..."?> declaration in the
+      #   source.
+      # @return [Saxon::Source] the Saxon::Source wrapping the input
+      def from_path(path, opts = {})
+        encoding = opts.fetch(:encoding, nil)
+        return from_inputstream_or_reader(Helpers.file(path), opts[:base_uri]) if encoding.nil?
+        reader = Helpers.file_reader(path, encoding)
+        base_uri = opts.fetch(:base_uri) { File.expand_path(path) }
+        from_inputstream_or_reader(reader, base_uri)
+      end
 
-    # Generate a Saxon::Source given a URI
-    #
-    # @param [String, URI] uri The URI to the XML file to be parsed
-    # @param [Hash] opts
-    # @option opts [String] :base_uri The Base URI for the Source - an
-    #   absolute URI or relative path that will be used to resolve relative
-    #   URLs in the XML. Setting this will override the given URI.
-    # @return [Saxon::Source] the Saxon::Source wrapping the input
-    def self.from_uri(uri, opts = {})
-      stream_source = Saxon::JAXP::StreamSource.new(uri.to_s)
-      stream_source.setSystemId(opts[:base_uri]) if opts[:base_uri]
-      new(stream_source)
-    end
+      # Generate a Saxon::Source given a URI
+      #
+      # @param [String, URI] uri The URI to the XML file to be parsed
+      # @param [Hash] opts
+      # @option opts [String] :base_uri The Base URI for the Source - an
+      #   absolute URI or relative path that will be used to resolve relative
+      #   URLs in the XML. Setting this will override the given URI.
+      # @option opts [String, Encoding] :encoding The encoding of the source.
+      #   Note that specifying this will force the parser to ignore the charset
+      #   if it's set in the XML declaration of the source. Only really useful
+      #   if there's a discrepancy between the source's declared and actual
+      #   encoding. Defaults to the <?xml charset="..."?> declaration in the
+      #   source.
+      # @return [Saxon::Source] the Saxon::Source wrapping the input
+      def from_uri(uri, opts = {})
+        encoding = opts.fetch(:encoding, nil)
+        return from_io(open(uri), encoding: encoding) if encoding
+        from_inputstream_or_reader(uri.to_s, opts[:base_uri])
+      end
 
-    # Generate a Saxon::Source given a string containing XML
-    #
-    # @param [String] string The string containing XML to be parsed
-    # @param [Hash] opts
-    # @option opts [String] :base_uri The Base URI for the Source - an
-    #   absolute URI or relative path that will be used to resolve relative
-    #   URLs in the XML. This will be nil unless set.
-    # @return [Saxon::Source] the Saxon::Source wrapping the input
-    def self.from_string(string, opts = {})
-      reader = java.io.StringReader.new(string)
-      stream_source = Saxon::JAXP::StreamSource.new(reader)
-      stream_source.setSystemId(opts[:base_uri]) if opts[:base_uri]
-      new(stream_source, reader)
-    end
+      # Generate a Saxon::Source given a string containing XML
+      #
+      # @param [String] string The string containing XML to be parsed
+      # @param [Hash] opts
+      # @option opts [String] :base_uri The Base URI for the Source - an
+      #   absolute URI or relative path that will be used to resolve relative
+      #   URLs in the XML. This will be nil unless set.
+      # @option opts [String, Encoding] :encoding The encoding of the source.
+      #   Note that specifying this will force the parser to ignore the charset
+      #   if it's set in the XML declaration of the source. Only really useful
+      #   if there's a discrepancy between the encoding of the string and the
+      #   encoding of the source. Defaults to the encoding of the string, unless
+      #   that is ASCII-8BIT, in which case the parser will use the
+      #   <?xml charset="..."?> declaration in the source to pick the encoding.
+      # @return [Saxon::Source] the Saxon::Source wrapping the input
+      def from_string(string, opts = {})
+        encoding = opts.fetch(:encoding) { string.encoding }
+        reader = Helpers.string_reader(string, encoding)
+        from_inputstream_or_reader(reader, opts[:base_uri])
+      end
 
-    def self.create(io_path_uri_or_string, opts = {})
-      case io_path_uri_or_string
-      when IO, File, java.io.InputStream, StringIO
-        from_io(io_path_uri_or_string, opts)
-      when Pathname, PathChecker
-        from_path(io_path_uri_or_string, opts)
-      when URIChecker
-        from_uri(io_path_uri_or_string, opts)
-      else
-        from_string(io_path_uri_or_string, opts)
+      # Generate a Saxon::Source from one of the several inputs allowed.
+      #
+      # If possible the character encoding of the input source will be left to
+      # the XML parser to discover (from the <tt><?xml charset="..."?></tt> XML
+      # declaration).
+      #
+      # The Base URI for the source (its absolute path, or URI) can be set by
+      # passing in the +:base_uri+ option. This is the same thing as an XML
+      # document's 'System ID' - Base URI is the term most widely used in Ruby
+      # libraries for this, so that's what's used here.
+      #
+      # If the source's character encoding can't be correctly discovered by the
+      # parser from the XML declaration (<tt><?xml version="..."
+      # charset="..."?></tt> at the top of the document), then it can be passed
+      # as the +:encoding+ option.
+      #
+      # @param [IO, File, String, Pathname, URI] io_path_uri_or_string The XML to be parsed
+      # @param [Hash] opts
+      # @option opts [String] :base_uri The Base URI for the Source - an
+      #   absolute URI or relative path that will be used to resolve relative
+      #   URLs in the XML. Setting this will override any path or URI derived
+      #   from an IO, URI, or Path.
+      # @option opts [String, Encoding] :encoding The encoding of the source.
+      #   Note that specifying this will force the parser to ignore the charset
+      #   if it's set in the XML declaration of the source. Only really useful
+      #   if there's a discrepancy between the source's declared and actual
+      #   encoding. Defaults to the <?xml charset="..."?> declaration in the
+      #   source.
+      # @return [Saxon::Source] the Saxon::Source wrapping the input
+      def create(io_path_uri_or_string, opts = {})
+        case io_path_uri_or_string
+        when IO, File, java.io.InputStream, StringIO
+          from_io(io_path_uri_or_string, opts)
+        when Pathname, PathChecker
+          from_path(io_path_uri_or_string, opts)
+        when URIChecker
+          from_uri(io_path_uri_or_string, opts)
+        else
+          from_string(io_path_uri_or_string, opts)
+        end
+      end
+
+      private
+
+      def from_inputstream_or_reader(inputstream_or_reader, base_uri = nil)
+        stream_source = Saxon::JAXP::StreamSource.new(inputstream_or_reader)
+        stream_source.setSystemId(base_uri) if base_uri
+        new(stream_source, inputstream_or_reader)
       end
     end
 
@@ -183,5 +280,6 @@ module Saxon
     end
   end
 
+  # Error raised when trying to consume an already-consumed, and closed, Source
   class SourceClosedError < Exception; end
 end
