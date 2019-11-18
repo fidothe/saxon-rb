@@ -48,10 +48,10 @@ module Saxon
       end
 
       # Provides the hooks for constructing a {EvaluationContext} with a DSL.
-      # @api private
       class DSL
         include Common
 
+        # @api private
         # Create an instance based on the args hash, and execute the passed in Proc/lambda against it using <tt>#instance_exec</tt> and return a
         # new {EvaluationContext} with the results
         # @param block [Proc] a Proc/lambda (or <tt>to_proc</tt>'d containing DSL calls
@@ -147,14 +147,16 @@ module Saxon
       end
     end
 
+    # Error raised when a global and static parameter of the same name are
+    # declared
     class GlobalAndStaticParameterClashError < StandardError
     end
 
     module ParameterHelper
       def self.process_parameters(parameters)
-        Hash[parameters.map { |qname, value|
+        parameters.map { |qname, value|
           [Saxon::QName.resolve(qname), Saxon::XDM.Value(value)]
-        }]
+        }.to_h
       end
 
       def self.to_java(parameters)

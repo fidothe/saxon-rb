@@ -30,7 +30,7 @@ Saxon HE is (c) Michael H. Kay and released under the Mozilla MPL 1.0
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'saxon'
+gem 'saxon-rb'
 ```
 
 And then execute:
@@ -39,7 +39,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install saxon
+    $ gem install saxon-rb
 
 ## Simple usage
 
@@ -60,10 +60,20 @@ Using a default document builder from the default processor:
 document_node = Saxon::Processor.create.document_builder.build(Saxon::Source.from_path('/path/to/your.xml'))
 ```
 
+Or
+
+```ruby
+document_node = Saxon.XML('/path/to/your.xml')
+```
+
+
 ### Transform an XML document with XSLT
 
 ```ruby
 transformer = Saxon::Processor.create.xslt_compiler.compile(Saxon::Source.from_path('/path/to/your.xsl'))
+# Or
+transformer = Saxon.XSLT('/path/to/your.xsl')
+
 
 # Apply templates against a document
 result_1 = transformer.apply_templates(document_node)

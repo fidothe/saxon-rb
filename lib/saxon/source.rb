@@ -107,8 +107,7 @@ module Saxon
         base_uri = opts.fetch(:base_uri) { Helpers.base_uri(io) }
         encoding = opts.fetch(:encoding, nil)
         inputstream = Helpers.inputstream(io, encoding)
-        stream_source = Saxon::JAXP::StreamSource.new(inputstream, base_uri)
-        new(stream_source, inputstream)
+        from_inputstream_or_reader(inputstream, base_uri)
       end
 
       # Generate a Saxon::Source given a path to a file
@@ -190,7 +189,9 @@ module Saxon
       # charset="..."?></tt> at the top of the document), then it can be passed
       # as the +:encoding+ option.
       #
-      # @param [IO, File, String, Pathname, URI] io_path_uri_or_string The XML to be parsed
+      # If an existing {Source} is passed in, simply return it.
+      #
+      # @param [Saxon::Source, IO, File, String, Pathname, URI] input The XML to be parsed
       # @param [Hash] opts
       # @option opts [String] :base_uri The Base URI for the Source - an
       #   absolute URI or relative path that will be used to resolve relative
@@ -203,16 +204,18 @@ module Saxon
       #   encoding. Defaults to the <?xml charset="..."?> declaration in the
       #   source.
       # @return [Saxon::Source] the Saxon::Source wrapping the input
-      def create(io_path_uri_or_string, opts = {})
-        case io_path_uri_or_string
+      def create(input, opts = {})
+        case input
+        when Saxon::Source
+          input
         when IO, File, java.io.InputStream, StringIO
-          from_io(io_path_uri_or_string, opts)
+          from_io(input, opts)
         when Pathname, PathChecker
-          from_path(io_path_uri_or_string, opts)
+          from_path(input, opts)
         when URIChecker
-          from_uri(io_path_uri_or_string, opts)
+          from_uri(input, opts)
         else
-          from_string(io_path_uri_or_string, opts)
+          from_string(input, opts)
         end
       end
 

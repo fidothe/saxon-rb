@@ -80,6 +80,12 @@ RSpec.describe Saxon::Processor do
           expect(subject.XML(source)).to be_a(Saxon::XDM::Node)
         end
       end
+
+      context "compiling an XSLT stylesheet" do
+        specify "without constructing a Source or Compiler manually" do
+          expect(subject.XSLT(fixture_path('eg.xsl'))).to be_a(Saxon::XSLT::Executable)
+        end
+      end
     end
   end
 end
