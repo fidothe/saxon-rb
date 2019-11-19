@@ -18,6 +18,7 @@ Ruby.
 [![Gem Version](https://badge.fury.io/rb/saxon.svg)](http://badge.fury.io/rb/saxon)
 [![Code Climate](https://codeclimate.com/github/fidothe/saxon-rb/badges/gpa.svg)](https://codeclimate.com/github/fidothe/saxon-rb)
 [![Test Coverage](https://codeclimate.com/github/fidothe/saxon-rb/badges/coverage.svg)](https://codeclimate.com/github/fidothe/saxon-rb/coverage)
+[![CircleCI](https://circleci.com/gh/fidothe/saxon-rb.svg?style=svg)](https://circleci.com/gh/fidothe/saxon-rb)
 
 You can find Saxon HE at http://saxon.sourceforge.net/ and Saxonica at
 http://www.saxonica.com/
@@ -66,14 +67,12 @@ Or
 document_node = Saxon.XML('/path/to/your.xml')
 ```
 
-
 ### Transform an XML document with XSLT
 
 ```ruby
 transformer = Saxon::Processor.create.xslt_compiler.compile(Saxon::Source.from_path('/path/to/your.xsl'))
 # Or
 transformer = Saxon.XSLT('/path/to/your.xsl')
-
 
 # Apply templates against a document
 result_1 = transformer.apply_templates(document_node)
@@ -98,17 +97,60 @@ matches = xpath.run(document_node, {
 })
 ```
 
-### Use your Saxon PE license and `.jar`s instead of the bundled Saxon HE
+## Migrating from `saxon-xslt` (or Nokogiri)
+
+`saxon-xslt` wrapped Saxon and provided a Nokogiri-esque API. Nokogiri is built on XSLT 1 processors, and the APIs support XSLT 1 features, but won't allow XSLT 2/3 features (like setting initial tunnel parameters, starting processing by calling a named template, or a function). The main API for invoking XSLT in `saxon-rb` needs to be different from Nokogiri's so that full use of XSLT 2/3 features is possible.
+
+By default, the original `saxon-xslt` API (on `Saxon::XSLT::Stylesheet`) is not available. If you need those methods, then you can load the legacy API by requiring `saxon/nokogiri`.
+
+That gives you back the `#transform`, `#apply_to`, and `#serialize` methods on the object you get back after compiling an XSLT: `Saxon::XSLT::Executable` in `saxon-rb`. They work the same way, and you should be able to drop in `saxon-rb` as a replacement for XSLT processing.
+
+```ruby
+require 'saxon-rb'
+require 'saxon/nokogiri'
+
+xslt = Saxon.XSLT('/path/to/my.xsl')
+xslt.apply_to(Saxon.XML('/path/to/my.xml')) #=> "<result-xml/>"
+```
+
+## Using your Saxon PE license and `.jar`s instead of the bundled Saxon HE
+
+Saxon 9.9 HE is bundled with the gem. To use Saxon PE or EE (the commercial
+versions) you need to make the `.jar`s available, and then create a licensed
+`Saxon::Configuration` object. To make the `.jar`s available is simply a matter
+of adding them to the `CLASS_PATH`. The version of Saxon downloaded directly
+provides several `.jar` files. We provide a `Saxon::Loader` method for adding
+the `.jar`s within the directory correctly. Saxon is distributed through Maven
+as a single `.jar`, which you can just add to the `LOAD_PATH`/`CLASS_PATH`. If
+you're adding to the `CLASS_PATH` directly, or calling `Saxon::Loader.load!`,
+then you need to do it before you try and use the library.
+
+### Loading a Saxon PE you downloaded directly from Saxonica
 
 ```ruby
 require 'saxon-rb'
 
-Saxon::Loader.load!('/path/to/SaxonHE9-9-1-2J') # The folder that contains the .jars, like $SAXON_HOME
+Saxon::Loader.load!('/path/to/SaxonPE9-9-1-2J') # The folder that contains the .jars, like $SAXON_HOME
 config = Saxon::Configuration.create_licensed('/path/to/saxon.lic')
 processor = Saxon::Processor.create(config)
 
 processor.xslt_compiler...
 ```
+
+### Loading a Saxon PE installed via Maven (e.g. with JBundler)
+
+```ruby
+require 'jbundler'
+require 'saxon-rb'
+
+config = Saxon::Configuration.create_licensed('/path/to/saxon.lic')
+processor = Saxon::Processor.create(config)
+
+...
+```
+
+See https://github.com/mkristian/jbundler for more on loading Java deps from
+Maven.
 
 ## Development
 
