@@ -67,7 +67,7 @@ module Saxon
       end
 
       def v1_param_value(value)
-        if /\A(['"]).+\1\z/.match?(value)
+        if /\A(['"]).+\1\z/.match(value)
           value.slice(1..-2)
         else
           value
