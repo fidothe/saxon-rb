@@ -24,10 +24,21 @@ jobs:
         name: Bundle Install
         command: bundle check || bundle install
     - run:
-        name: Run the tests
+        name: Install Code Climate Test Reporter
+        command: |
+          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+          chmod +x ./cc-test-reporter
+    - run:
+        name: Run the tests, and upload coverage data to Code Climate
         command: |-
+          ./cc-test-reporter before-build
           mkdir -p /tmp/test-results
           bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage-alt-saxon.json"; fi
+    - persist_to_workspace:
+        root: "~/project"
+        paths:
+        - cc-coverage*
     - store_test_results:
         path: "/tmp/test-results"
     - store_artifacts:
@@ -57,7 +68,11 @@ jobs:
           ./cc-test-reporter before-build
           mkdir -p /tmp/test-results
           bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
-          ./cc-test-reporter after-build -t simplecov --exit-code=$?
+          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage.json"; fi
+    - persist_to_workspace:
+        root: "~/project"
+        paths:
+        - cc-coverage*
     - store_test_results:
         path: "/tmp/test-results"
     - store_artifacts:
@@ -393,6 +408,23 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
+  Report test coverage to Code Climate:
+    docker:
+    - image: circleci/ruby:latest
+    steps:
+    - attach_workspace:
+        at: "/tmp/workspace"
+    - run:
+        name: Install Code Climate Test Reporter
+        command: |
+          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+          chmod +x ./cc-test-reporter
+    - run:
+        name: Upload test coverage to Code Climate
+        command: |-
+          find /tmp/workspace -name 'cc-coverage*.json' &&\
+           ./cc-test-reporter sum-coverage /tmp/workspace/cc-coverage*.json &&\
+           ./cc-test-reporter upload-coverage
 workflows:
   version: 2
   build_and_test:
@@ -411,3 +443,7 @@ workflows:
     - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 11
     - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 13 Saxon HE 9.8
     - JRuby 9.2.10.0-SNAPSHOT-latest, JDK 13
+    - Report test coverage to Code Climate:
+        requires:
+        - JRuby 9.2.9.0, JDK 8 Saxon HE 9.8
+        - JRuby 9.2.9.0, JDK 8

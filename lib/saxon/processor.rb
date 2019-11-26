@@ -76,7 +76,7 @@ module Saxon
     # <tt>Processor</tt>. Sharing <tt>XSLT::Compiler</tt>s across threads is
     # fine as long as the static context is not changed.
     #
-    # @yield An XPath compiler DSL block, see {Saxon::XSLT::Compiler.create}
+    # @yield An XSLT compiler DSL block, see {Saxon::XSLT::Compiler.create}
     # @return [Saxon::XSLT::Compiler] a new XSLT compiler
     def xslt_compiler(&block)
       Saxon::XSLT::Compiler.create(self, &block)
@@ -97,6 +97,37 @@ module Saxon
     # @return [Saxon::Configuration] This processor's configuration instance
     def config
       @config ||= Saxon::Configuration.create(self)
+    end
+
+    # Create a {DocumentBuilder} and construct a {Source} and parse some XML.
+    # The args are passed to {Saxon::Source.create}, and the returned {Source}
+    # is parsed using {DocumentBuilder#build}. If a {Source} is passed in, parse
+    # that. Any options in +opts+ will be ignored in that case.
+    #
+    # @param input [Saxon::Source, IO, File, String, Pathname, URI] the input to
+    #   be turned into a {Source} and parsed.
+    # @param opts [Hash] for Source creation. See {Saxon::Source.create}.
+    # @return [Saxon::XDM::Node] the XML document
+    def XML(input, opts = {})
+      source = Source.create(input, opts)
+      document_builder.build(source)
+    end
+
+    # Construct a {Source} containing an XSLT stylesheet, create an
+    # {XSLT::Compiler}, and compile the source, returning the {XSLT::Executable}
+    # produced. If a {Source} is passed as +input+, then it will be passed
+    # through to the compiler and any source-related options in +opts+ will be
+    # ignored.
+    #
+    # @param input [Saxon::Source, IO, File, String, Pathname, URI] the input to
+    #   be turned into a {Source} and parsed.
+    # @param opts [Hash] for Source creation. See {Saxon::Source.create}.
+    # @yield the block is executed as an {XSLT::EvaluationContext::DSL} instance
+    #   and applied to the compiler
+    # @return [Saxon::XSLT::Executable] the XSLT Executable
+    def XSLT(input, opts = {}, &block)
+      source = Source.create(input, opts)
+      xslt_compiler(&block).compile(source)
     end
   end
 end

@@ -49,8 +49,10 @@ task :circleci do
       ]
     end
 
-    def codeclimate_job
-      ["9.2.9.0", "8-jdk-slim", nil]
+    def codeclimate_jobs
+      (alt_saxon_urls.keys << nil).map { |alt_saxon_url|
+        ["9.2.9.0", "8-jdk-slim", alt_saxon_url]
+      }
     end
 
     def all_job_variants
@@ -74,7 +76,7 @@ task :circleci do
 
     def jobs
       all_job_variants.map { |jruby_image_tag, jdk_image_tag, alt_saxon_url|
-        run_codeclimate = codeclimate_job == [jruby_image_tag, jdk_image_tag, alt_saxon_url]
+        run_codeclimate = codeclimate_jobs.include?([jruby_image_tag, jdk_image_tag, alt_saxon_url])
         [
           job_name(jruby_image_tag, jdk_image_tag, alt_saxon_url),
           job_config({
@@ -82,7 +84,10 @@ task :circleci do
             docker_image: docker_image(jruby_image_tag, jdk_image_tag)
           })
         ]
-      }.to_h
+      }.to_h.merge(report_test_coverage_job({
+        docker_image: "circleci/ruby:latest",
+        run_codeclimate: true
+      }))
     end
 
     def docker_image(jruby_image_tag, jdk_image_tag)
@@ -122,6 +127,7 @@ task :circleci do
         },
         install_codeclimate_reporter_step(opts),
         run_tests_step(opts),
+        persist_test_coverage_to_workspace_step(opts),
         {
           "store_test_results" => {"path" => "/tmp/test-results"}
         },
@@ -148,6 +154,15 @@ task :circleci do
       }
     end
 
+    def attach_workspace_step(opts)
+      return nil unless opts.fetch(:run_codeclimate)
+      {
+        "attach_workspace" => {
+          "at" => "/tmp/workspace"
+        }
+      }
+    end
+
     def install_codeclimate_reporter_step(opts)
       return nil unless opts.fetch(:run_codeclimate)
       {
@@ -160,6 +175,18 @@ task :circleci do
       }
     end
 
+    def persist_test_coverage_to_workspace_step(opts)
+      return nil unless opts.fetch(:run_codeclimate)
+      {
+        "persist_to_workspace" => {
+          "root" => "~/project",
+          "paths" => [
+            "cc-coverage*"
+          ]
+        }
+      }
+    end
+
     def run_tests_step(opts)
       command = [
         "mkdir -p /tmp/test-results",
@@ -167,12 +194,36 @@ task :circleci do
       ]
       if opts.fetch(:run_codeclimate)
         command.prepend("./cc-test-reporter before-build")
-        command.append("./cc-test-reporter after-build -t simplecov --exit-code=$?")
+        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage#{"-alt-saxon" if opts.fetch(:alt_saxon_url)}.json\"; fi")
       end
       {
         "run" => {
           "name" => "Run the tests" + (opts.fetch(:run_codeclimate) ? ", and upload coverage data to Code Climate" : ""),
           "command" => command.join("\n")
+        }
+      }
+    end
+
+    def report_test_coverage_job(opts)
+      {
+        "Report test coverage to Code Climate" => {
+          "docker" => [
+            {"image" => opts.fetch(:docker_image)}
+          ],
+          "steps" => [
+            {
+              "attach_workspace" => {
+                "at" => "/tmp/workspace"
+              }
+            },
+            install_codeclimate_reporter_step(opts),
+            {
+              "run" => {
+                "name" => "Upload test coverage to Code Climate",
+                "command" => "find /tmp/workspace -name 'cc-coverage*.json' &&\\\n ./cc-test-reporter sum-coverage /tmp/workspace/cc-coverage*.json &&\\\n ./cc-test-reporter upload-coverage"
+              }
+            }
+          ]
         }
       }
     end
@@ -184,7 +235,11 @@ task :circleci do
         "workflows" => {
           "version" => 2,
           "build_and_test" => {
-            "jobs" => all_job_names
+            "jobs" => all_job_names << {
+              "Report test coverage to Code Climate" => {
+                "requires" => codeclimate_jobs.map { |args| job_name(*args) }
+              }
+            }
           }
         }
       }

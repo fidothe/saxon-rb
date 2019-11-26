@@ -41,7 +41,7 @@ module Saxon
         # Convert a single Ruby value into an XDM::AtomicValue
         #
         # If no explicit {ItemType} is passed, the correct type is guessed based
-        # on the class of the value. (e.g. <tt>xs:date</tt> for {Date}.)
+        # on the class of the value. (e.g. <tt>xs:date</tt> for {::Date}.)
         #
         # Values are converted based on Ruby idioms and operations, so an explicit
         # {ItemType} of <tt>xs:boolean</tt> will use truthyness to evaluate the

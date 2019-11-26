@@ -68,5 +68,24 @@ RSpec.describe Saxon::Processor do
         }.to_not raise_error
       end
     end
+
+    context "Convenience functions" do
+      context "parsing an XML document" do
+        specify "without constructing a DocumentBuilder or Source manually" do
+          expect(subject.XML("<doc/>", encoding: 'UTF-8', base_uri: 'http://example.org/')).to be_a(Saxon::XDM::Node)
+        end
+
+        specify "from a Source without constructing a DocumentBuilder manually" do
+          source = Saxon::Source.create('<doc/>', base_uri: 'http://example.org/')
+          expect(subject.XML(source)).to be_a(Saxon::XDM::Node)
+        end
+      end
+
+      context "compiling an XSLT stylesheet" do
+        specify "without constructing a Source or Compiler manually" do
+          expect(subject.XSLT(fixture_path('eg.xsl'))).to be_a(Saxon::XSLT::Executable)
+        end
+      end
+    end
   end
 end

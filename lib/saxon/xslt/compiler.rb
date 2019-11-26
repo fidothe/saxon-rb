@@ -42,6 +42,7 @@ module Saxon
       #   Saxon::XDM::AtomicValue>] parameters required at compile time as QName => value hash
 
       # @param source [Saxon::Source] the Source to compile
+      # @yield the block is executed in the context of an {XSLT::EvaluationContext} DSL instance
       # @return [Saxon::XSLT::Executable] the executable stylesheet
       def compile(source, &block)
         Saxon::XSLT::Executable.new(
