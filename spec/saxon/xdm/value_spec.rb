@@ -11,11 +11,34 @@ module Saxon
       let(:node) { fixture_doc(processor, 'eg.xml') }
       let(:atomic_value) { XDM.AtomicValue(1) }
 
-      specify "handles being passed an existing net.sf.saxon.s9api.XdmValue correctly" do
-        s9_value = described_class.create([1,2]).to_java
-        value = described_class.create(s9_value)
+      context "when being passed an existing net.sf.saxon.s9api.XdmValue" do
+        specify "creates an XDM::Value when given a multi-item XdmValue" do
+          s9_value = described_class.create([1,2]).to_java
+          value = described_class.create(s9_value)
 
-        expect(value.to_java).to be(s9_value)
+          expect(value.to_java).to be(s9_value)
+        end
+
+        specify "creates an XDM::AtomicValue for the sole item when given a single-item XdmValue containing an XdmAtomicValue" do
+          s9_value = S9API::XdmValue.new([atomic_value.to_java])
+          value = described_class.create(s9_value)
+
+          expect(value).to eq(atomic_value)
+        end
+
+        specify "returns an XDM::EmptySequence instance when the XdmValue is empty" do
+          s9_value = S9API::XdmValue.new([])
+          value = described_class.create(s9_value)
+
+          expect(value).to be(XDM.EmptySequence())
+        end
+
+        specify "returns an XDM::EmptySequence instance when handed XdmEmptySequence()" do
+          s9_value = S9API::XdmEmptySequence.getInstance()
+          value = described_class.create(s9_value)
+
+          expect(value).to be(XDM.EmptySequence())
+        end
       end
 
       specify "handles being passed an existing XDM::Value correctly" do

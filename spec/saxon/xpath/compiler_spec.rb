@@ -204,29 +204,29 @@ EOS
   describe "compiling and running an XPath" do
     specify "a simple XPath with no context" do
       compiler = described_class.create(processor)
-      expect(compiler.compile('/doc').run(context_doc).to_a).
-        to eq(context_doc.axis_iterator(:child).to_a)
+      expect(compiler.compile('/doc').evaluate(context_doc)).
+        to eq(context_doc.axis_iterator(:child).first)
     end
 
     specify "an XPath which makes use of collations" do
       compiler = described_class.create(processor) {
         default_collation 'http://www.w3.org/2013/collation/UCA?lang=de-DE'
       }
-      expect(compiler.compile('/doc/collation/e[1][compare(., /doc/collation/e[2]) = 1]').run(context_doc).to_a).to eq([])
+      expect(compiler.compile('/doc/collation/e[1][compare(., /doc/collation/e[2]) = 1]').evaluate(context_doc)).to eq(Saxon::XDM.EmptySequence())
     end
 
     specify "an XPath which uses namespaces" do
       compiler = described_class.create(processor) {
         namespace a: 'http://example.org/a'
       }
-      expect(compiler.compile('/doc/namespace/a:n').run(context_doc).to_a.size).to eq(1)
+      expect(compiler.compile('/doc/namespace/a:n').evaluate(context_doc).sequence_size).to eq(1)
     end
 
     specify "an XPath which uses variables" do
       compiler = described_class.create(processor) {
         variable 'var', 'xs:string'
       }
-      expect(compiler.compile('/doc/collation/e[. = $var]').run(context_doc, 'var' => 'ab').to_a.size).to eq(1)
+      expect(compiler.compile('/doc/collation/e[. = $var]').evaluate(context_doc, 'var' => 'ab').sequence_size).to eq(1)
     end
   end
 end
