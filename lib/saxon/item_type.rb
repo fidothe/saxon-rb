@@ -184,6 +184,8 @@ module Saxon
 
       def get_s9_type(arg)
         case arg
+        when S9API::ItemType
+          arg
         when Saxon::QName
           get_s9_qname_mapped_type(arg)
         when Class
