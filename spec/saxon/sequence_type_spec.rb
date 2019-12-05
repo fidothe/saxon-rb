@@ -46,13 +46,41 @@ module Saxon
       specify "failing to pass an S9 SequenceType when instantiating with a single arg raises an error" do
         expect { described_class.new(item_type) }.to raise_error(ArgumentError)
       end
-    end
 
-    describe "turning type-occurence strings (xs:string+) into SequenceType instances" do
-      let(:zero_or_more) { described_class.new(ItemType.get_type('xs:string'), OccurrenceIndicator.zero_or_more) }
+      context "convenience creation" do
+        let(:zero_or_more_strings) {
+          described_class.new(item_type, OccurrenceIndicator.zero_or_more)
+        }
 
-      specify "zero-or-more" do
-        expect(described_class.from_type_decl('xs:string*')).to eq(zero_or_more)
+        specify "using type-occurence strings (xs:string+) into SequenceType instances" do
+          expect(described_class.from_type_decl('xs:string*')).to eq(zero_or_more_strings)
+        end
+
+        describe "using a type string/literal / occurence indicator pair" do
+          specify "with a literal ruby class and symbol for occurrence indicator" do
+            expect(described_class.create(::String, :zero_or_more)).to eq(zero_or_more_strings)
+          end
+
+          specify "with an item type name and symbol for occurrence indicator" do
+            expect(described_class.create('xs:string', :zero_or_more)).to eq(zero_or_more_strings)
+          end
+
+          specify "with an ItemType and symbol" do
+            expect(described_class.create(item_type, :zero_or_more)).to eq(zero_or_more_strings)
+          end
+
+          specify "with an ItemType and OccurrenceIndicator" do
+            expect(described_class.create(item_type, OccurrenceIndicator.zero_or_more)).to eq(zero_or_more_strings)
+          end
+
+          specify "with an item type name and OccurrenceIndicator" do
+            expect(described_class.create('xs:string', OccurrenceIndicator.zero_or_more)).to eq(zero_or_more_strings)
+          end
+        end
+
+        specify ".create is exposed as Saxon.SequenceType()" do
+          expect(Saxon.SequenceType('xs:string*')).to eq(zero_or_more_strings)
+        end
       end
     end
 

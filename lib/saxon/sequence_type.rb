@@ -2,23 +2,55 @@ require_relative './item_type'
 require_relative './occurrence_indicator'
 
 module Saxon
+  # Represents a type definition for an XDM Sequence: an {ItemType} plus an
+  # {OccurrenceIndicator} as a restriction on the cardinality (length) of the
+  # sequence. Used most often to define variables in XPath or XSLT, plus in
+  # extension function definition.
   class SequenceType
-    # Generate a {SequenceType} from a declaration string following the rules of
-    # parameter and function declarations in XSLT, like <tt>xs:string+</tt>
-    #
-    # @param type_decl [String] the declaration string
-    # @return [Saxon::SequenceType] the resulting SequenceType
-    def self.from_type_decl(type_decl)
-      occurence_char = type_decl[-1]
-      occurence = case occurence_char
-      when '?'
-        new(ItemType.get_type(type_decl[0..-2]), OccurrenceIndicator.zero_or_one)
-      when '+'
-        new(ItemType.get_type(type_decl[0..-2]), OccurrenceIndicator.one_or_more)
-      when '*'
-        new(ItemType.get_type(type_decl[0..-2]), OccurrenceIndicator.zero_or_more)
-      else
-        new(ItemType.get_type(type_decl), OccurrenceIndicator.one)
+    class << self
+      # Generate a {SequenceType} from a type declaration string (see
+      # {.from_type_decl}), or some combination of type name/Ruby class (see
+      # {ItemType.get_type}), and an {OccurrenceIndicator} or symbol referencing
+      # an OccurenceIndicator (one of +:zero_or_more+, +:one_or_more+,
+      # +:zero_or_one+, or +:one+)
+      def create(type_name, occurrence_indicator = nil)
+        check_for_complete_decl!(type_name, occurrence_indicator)
+        return from_type_decl(type_name) if type_name.is_a?(String) && occurrence_indicator.nil?
+        item_type = ItemType.get_type(type_name)
+        occurrence_indicator = OccurrenceIndicator.get_indicator(occurrence_indicator)
+        new(item_type, occurrence_indicator)
+      end
+
+      # Generate a {SequenceType} from a declaration string following the rules of
+      # parameter and function declarations in XSLT, like <tt>xs:string+</tt>
+      #
+      # @param type_decl [String] the declaration string
+      # @return [Saxon::SequenceType] the resulting SequenceType
+      def from_type_decl(type_decl)
+        occurence_char = type_decl[-1]
+        occurence = case occurence_char
+        when '?'
+          new(ItemType.get_type(type_decl[0..-2]), OccurrenceIndicator.zero_or_one)
+        when '+'
+          new(ItemType.get_type(type_decl[0..-2]), OccurrenceIndicator.one_or_more)
+        when '*'
+          new(ItemType.get_type(type_decl[0..-2]), OccurrenceIndicator.zero_or_more)
+        else
+          new(ItemType.get_type(type_decl), OccurrenceIndicator.one)
+        end
+      end
+
+      private
+
+      def check_for_complete_decl!(type_name, occurrence_indicator)
+        return true if occurrence_indicator.nil?
+        if type_name_is_complete_decl?(type_name)
+          raise ArgumentError, "Cannot pass a complete type declaration (#{type_name}) and an OccurrenceIndicator"
+        end
+      end
+
+      def type_name_is_complete_decl?(type_name)
+        !!(type_name.is_a?(String) && type_name.match(/[+*?]$/))
       end
     end
 
@@ -79,5 +111,11 @@ module Saxon
     def s9_sequence_type
       @s9_sequence_type ||= S9API::SequenceType.makeSequenceType(item_type.to_java, occurrence_indicator.to_java)
     end
+  end
+
+  # Convenience wrapper for {SequenceType.create}
+  # @see SequenceType.create
+  def self.SequenceType(*args)
+    SequenceType.create(*args)
   end
 end
