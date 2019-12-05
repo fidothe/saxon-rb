@@ -69,24 +69,18 @@ EOS
         }
 
         expect(compiler.declared_variables).to eq({
-          qname => Saxon::XPath::VariableDeclaration.new({
-            qname: qname,
-            zero_or_more: 'item()'
-          })
+          qname => Saxon::XPath::VariableDeclaration.new(qname, Saxon.SequenceType('item()*'))
         })
       end
 
       it "can be declared with a Ruby type mapped to an XDM type" do
         compiler = Saxon::XPath::Compiler.create(processor) {
           namespace a: 'http://example.org/a'
-          variable 'a:var', one_or_more: ::String
+          variable 'a:var', Saxon.SequenceType(::String, :one_or_more)
         }
 
         expect(compiler.declared_variables).to eq({
-          qname => Saxon::XPath::VariableDeclaration.new({
-            qname: qname,
-            one_or_more: 'xs:string'
-          })
+          qname => Saxon::XPath::VariableDeclaration.new(qname, Saxon.SequenceType('xs:string+'))
         })
       end
 
@@ -97,10 +91,7 @@ EOS
         }
 
         expect(compiler.declared_variables).to eq({
-          qname => Saxon::XPath::VariableDeclaration.new({
-            qname: qname,
-            one_or_more: 'xs:string'
-          })
+          qname => Saxon::XPath::VariableDeclaration.new(qname, Saxon.SequenceType('xs:string+'))
         })
       end
 
@@ -111,10 +102,7 @@ EOS
         }
 
         expect(compiler.declared_variables).to eq({
-          qname => Saxon::XPath::VariableDeclaration.new({
-            qname: qname,
-            zero_or_more: 'item()'
-          })
+          qname => Saxon::XPath::VariableDeclaration.new(qname, Saxon.SequenceType('item()*'))
         })
       end
 
@@ -172,8 +160,8 @@ EOS
           prefix: 'b', uri: 'http://example.org/b', local_name: 'var'
         })
         expect(compiler.declared_variables).to eq({
-          a_var_qname => Saxon::XPath::VariableDeclaration.new(qname: a_var_qname, one: 'xs:string'),
-          b_var_qname => Saxon::XPath::VariableDeclaration.new(qname: b_var_qname, one: 'xs:string')
+          a_var_qname => Saxon::XPath::VariableDeclaration.new(a_var_qname, Saxon.SequenceType('xs:string')),
+          b_var_qname => Saxon::XPath::VariableDeclaration.new(b_var_qname, Saxon.SequenceType('xs:string'))
         })
 
         expect(compiler.default_collation).to eq('http://example.org/collation')
@@ -193,7 +181,7 @@ EOS
           prefix: 'a', uri: 'http://example.org/a', local_name: 'var'
         })
         expect(compiler.declared_variables).to eq({
-          a_var_qname => Saxon::XPath::VariableDeclaration.new(qname: a_var_qname, one_or_more: 'xs:string')
+          a_var_qname => Saxon::XPath::VariableDeclaration.new(a_var_qname, Saxon.SequenceType('xs:string+')),
         })
 
         expect(compiler.default_collation).to be_nil

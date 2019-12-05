@@ -13,16 +13,26 @@ module Saxon
       # {ItemType.get_type}), and an {OccurrenceIndicator} or symbol referencing
       # an OccurenceIndicator (one of +:zero_or_more+, +:one_or_more+,
       # +:zero_or_one+, or +:one+)
+      #
+      # @return [Saxon::SequenceType] the resulting SequenceType
       def create(type_name, occurrence_indicator = nil)
-        check_for_complete_decl!(type_name, occurrence_indicator)
-        return from_type_decl(type_name) if type_name.is_a?(String) && occurrence_indicator.nil?
-        item_type = ItemType.get_type(type_name)
-        occurrence_indicator = OccurrenceIndicator.get_indicator(occurrence_indicator)
-        new(item_type, occurrence_indicator)
+        case type_name
+        when SequenceType
+          return type_name
+        when S9API::SequenceType
+          return new(type_name)
+        else
+          check_for_complete_decl!(type_name, occurrence_indicator)
+          return from_type_decl(type_name) if type_name.is_a?(String) && occurrence_indicator.nil?
+          item_type = ItemType.get_type(type_name)
+          occurrence_indicator = OccurrenceIndicator.get_indicator(occurrence_indicator)
+          new(item_type, occurrence_indicator)
+        end
       end
 
-      # Generate a {SequenceType} from a declaration string following the rules of
-      # parameter and function declarations in XSLT, like <tt>xs:string+</tt>
+      # Generate a {SequenceType} from a declaration string following the rules
+      # of parameter and function +as=+ declarations in XSLT, like
+      # <tt><xsl:variable ... as="xs:string+"/></tt>
       #
       # @param type_decl [String] the declaration string
       # @return [Saxon::SequenceType] the resulting SequenceType

@@ -46,6 +46,12 @@ module Saxon
         Saxon::XPath::Executable.new(new_compiler.compile(expression), static_context)
       end
 
+      # Allows the creation of a new {Compiler} starting from a copy of this
+      # Compiler's static context. As with {.create}, passing a block gives
+      # access to a DSL for setting up the compiler's static context.
+      #
+      # @yield An XPath compiler DSL block
+      # @return [Saxon::XPath::Compiler] the new compiler instance
       def create(&block)
         new_static_context = static_context.define(block)
         self.class.new(@s9_processor, new_static_context)
