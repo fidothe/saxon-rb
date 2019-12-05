@@ -157,6 +157,7 @@ module Saxon
       # @overload get_type(type_name)
       #   Get the {ItemType} for the name
       #   @param type_name [String] name of the built-in {ItemType} to fetch
+      #   (e.g. +xs:string+ or +element()+)
       # @overload get_type(item_type)
       #   Given an instance of {ItemType}, simply return the instance
       #   @param item_type [Saxon::ItemType] an existing ItemType instance
@@ -184,6 +185,8 @@ module Saxon
 
       def get_s9_type(arg)
         case arg
+        when S9API::ItemType
+          arg
         when Saxon::QName
           get_s9_qname_mapped_type(arg)
         when Class

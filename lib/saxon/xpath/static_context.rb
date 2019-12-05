@@ -1,5 +1,6 @@
 require_relative '../qname'
 require_relative './variable_declaration'
+
 module Saxon
   module XPath
     # Raised when an attempt to declare a variable is made using a string for
@@ -76,22 +77,17 @@ module Saxon
         # Declare a XPath variable's existence in the context
         #
         # @param qname [String, Saxon::QName] The name of the variable as
-        # explicit QName or prefix:name string form. The string form requires
-        # the namespace prefix to have already been declared with {#namespace}
-        # @param type [String, Hash{Symbol => String, Class}, null] The type of the
-        # variable, either as a string using the same form as an XSLT
-        # <tt>as=""</tt> type definition, or as a hash of one key/value where
-        # that key is a Symbol taken from {Saxon::OccurenceIndicator} and the
-        # value is either a Class that {Saxon::ItemType} can convert to its
-        # XDM equivalent (e.g. {::String}), or a string that {Saxon::ItemType}
-        # can parse into an XDM type (e.g. <tt>xs:string</tthat
-        # {Saxon::ItemType} can parse into an XDM type (e.g.
-        # <tt>xs:string</tt> or <tt>element()</tt>).
-        # If it's nil, then the default <tt>item()*</tt> – anything – type declaration is used
-        def variable(qname, type = nil)
+        #   explicit QName or prefix:name string form. The string form requires
+        #   the namespace prefix to have already been declared with {#namespace}
+        # @param sequence_type [String, Saxon::SequenceType, null] The type of
+        #   the variable, either as a string using the same form as an XSLT
+        #   <tt>as=""</tt> type definition, or as a {Saxon::SequenceType} directly.
+        #
+        #   If it's nil, then the default <tt>item()*</tt> – anything – type declaration is used
+        def variable(qname, sequence_type = nil)
           qname = resolve_variable_qname(qname)
           @declared_variables = @declared_variables.merge({
-            qname => resolve_variable_declaration(qname, type)
+            qname => resolve_variable_declaration(qname, sequence_type)
           }).freeze
         end
 
@@ -101,29 +97,8 @@ module Saxon
           Saxon::QName.resolve(qname_or_string, @declared_namespaces)
         end
 
-        def resolve_variable_type_decl(type_decl)
-          case type_decl
-          when String
-            occurence_char = type_decl[-1]
-            occurence = case occurence_char
-            when '?'
-              {zero_or_one: type_decl[0..-2]}
-            when '+'
-              {one_or_more: type_decl[0..-2]}
-            when '*'
-              {zero_or_more: type_decl[0..-2]}
-            else
-              {one: type_decl}
-            end
-          when Hash
-            type_decl
-          end
-        end
-
-        def resolve_variable_declaration(qname, type)
-          args_hash = resolve_variable_type_decl(type) || {}
-          args_hash[:qname] = qname
-          Saxon::XPath::VariableDeclaration.new(args_hash)
+        def resolve_variable_declaration(qname, sequence_type = nil)
+          Saxon::XPath::VariableDeclaration.new(qname, Saxon.SequenceType(sequence_type || 'item()*'))
         end
       end
 

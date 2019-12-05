@@ -32,10 +32,26 @@ module Saxon::XPath
       context "a simple query" do
         subject { compiler.compile('/doc') }
 
-        specify "returns the expected node as an enumerable" do
-          expect(subject.run(context).map { |xdm_node|
-            xdm_node.node_name
-          }).to eq([Saxon::QName.clark('doc')])
+        context "being evaluated it to return an Enumerator over the contents of the XDM Value" do
+          specify "returns the expected value" do
+            expect(subject.as_enum(context).map { |xdm_node|
+              xdm_node.node_name
+          }.to_a).to eq([Saxon::QName.clark('doc')])
+          end
+
+          specify "returns a non-node value correctly" do
+            expect(compiler.compile("'a'").as_enum(context).to_a).to eq([Saxon::XDM.AtomicValue('a')])
+          end
+        end
+
+        context "being evaluated it to return an XDM::Value" do
+          specify "returns the expected value" do
+            expect(subject.evaluate(context).node_name).to eq(Saxon::QName.clark('doc'))
+          end
+
+          specify "returns a non-node value correctly" do
+            expect(compiler.compile("'a'").evaluate(context)).to eq(Saxon::XDM.AtomicValue('a'))
+          end
         end
       end
     end

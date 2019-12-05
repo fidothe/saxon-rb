@@ -51,6 +51,12 @@ module Saxon
         )
       end
 
+      # Allows the creation of a new {Compiler} starting from a copy of this
+      # Compiler's static context. As with {.create}, passing a block gives
+      # access to a DSL for setting up the compiler's static context.
+      #
+      # @yield An XSLT compiler DSL block
+      # @return [Saxon::XSLT::Compiler] the new compiler instance
       def create(&block)
         new_evaluation_context = evaluation_context.define(block)
         self.class.new(@s9_processor, new_evaluation_context)

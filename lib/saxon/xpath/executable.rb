@@ -16,17 +16,34 @@ module Saxon
         @s9_xpath_executable, @static_context = s9_xpath_executable, static_context
       end
 
-      # Run the compiled query using a passed-in node as the context item.
-      # @param context_item [Saxon::XDM::Node] the context item node
-      # @return [Saxon::XPath::Result] the result of the query as an
-      #   enumerable
-      def run(context_item, variables = {})
-        selector = to_java.load
-        selector.setContextItem(context_item.to_java)
-        variables.each do |qname_or_string, value|
-          selector.setVariable(static_context.resolve_variable_qname(qname_or_string).to_java, Saxon::XDM.Value(value).to_java)
-        end
-        Result.new(selector.iterator)
+
+      # Evaluate the XPath against the context node given and return an
+      # +Enumerator+ over the result.
+      #
+      # @param context_item [Saxon::XDM::Node, Saxon::XDM::AtomicValue] the item
+      #   to be used as the context item for evaluating the XPath from.
+      # @param variables [Hash<Saxon::QName => Saxon::XDM::Value, Saxon::XDM::Node,
+      #   Saxon::XDM::AtomicValue>] any variable values to set within the XPath
+      # @return [Enumerator] an Enumerator over the items in the result sequence
+      def as_enum(context_item, variables = {})
+        generate_selector(context_item, variables).iterator.lazy.
+          map { |s9_xdm_object| Saxon::XDM.Value(s9_xdm_object) }
+      end
+
+      # Evaluate the XPath against the context node given and return the result.
+      #
+      # If the result is a single item, then that will be returned directly
+      # (e.g. an {XDM::Node} or an {XDM::AtomicValue}). If the result is an
+      # empty sequence then {XDM::EmptySequence} is returned.
+      #
+      # @param context_item [Saxon::XDM::Node, Saxon::XDM::AtomicValue] the item
+      #   to be used as the context item for evaluating the XPath from.
+      # @param variables [Hash<Saxon::QName => Saxon::XDM::Value, Saxon::XDM::Node,
+      #   Saxon::XDM::AtomicValue>] any variable values to set within the XPath
+      # @return [Saxon::XDM::Value] the XDM value returned
+      def evaluate(context_item, variables = {})
+        s9_xdm_value = generate_selector(context_item, variables).evaluate
+        Saxon::XDM.Value(s9_xdm_value)
       end
 
       # @return [net.sf.saxon.s9api.XPathExecutable] the underlying Saxon
@@ -34,24 +51,16 @@ module Saxon
       def to_java
         @s9_xpath_executable
       end
-    end
 
-    # The result of executing an XPath query as an enumerable object
-    class Result
-      include Enumerable
+      private
 
-      # @api private
-      # @param result_iterator [java.util.Iterator] the result of calling
-      #   <tt>#iterator</tt> on a Saxon <tt>XPathSelector</tt>
-      def initialize(result_iterator)
-        @result_iterator = result_iterator
-      end
-
-      # Yields <tt>XDM::Node</tt>s from the query result. If no block is passed,
-      # returns an <tt>Enumerator</tt>
-      # @yieldparam xdm_node [Saxon::XDM::Node] the name that is yielded
-      def each(&block)
-        @result_iterator.lazy.map { |s9_xdm_node| Saxon::XDM::Node.new(s9_xdm_node) }.each(&block)
+      def generate_selector(context_item, variables = {})
+        selector = to_java.load
+        selector.setContextItem(context_item.to_java)
+        variables.each do |qname_or_string, value|
+          selector.setVariable(static_context.resolve_variable_qname(qname_or_string).to_java, Saxon::XDM.Value(value).to_java)
+        end
+        selector
       end
     end
   end

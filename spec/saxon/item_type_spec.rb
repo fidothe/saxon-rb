@@ -69,6 +69,13 @@ module Saxon
       expect(described_class.get_type(item_type)).to be(item_type)
     end
 
+    specify "passing an existing s9api.ItemType instance to get_type returns that instance correctly wrapped" do
+      item_type = described_class.get_type(::String)
+      s9_item_type = item_type.to_java
+
+      expect(described_class.get_type(s9_item_type)).to eq(item_type)
+    end
+
     context "instances" do
       subject { described_class.get_type(::String) }
 

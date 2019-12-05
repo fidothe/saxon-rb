@@ -19,8 +19,8 @@ module Saxon
           when 0
             XDM.EmptySequence()
           when 1
-            if existing_value = maybe_xdm_value(items.first)
-              return existing_value
+            if value = maybe_xdm_value(items.first)
+              return value
             end
             XDM.Item(items.first)
           else
@@ -30,10 +30,22 @@ module Saxon
 
         private
 
-        def maybe_xdm_value(item)
-          return item if item.is_a?(self)
-          return new(item) if item.instance_of?(Saxon::S9API::XdmValue)
+        def maybe_xdm_value(value)
+          return value if value.is_a?(self)
+          return XDM.EmptySequence() if value.instance_of?(Saxon::S9API::XdmEmptySequence)
+          return check_for_empty_or_single_item_value(value) if value.instance_of?(Saxon::S9API::XdmValue)
           false
+        end
+
+        def check_for_empty_or_single_item_value(s9_value)
+          case s9_value.size
+          when 0
+            XDM.EmptySequence()
+          when 1
+            XDM.Item(s9_value.item_at(0))
+          else
+            new(s9_value)
+          end
         end
 
         def wrap_items(items)
