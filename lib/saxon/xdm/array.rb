@@ -5,6 +5,11 @@ module Saxon
   module XDM
     # Represents an XDM Array
     class Array
+      # Create a new {XDM::Array} from a Ruby Array. The contents of the array
+      # will be converted to {XDM::Value}s using {XDM.Value()}. An existing
+      # {S9API::XdmArray} will simply be wrapped and returned.
+      #
+      # @return [XDM::Array] the new XDM Array
       def self.create(array)
         case array
         when S9API::XdmArray
@@ -28,14 +33,19 @@ module Saxon
         @s9_xdm_array = s9_xdm_array
       end
 
+      # Iterate over the Array, yielding each element.
+      # @yieldparam value [XDM::Value] the current value from the Array
       def each(&block)
         cached_array.each(&block)
       end
 
+      # Fetch element at index +i+ in the array.
+      # @param i [Integer] the index of the element to retrieve.
       def [](i)
         cached_array[i]
       end
 
+      # @return [Integer] the length of the array
       def length
         s9_xdm_array.arrayLength
       end
@@ -53,16 +63,22 @@ module Saxon
         cached_array == other.to_a
       end
 
+      # Return a (frozen) Ruby {::Array} containing all the elements of the {XDM::Array}
       def to_a
         cached_array
       end
 
       alias_method :eql?, :==
 
+      # Compute a hash-code for this {Array}.
+      #
+      # Two {XDM::Array}s with the same content will have the same hash code (and will compare using eql?).
+      # @see Object#hash
       def hash
         @hash ||= cached_array.hash
       end
 
+      # @return the underlying Java XdmArray
       def to_java
         s9_xdm_array
       end

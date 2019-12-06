@@ -13,6 +13,7 @@ module Saxon
         @s9_xdm_function_item = s9_xdm_function_item
       end
 
+      # The underlying Saxon XdmFunctionItem
       def to_java
         @s9_xdm_function_item
       end

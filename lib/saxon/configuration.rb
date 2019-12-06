@@ -10,6 +10,7 @@ module Saxon
   # for details of the constant names used to access the values
   class Configuration
     DEFAULT_SEMAPHORE = Mutex.new
+    private_constant :DEFAULT_SEMAPHORE
 
     # Provides a processor with default configuration. Essentially a singleton
     # instance

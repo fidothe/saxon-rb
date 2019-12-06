@@ -24,10 +24,67 @@ module Saxon
 
       def_delegators :evaluation_context, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
 
+      # Run the XSLT by applying templates against the provided {Saxon::Source}
+      # or {Saxon::XDM::Node}.
+      #
+      # Any {QName}s supplied as {String}s MUST be resolvable as a QName without
+      # extra information, so they must be prefix-less (so, 'name', and never
+      # 'ns:name')
+      #
+      # @param source [Saxon::Source, Saxon::XDM::Node] the Source or Node that
+      #   will be used as the global context item
+      # @param opts [Hash] a hash of options for invoking the transformation
+      # @option opts [Boolean] :raw (false) Whether the transformation should be
+      #   executed 'raw', because it is expected to return a simple XDM Value
+      #   (like a number, or plain text) and not an XML document.
+      # @option opts [String, Saxon::QName] :mode The initial mode to use when
+      #   processing starts.
+      # @option opts [Hash<String, Saxon::QName => Object>] :global_parameters
+      #   Additional global parameters to set. Setting already-defined
+      #   parameters will replace their value for this invocation of the XSLT
+      #   only, it won't affect the {XSLT::Compiler}'s context.
+      # @option opts [Hash<String, Saxon::QName => Object>]
+      #   :initial_template_parameters Additional parameters to pass to the
+      #   first template matched. Setting already-defined parameters will
+      #   replace their value for this invocation of the XSLT only, it won't
+      #   affect the {XSLT::Compiler}'s context.
+      # @option opts [Hash<String, Saxon::QName => Object>]
+      #   :initial_template_tunnel_parameters Additional tunnelling parameters
+      #   to pass to the first template matched. Setting already-defined
+      #   parameters will replace their value for this invocation of the XSLT
+      #   only, it won't affect the {XSLT::Compiler}'s context.
       def apply_templates(source, opts = {})
         transformation(opts).apply_templates(source)
       end
 
+      # Run the XSLT by calling the named template.
+      #
+      # Any {QName}s supplied as {String}s MUST be resolvable as a QName without
+      # extra information, so they must be prefix-less (so, 'name', and never
+      # 'ns:name')
+      #
+      # @param template_name [String, Saxon::QName] the name of the template to
+      #   be invoked.
+      # @param opts [Hash] a hash of options for invoking the transformation
+      # @option opts [Boolean] :raw (false) Whether the transformation should be
+      #   executed 'raw', because it is expected to return a simple XDM Value
+      #   (like a number, or plain text) and not an XML document.
+      # @option opts [String, Saxon::QName] :mode The name of the initial mode
+      #   to use when processing starts.
+      # @option opts [Hash<String, Saxon::QName => Object>] :global_parameters
+      #   Additional global parameters to set. Setting already-defined
+      #   parameters will replace their value for this invocation of the XSLT
+      #   only, it won't affect the {XSLT::Compiler}'s context.
+      # @option opts [Hash<String, Saxon::QName => Object>]
+      #   :initial_template_parameters Additional parameters to pass to the
+      #   first template matched. Setting already-defined parameters will
+      #   replace their value for this invocation of the XSLT only, it won't
+      #   affect the {XSLT::Compiler}'s context.
+      # @option opts [Hash<String, Saxon::QName => Object>]
+      #   :initial_template_tunnel_parameters Additional tunnelling parameters
+      #   to pass to the first template matched. Setting already-defined
+      #   parameters will replace their value for this invocation of the XSLT
+      #   only, it won't affect the {XSLT::Compiler}'s context.
       def call_template(template_name, opts = {})
         transformation(opts).call_template(template_name)
       end
@@ -69,6 +126,8 @@ module Saxon
       end
     end
 
+    # Represents the result of a transformation, providing a simple default
+    # serializer as well
     class Result
       attr_reader :xdm_value
 
@@ -76,14 +135,20 @@ module Saxon
         @xdm_value, @s9_transformer = xdm_value, s9_transformer
       end
 
+      # Serialize the result to a string using the options specified in
+      # +<xsl:output/>+ in the XSLT
       def to_s
         serializer = Serializer.new(@s9_transformer.newSerializer)
         serializer.serialize(xdm_value.to_java)
       end
     end
 
+    # @api private
+    # Represents a loaded XSLT transformation ready to be applied against a
+    # context node.
     class Transformation
       attr_reader :s9_transformer, :opts
+      private :s9_transformer, :opts
 
       def initialize(args)
         @s9_transformer = args.fetch(:s9_transformer)
@@ -94,10 +159,14 @@ module Saxon
         @raw = false
       end
 
+      # Apply templates to Source, using all the context set up when we were
+      # created.
       def apply_templates(source)
         transformation_result(:applyTemplates, source)
       end
 
+      # Call the named template, using all the context set up when we were
+      # created.
       def call_template(template_name)
         transformation_result(:callTemplate, Saxon::QName.resolve(template_name))
       end

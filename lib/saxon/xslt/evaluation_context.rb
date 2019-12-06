@@ -3,6 +3,7 @@ require_relative '../qname'
 
 module Saxon
   module XSLT
+    # @api private
     # Represents the evaluation context for an XSLT compiler, and stylesheets
     # compiled using one. {EvaluationContext}s are immutable.
     class EvaluationContext
@@ -47,6 +48,7 @@ module Saxon
         end
       end
 
+      # @api public
       # Provides the hooks for constructing a {EvaluationContext} with a DSL.
       class DSL
         include Common
@@ -130,6 +132,7 @@ module Saxon
 
       include Common
 
+      # @api private
       # Executes the Proc/lambda passed in with a new instance of
       # {EvaluationContext} as <tt>self</tt>, allowing the DSL methods to be
       # called in a DSL-ish way
@@ -142,6 +145,10 @@ module Saxon
 
       attr_reader :default_collation, :static_parameters, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
 
+      # @api private
+      # When passed a Proc, create a new EvaluationContext based on this one, with the same DSL available as in {.define}.
+      #
+      # When passed {nil}, simply return the EvaluationContext unaltered.
       def define(block)
         block.nil? ? self : DSL.define(block, args_hash)
       end
@@ -152,13 +159,20 @@ module Saxon
     class GlobalAndStaticParameterClashError < StandardError
     end
 
+    # parameter shorthand name/value-to-full QName/XDM::Value helper module
     module ParameterHelper
+      # process shorthand parameter hash into fully-qualified QName / Value hash
+      # @param parameters [Hash<String, Saxon::QName => Object>]
+      # @return [Hash<Saxon::QName => Saxon::XDM::Value>]
+      # @see Saxon::QName.resolve() for more about the QName resolution process
+      # @see Saxon::XDM.Value() for more about the conversion of Object into XDM Values
       def self.process_parameters(parameters)
         parameters.map { |qname, value|
           [Saxon::QName.resolve(qname), Saxon::XDM.Value(value)]
         }.to_h
       end
 
+      # generate Java Map from fully qualified parameter hash
       def self.to_java(parameters)
         Hash[parameters.map { |k,v| [k.to_java, v.to_java] }].to_java
       end

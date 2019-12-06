@@ -3,16 +3,39 @@ require 'saxon/s9api'
 module Saxon
   # Represents QNames
   class QName
+    # Create a {QName} from a Clark-notation string.
+    #
+    # Clark-notation for QNames uses +{}+ to delimit the namespace, so for a
+    # QName not in a namespace it's simply +local-name+, and for one in a
+    # namespace it's +{http://example.org/ns}local-name+
+    #
+    # @param clark_string [String] A QName in Clark notation.
+    # @return [Saxon::QName] A QName
     def self.clark(clark_string)
       s9_qname = Saxon::S9API::QName.fromClarkName(clark_string)
       new(s9_qname)
     end
 
+    # Create a {QName} from an Expanded QName string.
+    #
+    # Expanded QNames uses +Q{}+ to delimit the namespace, so for a
+    # QName not in a namespace it's simply +Q{}local-name+ (or +local-name}), and for one in a
+    # namespace it's +Q{http://example.org/ns}local-name+
+    #
+    # @param eqname_string [String] A QName in Expanded QName notation.
+    # @return [Saxon::QName] A QName
     def self.eqname(eqname_string)
       s9_qname = Saxon::S9API::QName.fromEQName(eqname_string)
       new(s9_qname)
     end
 
+    # Create a {QName} from prefix, uri, and local name options
+    #
+    # @param opts [Hash]
+    # @option [String] :prefix the namespace prefix to use (optional, requires +:uri+ passed too)
+    # @option [String] :uri the namespace URI to use (only required for QNames in a namespace)
+    # @option [String] :local_name the local-part of the QName. Required.
+    # @return [Saxon::QName] the QName
     def self.create(opts = {})
       prefix = opts[:prefix]
       uri = opts[:uri]
@@ -48,7 +71,7 @@ module Saxon
       end
     end
 
-    # Resolve a QName string of the form <tt>"prefix:local-name"</tt> into a
+    # Resolve a QName string of the form +"prefix:local-name"+ into a
     # {Saxon::QName} by looking up the namespace URI in a hash of
     # <tt>"prefix" => "namespace-uri"</tt>
     #
@@ -110,12 +133,21 @@ module Saxon
       @s9_qname.getEQName
     end
 
+    # Compare this QName with another. They compare equal if they have same URI
+    # and local name. Prefix is ignored.
+    #
+    # @param other [Saxon::QName] the QName to compare against
+    # @return [Boolean] whether the two compare equal
     def ==(other)
       return false unless other.is_a?(QName)
       s9_qname.equals(other.to_java)
     end
     alias_method :eql?, :==
 
+    # Compute a hash-code for this {QName}.
+    #
+    # Two {QNames}s with the same local name and URI will have the same hash code (and will compare using eql?).
+    # @see Object#hash
     def hash
       @hash ||= (local_name + uri).hash
     end
@@ -134,6 +166,8 @@ module Saxon
       s9_qname.to_s
     end
 
+    # Returns a more detailed string representation of the object, showing
+    # prefix, uri, and local_name instance variables
     def inspect
       "<Saxon::QName @prefix=#{prefix} @uri=#{uri} @local_name=#{local_name}>"
     end
@@ -145,6 +179,7 @@ module Saxon
         @qname_string, @prefix = qname_string, prefix
       end
 
+      # The error message reports the unbound prefix and complete QName
       def to_s
         "Namespace prefix ‘#{@prefix}’ for QName ‘#{@qname_string}’ is not bound to a URI"
       end

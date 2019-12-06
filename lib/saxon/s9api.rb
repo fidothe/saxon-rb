@@ -3,8 +3,13 @@ require 'saxon/loader'
 module Saxon
   module S9API
     CLASS_IMPORT_SEMAPHORE = Mutex.new
+    private_constant :CLASS_IMPORT_SEMAPHORE
 
     class << self
+      # Override the +const_missing+ hook in {S9API} so that we can delay
+      # loading the Saxon JARs until the user has had a chance to set an
+      # alternate location for them, if they don't want to use the bundled Saxon
+      # HE
       def const_missing(name)
         Saxon::Loader.load!
         begin

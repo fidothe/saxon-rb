@@ -13,6 +13,7 @@ module Saxon
         @class_name = class_name
       end
 
+      # error message including class name no type equivalent found for
       def to_s
         "Ruby class <#{@class_name}> has no XDM type equivalent"
       end
@@ -26,29 +27,14 @@ module Saxon
         @type_str = type_str
       end
 
+      # error message including type string with no matching built-in type
       def to_s
         "'#{@type_str}' is not recognised as an XSD built-in type"
       end
     end
 
-    class Factory
-      DEFAULT_SEMAPHORE = Mutex.new
-
-      attr_reader :processor
-
-      def initialize(processor)
-        @processor = processor
-      end
-
-      def s9_factory
-        return @s9_factory if instance_variable_defined?(:@s9_factory)
-        DEFAULT_SEMAPHORE.synchronize do
-          @s9_factory = S9API::ItemTypeFactory.new(processor.to_java)
-        end
-      end
-    end
-
     TYPE_CACHE_MUTEX = Mutex.new
+    private_constant :TYPE_CACHE_MUTEX
     # A mapping of Ruby types to XDM type constants
     TYPE_MAPPING = {
       'String' => :STRING,
@@ -134,12 +120,14 @@ module Saxon
       Hash[QNAME_MAPPING.map { |qname, v| [qname.to_s, v] }]
     ).freeze
 
+    # convertors to generate lexical strings for a given {ItemType}, as a hash keyed on the ItemType
     ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS = Hash[
       LexicalStringConversion::Convertors.constants.map { |const|
         [S9API::ItemType.const_get(const), LexicalStringConversion::Convertors.const_get(const)]
       }
     ].freeze
 
+    # convertors from {XDM::AtomicValue} to a ruby primitve value, as a hash keyed on the ItemType
     ATOMIC_VALUE_TO_RUBY_CONVERTORS = Hash[
       ValueToRuby::Convertors.constants.map { |const|
         [S9API::ItemType.const_get(const), ValueToRuby::Convertors.const_get(const)]
@@ -255,6 +243,8 @@ module Saxon
 
     alias_method :eql?, :==
 
+    # Return a hash code so this can be used as a key in a {::Hash}.
+    # @return [Fixnum] the hash code
     def hash
       @hash ||= s9_item_type.hashCode
     end

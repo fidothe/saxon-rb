@@ -34,7 +34,9 @@ module Saxon
         end
       end
 
+      # ItemType representing QNames
       XS_QNAME = ItemType.get_type('xs:QName')
+      # ItemType representing NOTATION
       XS_NOTATION = ItemType.get_type('xs:NOTATION')
 
       class << self
@@ -165,6 +167,10 @@ module Saxon
 
       alias_method :eql?, :==
 
+      # Compute a hash-code for this {AtomicValue}.
+      #
+      # Two {AtomicValue}s with the same content will have the same hash code (and will compare using eql?).
+      # @see Object#hash
       def hash
         @hash ||= s9_xdm_atomic_value.hashCode
       end

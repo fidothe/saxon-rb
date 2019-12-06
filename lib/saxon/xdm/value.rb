@@ -134,10 +134,12 @@ module Saxon
 
       alias_method :enum_for, :to_enum
 
+      # Returns an enumerator over the Sequence
       def sequence_enum
         to_enum
       end
 
+      # @return [Integer] the size of the sequence
       def sequence_size
         s9_xdm_value.size
       end
@@ -149,6 +151,7 @@ module Saxon
         @s9_xdm_item = s9_xdm_item
       end
 
+      # Return the underlying s9api XdmItem
       def to_java
         @s9_xdm_item
       end
