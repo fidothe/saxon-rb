@@ -24,7 +24,7 @@ It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.requirements << 'jar net.sf.saxon, Saxon-HE, 9.9.1-5'
+  spec.requirements << 'jar net.sf.saxon, Saxon-HE, 9.9.1-6'
 
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'jar-dependencies'
