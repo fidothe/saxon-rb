@@ -4,7 +4,36 @@ require_relative './executable'
 
 module Saxon
   module XPath
-    # Compiles XPath expressions so they can be executed
+    # An {XPath::Compiler} turns XPath expressions into executable queries you
+    # can run against XDM Nodes (like XML documents, or parts of XML documents).
+    #
+    # To compile an XPath requires an +XPath::Compiler+ instance. You can create
+    # one by calling {Compiler.create} and passing a {Saxon::Processor}, with an
+    # optional block for context like bound namespaces and declared variables.
+    # Alternately, and much more easily, you can call {Processor#xpath_compiler}
+    # on the {Saxon::Processor} instance you're already working with.
+    #
+    #     processor = Saxon::Processor.create
+    #     compiler = processor.xpath_compiler {
+    #       namespace a: 'http://example.org/a'
+    #       variable 'a:var', 'xs:string'
+    #     }
+    #     # Or...
+    #     compiler = Saxon::XPath::Compiler.create(processor) {
+    #       namespace a: 'http://example.org/a'
+    #       variable 'a:var', 'xs:string'
+    #     }
+    #     xpath = compiler.compile('//a:element[@attr = $a:var]')
+    #     matches = xpath.evaluate(document_node, {
+    #       'a:var' => 'the value'
+    #     }) #=> Saxon::XDM::Value
+    #
+    # In order to use prefixed QNames in your XPaths, like +/ns:name/+, then you need
+    # to declare prefix/namespace URI bindings when you create a compiler.
+    #
+    # It's also possible to make use of variables in your XPaths by declaring them at
+    # the compiler creation stage, and then passing in values for them as XPath run
+    # time.
     class Compiler
       # Create a new <tt>XPath::Compiler</tt> using the supplied Processor.
       # Passing a block gives access to a DSL for setting up the compiler's
@@ -50,7 +79,7 @@ module Saxon
       # Compiler's static context. As with {.create}, passing a block gives
       # access to a DSL for setting up the compiler's static context.
       #
-      # @yield An XPath compiler DSL block
+      # @yield An {XPath::StaticContext::DSL} block
       # @return [Saxon::XPath::Compiler] the new compiler instance
       def create(&block)
         new_static_context = static_context.define(block)

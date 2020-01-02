@@ -2,7 +2,23 @@ require_relative '../xdm'
 
 module Saxon
   module XPath
-    # Represents a compiled XPath query ready to be executed
+    # Represents a compiled XPath query ready to be executed. An
+    # {XPath::Executable} is created by compiling an XPath expression with
+    # {XPath::Compiler#compile}.
+    #
+    # To run the +XPath::Executable+ you can call {XPath::Executable#evaluate},
+    # to generate an {XDM::Value} of the results, or you can call
+    # {XPath::Executable#as_enum} to return an Enumerator over the results.
+    #
+    #     processor = Saxon::Processor.create
+    #     compiler = processor.xpath_compiler
+    #     xpath = compiler.compile('//element[@attr = $var]')
+    #
+    #     matches = xpath.evaluate(document_node, {'var' => 'the value'}) #=> Saxon::XDM::Value
+    #
+    #     xpath.as_enum(document_node, {'var' => 'the value'}).each do |node|
+    #       ...
+    #     end
     class Executable
       # @return [XPath::StaticContext] the XPath's static context
       attr_reader :static_context

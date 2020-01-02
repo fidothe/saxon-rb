@@ -11,11 +11,13 @@ module Saxon
         @variable_name, @prefix = variable_name, prefix
       end
 
+      # error message reports which unbound prefix is a problem, and how it was used
       def to_s
         "Namespace prefix ‘#{@prefix}’ for variable name ‘#{@variable_name}’ is not bound to a URI"
       end
     end
 
+    # @api private
     # Represents the static context for a compiled XPath. {StaticContext}s are immutable.
     class StaticContext
       # methods used by both {StaticContext} and {StaticContext::DSL}
@@ -42,11 +44,12 @@ module Saxon
         end
       end
 
+      # @api public
       # Provides the hooks for constructing a {StaticContext} with a DSL.
-      # @api private
       class DSL
         include Common
 
+        # @api private
         # Create an instance based on the args hash, and execute the passed in Proc/lambda against it using <tt>#instance_exec</tt> and return a
         # new {StaticContext} with the results
         # @param block [Proc] a Proc/lambda (or <tt>to_proc</tt>'d containing DSL calls
@@ -128,6 +131,8 @@ module Saxon
         Saxon::QName.resolve(qname_or_string, declared_namespaces)
       end
 
+      # @api private
+      # Create a new {StaticContext} based on this one. Passed Proc is evaluated in the same way as {DSL.define}
       def define(block)
         DSL.define(block, args_hash)
       end

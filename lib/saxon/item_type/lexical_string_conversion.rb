@@ -5,12 +5,26 @@ module Saxon
     # A collection of lamba-like objects for converting Ruby values into
     # lexical strings for specific XSD datatypes
     module LexicalStringConversion
+      # Simple validation helper that checks if a value string matches an
+      # allowed lexical string pattern space or not.
+      #
+      # @param value [Object] the value whose to_s representation should be
+      #   checked
+      # @param item_type [Saxon::ItemType] the ItemType whose lexical pattern
+      #   space should be checked against
+      # @param pattern [Regexp] the lexical pattern space Regexp to use in the
+      #   checking
+      # @return [String] the lexical string for the value and type
+      # @raise [Errors::BadRubyValue] if the ruby value doesn't produce a string
+      #   which validates against the allowed pattern
       def self.validate(value, item_type, pattern)
         str = value.to_s
         raise Errors::BadRubyValue.new(value, item_type) if str.match(pattern).nil?
         str
       end
 
+      # Helper class for performing conversion and validation to XDM integer
+      # types from Ruby's Fixnum/Bignum/Integer classes
       class IntegerConversion
         attr_reader :min, :max
 
@@ -18,20 +32,40 @@ module Saxon
           @min, @max = min, max
         end
 
+        # Returns whether the Ruby integer is within the range allowed for the
+        # XDM type
+        # @param integer_value [Integer] the ruby integer to check
+        # @return [Boolean] whether the value is within bounds
         def in_bounds?(integer_value)
           gte_min?(integer_value) && lte_max?(integer_value)
         end
 
+        # Returns whether the Ruby integer is >= the lower bound of the range
+        # allowed for the XDM type
+        # @param integer_value [Integer] the ruby integer to check
+        # @return [Boolean] whether the value is okay
         def gte_min?(integer_value)
           return true if min.nil?
           integer_value >= min
         end
 
+        # Returns whether the Ruby integer is <= the upper bound of the range
+        # allowed for the XDM type
+        # @param integer_value [Integer] the ruby integer to check
+        # @return [Boolean] whether the value is okay
         def lte_max?(integer_value)
           return true if max.nil?
           integer_value <= max
         end
 
+        # Check a value against our type constraints, and return the lexical
+        # string representation if it's okay.
+        #
+        # @param value [Integer] the ruby value
+        # @param item_type [Saxon::ItemType] the item type
+        # @return [String] the lexical string representation of the value
+        # @raise [Errors::RubyValueOutOfBounds] if the value is outside the
+        #   type's permitted bounds
         def call(value, item_type)
           integer_value = case value
           when ::Numeric
@@ -44,24 +78,19 @@ module Saxon
         end
       end
 
+      # Helper class for performing conversion and validation to XDM
+      # Floating-point types from Ruby's Float class
       class FloatConversion
         def initialize(size = :double)
           @double = size == :double
         end
 
-        def double?
-          @double
-        end
-
-        def float_value(float_value)
-          return float_value if double?
-          convert_to_single_precision(float_value)
-        end
-
-        def convert_to_single_precision(float_value)
-          [float_value].pack('f').unpack('f').first
-        end
-
+        # Check a value against our type constraints, and return the lexical
+        # string representation if it's okay.
+        #
+        # @param value [Float] the ruby value
+        # @param item_type [Saxon::ItemType] the item type
+        # @return [String] the lexical string representation of the value
         def call(value, item_type)
           case value
           when ::Float::INFINITY
@@ -74,8 +103,28 @@ module Saxon
             LexicalStringConversion.validate(value, item_type, Patterns::FLOAT)
           end
         end
+
+        private
+
+        # Is this a double-precision XDM float?
+        # @return [Boolean] true if we're converting a double-precision float
+        def double?
+          @double
+        end
+
+        # Return the float as either a double-precision or single-precision
+        # float as needed
+        def float_value(float_value)
+          return float_value if double?
+          convert_to_single_precision(float_value)
+        end
+
+        def convert_to_single_precision(float_value)
+          [float_value].pack('f').unpack('f').first
+        end
       end
 
+      # Convert a value in seconds into an XDM Duration string
       class DurationConversion
         attr_reader :pattern
 
@@ -83,10 +132,14 @@ module Saxon
           @pattern = pattern
         end
 
+        # Produce a lexical Duration string from a numeric Ruby value
+        # representing seconds
         def call(value, item_type)
           return numeric(value) if Numeric === value
           LexicalStringConversion.validate(value, item_type, pattern)
         end
+
+        private
 
         def numeric(value)
           sign = value.negative? ? '-' : ''
@@ -101,14 +154,39 @@ module Saxon
         end
       end
 
+      # Helper class for creating convertors for the various G* Date-related
+      # types that allow single values (GDay, GMonth, GYear).
       class GDateConversion
         attr_reader :bounds, :integer_formatter, :validation_pattern
 
-        def initialize(args = {})
+      # @param args [Hash]
+      # @option args [Range] :bounds the integer bounds for values of this type
+      # @option args [Regexp] :validation_pattern the pattern used to validate the
+      #   value when it's a String not an Integer
+      # @option args [Proc] :integer_formatter a proc/lambda that will produce a
+      #   correctly-formatted lexical string from an Integer value
+      def initialize(args = {})
           @bounds = args.fetch(:bounds)
           @validation_pattern = args.fetch(:validation_pattern)
           @integer_formatter = args.fetch(:integer_formatter)
         end
+
+        # @param value [String, Integer] the value to convert
+        # @param item_type [XDM::ItemType] the type being converted to
+        # @return [String] a correctly formatted String
+        def call(value, item_type)
+          case value
+          when Integer
+            check_value_bounds!(value, item_type)
+            sprintf(integer_formatter.call(value), value)
+          else
+            formatted_value = LexicalStringConversion.validate(value, item_type, validation_pattern)
+            extract_and_check_value_bounds!(formatted_value, item_type)
+            formatted_value
+          end
+        end
+
+        private
 
         def extract_value_from_validated_format(formatted_value)
           Integer(formatted_value.gsub(validation_pattern, '\1'), 10)
@@ -122,20 +200,11 @@ module Saxon
         def extract_and_check_value_bounds!(formatted_value, item_type)
           check_value_bounds!(extract_value_from_validated_format(formatted_value), item_type)
         end
-
-        def call(value, item_type)
-          case value
-          when Integer
-            check_value_bounds!(value, item_type)
-            sprintf(integer_formatter.call(value), value)
-          else
-            formatted_value = LexicalStringConversion.validate(value, item_type, validation_pattern)
-            extract_and_check_value_bounds!(formatted_value, item_type)
-            formatted_value
-          end
-        end
       end
 
+      # Convert Bytes. Idiomatically, Ruby uses +ASCII_8BIT+ encoded strings to
+      # represent bytes, and so a single character represents a single byte. XDM
+      # uses the decimal value of a signed or unsigned 8 bit integer
       class ByteConversion
         attr_reader :unpack_format
 
@@ -150,6 +219,8 @@ module Saxon
         end
       end
 
+      # Pattern fragments that can be combined to help create the lexical space
+      # patterns in {Patterns}
       module PatternFragments
         TIME_DURATION = /(?:T
           (?:
@@ -171,6 +242,7 @@ module Saxon
         NAME_CHAR = ":|" + NCNAME_CHAR
       end
 
+      # A collection of lexical space patterns for XDM types
       module Patterns
         def self.build(*patterns)
           Regexp.new((['\A'] + patterns.map(&:to_s) + ['\z']).join(''))
@@ -198,6 +270,8 @@ module Saxon
         BASE64_BINARY = /\A(?:(?:[A-Za-z0-9+\/] ?){4})*(?:(?:[A-Za-z0-9+\/] ?){3}[A-Za-z0-9+\/]|(?:[A-Za-z0-9+\/] ?){2}[AEIMQUYcgkosw048] ?=|[A-Za-z0-9+\/] ?[AQgw] ?= ?=)?\z/
       end
 
+      # Convertors from Ruby values to lexical string representations for a
+      # particular XDM type
       module Convertors
         ANY_URI = ->(value, item_type) {
           uri_classes = [URI::Generic]
@@ -344,6 +418,7 @@ module Saxon
         }
       end
 
+      # Conversion process error classes
       module Errors
         # Raised during conversion from Ruby value to XDM Type lexical string
         # when the ruby value does not conform to the Type's string

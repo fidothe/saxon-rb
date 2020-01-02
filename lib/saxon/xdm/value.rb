@@ -32,6 +32,7 @@ module Saxon
 
         def maybe_xdm_value(value)
           return value if value.is_a?(self)
+          return value if value === XDM.EmptySequence()
           return XDM.EmptySequence() if value.instance_of?(Saxon::S9API::XdmEmptySequence)
           return check_for_empty_or_single_item_value(value) if value.instance_of?(Saxon::S9API::XdmValue)
           false
@@ -134,10 +135,12 @@ module Saxon
 
       alias_method :enum_for, :to_enum
 
+      # Returns an enumerator over the Sequence
       def sequence_enum
         to_enum
       end
 
+      # @return [Integer] the size of the sequence
       def sequence_size
         s9_xdm_value.size
       end
@@ -149,6 +152,7 @@ module Saxon
         @s9_xdm_item = s9_xdm_item
       end
 
+      # Return the underlying s9api XdmItem
       def to_java
         @s9_xdm_item
       end

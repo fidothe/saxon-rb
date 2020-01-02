@@ -6,8 +6,11 @@ module Saxon
   module S9API
   end
 
+  # The mechanism for adding the JARs for either the bundled Saxon HE, or an
+  # external Saxon HE/PE/EE version, into the CLASSPATH and requiring them.
   module Loader
     LOAD_SEMAPHORE = Mutex.new
+    private_constant :LOAD_SEMAPHORE
 
     # Error raised if Saxon::Loader.load! is called but the path handed
     # in does not exist or is not a directory

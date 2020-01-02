@@ -9,10 +9,13 @@ module Saxon
   # the XML bytestream in. Provides some extra methods to make handling closing
   # the source and its inputstream after consumption more idiomatic
   class Source
+    # Helper methods for getting Java-useful representations of source document
+    # strings and files
     module Helpers
       # Given a File, or IO object which will return either #path or
       # #base_uri, return the #base_uri, if present, or the #path, if present, or
       # nil
+      #
       # @param [File, IO] io A File or IO
       #   object representing the input XML file or data, or a String containing
       #   the XML
@@ -27,6 +30,7 @@ module Saxon
       # Given a File or IO return a Java InputStream, or an InputStreamReader if
       # the Encoding is explicitly specified (rather than inferred from the
       # <?xml charset="..."?>) declaration in the source.
+      #
       # @param io [File, IO, org.jruby.util.IOInputStream, java.io.InputStream]
       #   input to be converted to an input stream
       # @param encoding [Encoding, String] the character encoding to be used to
@@ -45,20 +49,41 @@ module Saxon
       end
 
       # Given a path return a Java File object
-      # @param [String, Pathname] path the path to the file
+      #
+      # @param path [String, Pathname] the path to the file
       # @return [java.io.File] the Java File object
       def self.file(path)
         java.io.File.new(path.to_s)
       end
 
+      # Given a file path and encoding, return a Java InputStreamReader object
+      # for the file.
+      #
+      # @param path [String, Pathname] the path to the file
+      # @param encoding [String, Encoding] the file's character encoding
+      # @return [java.io.InputStreamReader] a Java InputStreamReader object
+      #   wrapping a FileInputStream for the file
       def self.file_reader(path, encoding)
         java.io.InputStreamReader.new(java.io.FileInputStream.new(file(path)), ruby_encoding_to_charset(encoding))
       end
 
+      # Return a File or Reader object for a file, depending on whether the
+      # encoding must be explicitly specified or not.
+      #
+      # @param path [String, Pathname] the path to the file
+      # @param encoding [String, Encoding] the file's character encoding
+      # @return [java.io.Reader] a Java Reader object
       def self.file_or_reader(path, encoding = nil)
         encoding.nil? ? file(path) : file_reader(path, encoding)
       end
 
+      # Return a Reader object for the String with an explicitly set encoding.
+      # If the encoding is +ASCII_8BIT+ then a binary-mode StreamReader is
+      # returned, rather than a character Reader
+      #
+      # @param string [String] the string
+      # @param encoding [String, Encoding] the string's character encoding
+      # @return [java.io.InputStream, java.io.Reader] a Java InputStream or Reader object
       def self.string_reader(string, encoding)
         inputstream = StringIO.new(string).to_inputstream
         encoding = ruby_encoding(encoding)
@@ -66,18 +91,28 @@ module Saxon
         java.io.InputStreamReader.new(inputstream, ruby_encoding_to_charset(encoding))
       end
 
+      # Figure out the equivalent Java +Charset+ for a Ruby {Encoding}.
+      #
+      # @param encoding [String, Encoding] the encoding to find a +Charset+ for
       def self.ruby_encoding_to_charset(encoding)
         ruby_encoding(encoding).to_java.getEncoding.getCharset
       end
 
+      # Given a String with an {Encoding} name or an {Encoding} instance, return
+      # an {Encoding} instance
+      #
+      # @param encoding [String, Encoding] the encoding or encoding name
+      # @return [Encoding] the encoding
       def self.ruby_encoding(encoding)
         encoding.nil? ? nil : ::Encoding.find(encoding)
       end
     end
 
+    # Lambda that checks if the given path exists and is a file
     PathChecker = ->(path) {
       File.file?(path)
     }
+    # Lambda that checks if the given string is a valid URI
     URIChecker = ->(uri) {
       begin
         URI.parse(uri)

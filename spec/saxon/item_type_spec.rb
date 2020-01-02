@@ -402,15 +402,4 @@ module Saxon
       end
     end
   end
-
-  RSpec.describe ItemType::Factory do
-    let(:processor) { Saxon::Processor.create }
-
-    describe "instantiating" do
-      it "requires a Processor" do
-        decl = described_class.new(processor)
-        expect(decl).to be_a(Saxon::ItemType::Factory)
-      end
-    end
-  end
 end

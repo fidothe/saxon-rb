@@ -13,6 +13,7 @@ module Saxon
         @s9_xdm_external_object = s9_xdm_external_object
       end
 
+      # The underlying Saxon XdmExternalObject
       def to_java
         @s9_xdm_external_object
       end
