@@ -4,7 +4,67 @@ require_relative './executable'
 
 module Saxon
   module XSLT
-    # Compiles XSLT stylesheets so they can be executed
+    # The simplest way to construct an {XSLT::Compiler} is to call
+    # {Saxon::Processor#xslt_compiler}.
+    #
+    #     processor = Saxon::Processor.create
+    #     # Simplest, default options
+    #     compiler = processor.xslt_compiler
+    #
+    # In order to set compile-time options, declare static compile-time
+    # parameters then pass a block to the method using the DSL syntax (see
+    # {Saxon::XSLT::EvaluationContext::DSL}
+    #
+    #     compiler = processor.xslt_compiler {
+    #       static_parameters 'param' => 'value'
+    #       default_collation 'https://www.w3.org/2005/xpath-functions/collation/html-ascii-case-insensitive/'
+    #     }
+    #
+    # The static evaluation context for a Compiler cannot be changed, you must
+    # create a new one with the context you want. It’s very simple to create a
+    # new Compiler based on an existing one. Declaring a parameter with a an
+    # existing name overwrites the old value.
+    #
+    #     new_compiler = compiler.create {
+    #       static_parameters 'param' => 'new value'
+    #     }
+    #     new_compiler.default_collation #=> "https://www.w3.org/2005/xpath-functions/collation/html-ascii-case-insensitive/"
+    #
+    # If you wanted to remove a value, you need to start from scratch. You can,
+    # of course, extract any data you want from a compiler instance separately
+    # and use that to create a new one.
+    #
+    #     params = compiler.static_parameters
+    #     new_compiler = processor.xslt_compiler {
+    #       static_parameters params
+    #     }
+    #     new_compiler.default_collation #=> nil
+    #
+    # Once you have a compiler, call {Compiler#compile} and pass in a
+    # {Saxon::Source} or an existing {Saxon::XDM::Node}. Parameters and other
+    # run-time configuration options can be set using a block in the same way as
+    # creating a compiler. You'll be returned a {Saxon::XSLT::Executable}.
+    #
+    #     source = Saxon::Source.create('my.xsl')
+    #     xslt = compiler.compile(source) {
+    #       initial_template_parameters 'param' => 'other value'
+    #     }
+    #
+    # You can also pass in (or override) parameters at stylesheet execution
+    # time, but if you'll be executing the same stylesheet against many
+    # documents with the same initial parameters then setting them at compile
+    # time is simpler.
+    #
+    # Global and initial template parameters can be set at compiler creation
+    # time, compile time, or execution time. Static parameters can only be set
+    # at compiler creation or compile time.
+    #
+    #     xslt = compiler.compile(source) {
+    #       static_parameters 'static-param' => 'static value'
+    #       global_parameters 'param' => 'global value'
+    #       initial_template_parameters 'param' => 'other value'
+    #       initial_template_tunnel_parameters 'param' => 'tunnel value'
+    #     }
     class Compiler
       # Create a new <tt>XSLT::Compiler</tt> using the supplied Processor.
       # Passing a block gives access to a DSL for setting up the compiler's
@@ -45,9 +105,11 @@ module Saxon
       # @yield the block is executed in the context of an {XSLT::EvaluationContext} DSL instance
       # @return [Saxon::XSLT::Executable] the executable stylesheet
       def compile(source, &block)
+        new_evaluation_context = evaluation_context.define(block)
+        s9_compiler = new_compiler(new_evaluation_context)
         Saxon::XSLT::Executable.new(
-          new_compiler.compile(source.to_java),
-          evaluation_context.define(block)
+          s9_compiler.compile(source.to_java),
+          new_evaluation_context
         )
       end
 
@@ -64,10 +126,10 @@ module Saxon
 
       private
 
-      def new_compiler
+      def new_compiler(evaluation_context)
         compiler = @s9_processor.newXsltCompiler
-        compiler.declareDefaultCollation(default_collation) unless default_collation.nil?
-        static_parameters.each do |qname, value|
+        compiler.declareDefaultCollation(evaluation_context.default_collation) unless evaluation_context.default_collation.nil?
+        evaluation_context.static_parameters.each do |qname, value|
           compiler.setParameter(qname.to_java, value.to_java)
         end
         compiler

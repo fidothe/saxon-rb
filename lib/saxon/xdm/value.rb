@@ -32,6 +32,7 @@ module Saxon
 
         def maybe_xdm_value(value)
           return value if value.is_a?(self)
+          return value if value === XDM.EmptySequence()
           return XDM.EmptySequence() if value.instance_of?(Saxon::S9API::XdmEmptySequence)
           return check_for_empty_or_single_item_value(value) if value.instance_of?(Saxon::S9API::XdmValue)
           false

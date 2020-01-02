@@ -26,18 +26,24 @@ module Saxon
           expect(value).to eq(atomic_value)
         end
 
-        specify "returns an XDM::EmptySequence instance when the XdmValue is empty" do
-          s9_value = S9API::XdmValue.new([])
-          value = described_class.create(s9_value)
+        context "empty sequences" do
+          specify "returns an XDM::EmptySequence instance when the XdmValue is empty" do
+            s9_value = S9API::XdmValue.new([])
+            value = described_class.create(s9_value)
 
-          expect(value).to be(XDM.EmptySequence())
-        end
+            expect(value).to be(XDM.EmptySequence())
+          end
 
-        specify "returns an XDM::EmptySequence instance when handed XdmEmptySequence()" do
-          s9_value = S9API::XdmEmptySequence.getInstance()
-          value = described_class.create(s9_value)
+          specify "returns an XDM::EmptySequence instance when handed XdmEmptySequence()" do
+            s9_value = S9API::XdmEmptySequence.getInstance()
+            value = described_class.create(s9_value)
 
-          expect(value).to be(XDM.EmptySequence())
+            expect(value).to be(XDM.EmptySequence())
+          end
+
+          specify "returns the input when handed an XDM::EmptySequence" do
+            expect(described_class.create(XDM.EmptySequence())).to be(XDM.EmptySequence())
+          end
         end
       end
 
