@@ -48,7 +48,7 @@ module Saxon
         else
           if jars_not_on_classpath?
             if saxon_home.nil?
-              require 'saxon_jars'
+              require 'saxon-rb_jars'
             else
               saxon_home = Pathname.new(saxon_home)
               raise NoJarsError, saxon_home unless saxon_home.directory?
