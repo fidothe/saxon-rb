@@ -69,6 +69,19 @@ RSpec.describe Saxon::Processor do
       end
     end
 
+    context "Serializers" do
+      specify "can be created" do
+        expect(subject.serializer).to be_a(Saxon::Serializer::Object)
+      end
+
+      specify "can have a block passed when created to configure them" do
+        serializer = subject.serializer {
+          output_property[:indent] = 'yes'
+        }
+        expect(serializer.output_property[:indent]).to eq('yes')
+      end
+    end
+
     context "Convenience functions" do
       context "parsing an XML document" do
         specify "without constructing a DocumentBuilder or Source manually" do

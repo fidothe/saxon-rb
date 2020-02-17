@@ -1,5 +1,6 @@
 require 'forwardable'
 require_relative 'evaluation_context'
+require_relative 'invocation'
 require_relative '../serializer'
 require_relative '../xdm'
 require_relative '../qname'
@@ -96,7 +97,7 @@ module Saxon
       #   to pass to the first template matched. Setting already-defined
       #   parameters will replace their value for this invocation of the XSLT
       #   only, it won't affect the {XSLT::Compiler}'s context.
-      # @return [Saxon::XSLT::Result] the transformation result
+      # @return [Saxon::XSLT::Invocation] the transformation result
       def apply_templates(source, opts = {})
         transformation(opts).apply_templates(source)
       end
@@ -130,7 +131,7 @@ module Saxon
       #   to pass to the first template matched. Setting already-defined
       #   parameters will replace their value for this invocation of the XSLT
       #   only, it won't affect the {XSLT::Compiler}'s context.
-      # @return [Saxon::XSLT::Result] the transformation result
+      # @return [Saxon::XSLT::Invocation] the transformation result
       def call_template(template_name = nil, opts = {})
         transformation(opts).call_template(template_name)
       end
@@ -155,14 +156,14 @@ module Saxon
       #   Additional global parameters to set. Setting already-defined
       #   parameters will replace their value for this invocation of the XSLT
       #   only, it won't affect the {XSLT::Compiler}'s context.
-      # @return [Saxon::XSLT::Result] the transformation result
+      # @return [Saxon::XSLT::Invocation] the transformation result
       def call_function(function_name, opts = {})
         args = opts.fetch(:args, [])
         transformation(opts.reject { |k, v| k == :args }).call_function(function_name, args)
       end
 
       # @return [net.sf.saxon.s9api.XsltExecutable] the underlying Saxon
-      #   <tt>XsltExecutable</tt>
+      #   +XsltExecutable+
       def to_java
         @s9_xslt_executable
       end
@@ -213,6 +214,7 @@ module Saxon
         @default_initial_template ||= Saxon::QName.clark('{http://www.w3.org/1999/XSL/Transform}initial-template')
       end
 
+      # @api private
       def initialize(args)
         @s9_transformer = args.fetch(:s9_transformer)
         @destination = args.fetch(:destination, nil)
@@ -225,55 +227,42 @@ module Saxon
       # Apply templates to Source, using all the context set up when we were
       # created.
       def apply_templates(source)
-        transformation_result(:applyTemplates, source)
+        transformation_invocation(:applyTemplates, source.to_java)
       end
 
       # Call the named template, using all the context set up when we were
       # created.
       def call_template(template_name)
-        transformation_result(:callTemplate, resolve_template_name(template_name))
+        transformation_invocation(:callTemplate, resolve_template_name(template_name))
       end
 
       # Call the named function, using all the context set up when we were
       # created.
       def call_function(function_name, args)
         function_name = Saxon::QName.resolve(function_name).to_java
-        args = function_args(args)
-        call_function_result(function_name, args)
+        transformation_invocation(:callFunction, function_name, function_args(args))
       end
 
       private
 
-      def transformation_result(invocation_method, invocation_arg)
+      def transformation_invocation(invocation_method, *invocation_args)
         set_opts!
-        transformer_args = [invocation_method, invocation_arg.to_java, destination].compact
-        Result.new(result_xdm_value(s9_transformer.send(*transformer_args)), s9_transformer)
+        XSLT::Invocation.new(s9_transformer, invocation_lambda(invocation_method, invocation_args), raw?)
       end
 
-      def call_function_result(name, args)
-        set_opts!
-        Result.new(result_xdm_value(s9_transformer.callFunction(*[name, args, destination].compact)), s9_transformer)
-      end
-
-      def result_xdm_value(transformer_return_value)
-        XDM.Value(
-          transformer_return_value.nil? ? destination.getXdmNode : transformer_return_value
-        )
+      def invocation_lambda(invocation_method, invocation_args)
+        ->(destination) {
+          s9_transformer.send(invocation_method, *invocation_args, destination.to_java)
+        }
       end
 
       def resolve_template_name(template_name)
-        return self.class.default_initial_template if template_name.nil?
-        Saxon::QName.resolve(template_name)
+        return self.class.default_initial_template.to_java if template_name.nil?
+        Saxon::QName.resolve(template_name).to_java
       end
 
       def function_args(args = [])
         args.map { |val| Saxon::XDM.Value(val).to_java }.to_java(S9API::XdmValue)
-      end
-
-      def destination
-        @destination ||= begin
-          Saxon::S9API::XdmDestination.new unless raw?
-        end
       end
 
       def set_opts!
@@ -309,24 +298,6 @@ module Saxon
 
       def initial_template_tunnel_parameters(parameters)
         s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters) , true)
-      end
-    end
-
-    # Represents the result of a transformation, providing a simple default
-    # serializer as well
-    class Result
-      attr_reader :xdm_value
-
-      # @api private
-      def initialize(xdm_value, s9_transformer)
-        @xdm_value, @s9_transformer = xdm_value, s9_transformer
-      end
-
-      # Serialize the result to a string using the options specified in
-      # +<xsl:output/>+ in the XSLT
-      def to_s
-        serializer = Serializer.new(@s9_transformer.newSerializer)
-        serializer.serialize(xdm_value.to_java)
       end
     end
 

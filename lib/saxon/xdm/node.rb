@@ -33,9 +33,10 @@ module Saxon
         @node_name = node_name.nil? ? nil : Saxon::QName.new(node_name)
       end
 
-      # What kind of node this is. Returns one of +:element+, +:text+,
-      # +:attribute+, +:namespace+, +:comment+, +:processing_instruction+, or
-      # +:comment+
+      # What kind of node this is. Returns one of +:document+, +:element+,
+      # +:text+, +:attribute+, +:namespace+, +:comment+,
+      # +:processing_instruction+, or +:comment+
+      #
       # @return [Symbol] the kind of node this is
       def node_kind
         @node_kind ||= case s9_xdm_node.nodeKind

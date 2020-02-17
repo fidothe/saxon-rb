@@ -44,7 +44,7 @@ module Saxon
       # @return [String] a serialization of the the input document
       def serialize(doc_node)
         s9_transformer = @s9_xslt_executable.load30
-        serializer = Saxon::Serializer.new(s9_transformer.newSerializer)
+        serializer = Saxon::Serializer::Object.new(s9_transformer.newSerializer)
         serializer.serialize(doc_node.to_java)
       end
 
