@@ -252,7 +252,11 @@ module Saxon
 
       def invocation_lambda(invocation_method, invocation_args)
         ->(destination) {
-          s9_transformer.send(invocation_method, *invocation_args, destination.to_java)
+          if destination.nil?
+            s9_transformer.send(invocation_method, *invocation_args)
+          else
+            s9_transformer.send(invocation_method, *invocation_args, destination.to_java)
+          end
         }
       end
 

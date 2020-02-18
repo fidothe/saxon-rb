@@ -34,13 +34,17 @@ module Saxon
       #
       # @return [Saxon::XDM::Value] the XDM value returned by the transformation
       def xdm_value
-        invocation_lambda.call(s9_xdm_destination)
-        XDM.Value(s9_result_value)
+        if raw?
+          XDM.Value(invocation_lambda.call(nil))
+        else
+          invocation_lambda.call(s9_xdm_destination)
+          XDM.Value(s9_xdm_destination.getXdmNode)
+        end
       end
 
       # Whether the transformation was invoked as a 'raw' transformation, where
-      # the result will be returned without being wrapped in a Document node,
-      # and without sequence normalization.
+      # an XDM Value result will be returned without being wrapped in a Document
+      # node, and without sequence normalization.
       #
       # @return [Boolean] whether the transformation was invoked 'raw' or not
       def raw?
@@ -54,15 +58,7 @@ module Saxon
       end
 
       def s9_xdm_destination
-        @s9_xdm_destination ||= raw? ? Saxon::S9API::RawDestination.new : Saxon::S9API::XdmDestination.new
-      end
-
-      def s9_result_value
-        if raw?
-          s9_xdm_destination.getXdmValue
-        else
-          s9_xdm_destination.getXdmNode
-        end
+        @s9_xdm_destination ||= Saxon::S9API::XdmDestination.new
       end
     end
   end
