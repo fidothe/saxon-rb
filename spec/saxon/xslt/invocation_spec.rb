@@ -58,14 +58,16 @@ module Saxon
       end
     end
 
-    context "sending the invocation result to a supplied SAX ContentHandler"
-    context "sending the invocation result to a supplied Destination"
+    context "sending the invocation result to a supplied Destination" do
+      specify "correctly uses the passed-in destination" do
+        destination = processor.serializer.to_java
+        io = StringIO.new
+        destination.setOutputStream(io.to_outputstream)
+
+        subject.to_destination(destination)
+
+        expect(io.string).to eq('<output/>')
+      end
+    end
   end
 end
-
-#     DOMDestination, NullDestination
-#     SAXDestinations
-#     , SchemaValidator,
-#     SchemaValidatorImpl,
-#     Serializer, TeeDestination, XdmDestination,
-#     XMLStreamWriterDestination
