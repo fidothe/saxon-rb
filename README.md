@@ -194,6 +194,47 @@ result = xslt.call_template('template-name', {
 
 Global and initial template parameters can be set at compiler creation time, compile time, or execution time. See [Setting parameters](#label-Setting+parameters) for details.
 
+To serialize the document you can, of course, just call `#to_s` on the result:
+
+```ruby
+result = xslt.apply_templates(input)
+puts result.to_s #=> '<?xml version="1.0"...'
+```
+
+You can also serialize directly to a file path or to any IO instance.
+
+```ruby
+result = xslt.apply_templates(input)
+result.serialize('/path/to/output.xml')
+
+result_2 = xslt.apply_templates(input)
+result_2.serialize($stderr)
+```
+
+You can override serialization options that were set by `<xsl:output/>` in your XSLT:
+
+```ruby
+result = xslt.apply_templates(input)
+result.serialize('/path/to/output.xml') {
+  output_property[:indent] = 'yes'
+}
+```
+
+You can also obtain the result of the transform as an XDM Value:
+
+```ruby
+result = xslt.apply_templates(input)
+result.xdm_value #=> #<Saxon::XDM::Node...>
+```
+
+You also have easy access to provide an instance of a class implementing Saxon's `net.sf.saxon.s9api.Destination` interface:
+
+```ruby
+dom_document = javax.xml.parsers.DocumentBuilderFactory.newInstance.builder.newDocument
+destination = Saxon::S9API::DOMDestination.new(dom_document)
+result = xslt.apply_templates(input).to_destination(destination)
+```
+
 #### Setting parameters
 
 There are four kinds of parameters you can set: *Static parameters*, which are
