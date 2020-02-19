@@ -34,6 +34,6 @@ It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
   spec.add_development_dependency 'addressable', '~> 2.4.0'
   spec.add_development_dependency 'webmock', '~> 2.3.2'
   spec.add_development_dependency 'yard', '~> 0.9.12'
-  spec.add_development_dependency 'simplecov', '~> 0.15'
+  spec.add_development_dependency 'simplecov', '~> 0.17.1'
   spec.add_development_dependency 'rspec_junit_formatter'
 end

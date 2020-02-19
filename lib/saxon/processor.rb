@@ -4,6 +4,7 @@ require 'saxon/configuration'
 require 'saxon/document_builder'
 require 'saxon/xpath'
 require 'saxon/xslt'
+require 'saxon/serializer'
 
 module Saxon
   # Saxon::Processor wraps the S9API::Processor object. This is the object
@@ -80,6 +81,17 @@ module Saxon
     # @return [Saxon::XSLT::Compiler] a new XSLT compiler
     def xslt_compiler(&block)
       Saxon::XSLT::Compiler.create(self, &block)
+    end
+
+    # Generate a new +Serializer+ for directly serializing XDM Values that uses
+    # this +Processor+. +Serializer+s are effectively one-shot objects, and
+    # shouldn't be reused.
+    #
+    # @yield the block passed will be called bound to the serializer instance. See
+    #   {Saxon::Serializer::Object.create}
+    # @return [Saxon::Serializer::Object]
+    def serializer(&block)
+      Saxon::Serializer::Object.create(self, &block)
     end
 
     # @return [net.sf.saxon.s9api.Processor] The underlying Saxon processor
