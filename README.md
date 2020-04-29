@@ -78,7 +78,7 @@ result_2 = transformer.call_template('main-template')
 processor = Saxon::Processor.create
 xpath = processor.xpath_compiler.compile('//element[@attr = $a:var]')
 
-matches = xpath.run(document_node)
+matches = xpath.evaluate(document_node)
 ```
 
 ## Migrating from `saxon-xslt` (or Nokogiri)
