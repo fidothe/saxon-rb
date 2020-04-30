@@ -40,7 +40,7 @@ module Saxon
       # static context.
       #
       # @param processor [Saxon::Processor] the {Saxon::Processor} to use
-      # @yield An XPath compiler DSL block
+      # @yield An XPath::StaticContext::DSL block
       # @return [Saxon::XPath::Compiler] the new compiler instance
       def self.create(processor, &block)
         static_context = XPath::StaticContext.define(block)
@@ -79,7 +79,7 @@ module Saxon
       # Compiler's static context. As with {.create}, passing a block gives
       # access to a DSL for setting up the compiler's static context.
       #
-      # @yield An {XPath::StaticContext::DSL} block
+      # @yield An XPath::StaticContext::DSL block
       # @return [Saxon::XPath::Compiler] the new compiler instance
       def create(&block)
         new_static_context = static_context.define(block)

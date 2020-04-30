@@ -143,7 +143,17 @@ module Saxon
         DSL.define(block)
       end
 
-      attr_reader :default_collation, :static_parameters, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
+
+      # @return [String] The default collation URI as a String
+      attr_reader :default_collation
+      # @return [Hash<Saxon::QName => Saxon::XDM::Value>] All the static parameters
+      attr_reader :static_parameters
+      # @return [Hash<Saxon::QName => Saxon::XDM::Value>] All the global parameters
+      attr_reader :global_parameters
+      # @return [Hash<Saxon::QName => Saxon::XDM::Value>] All the initial template parameters
+      attr_reader :initial_template_parameters
+      # @return [Hash<Saxon::QName => Saxon::XDM::Value>] All the initial template parameters with tunnelling = "yes"
+      attr_reader :initial_template_tunnel_parameters
 
       # @api private
       # When passed a Proc, create a new EvaluationContext based on this one, with the same DSL available as in {.define}.

@@ -222,9 +222,9 @@ module Saxon
       # Pattern fragments that can be combined to help create the lexical space
       # patterns in {Patterns}
       module PatternFragments
+        # The time part of the XSD Duration format allows T0H1M1S, T1H1M, T1M1S, T1H1S, T1H, T1M, T1S
         TIME_DURATION = /(?:T
           (?:
-            # The time part of the format allows T0H1M1S, T1H1M, T1M1S, T1H1S, T1H, T1M, T1S
             [0-9]+[HM]|
             [0-9]+(?:\.[0-9]+)?S|
             [0-9]+H[0-9]+M|
@@ -233,46 +233,78 @@ module Saxon
             [0-9]+H[0-9]+M[0-9]+(?:\.[0-9]+)?S
           )
         )?/x
+        # XSD Date
         DATE = /-?[0-9]{4}-[0-9]{2}-[0-9]{2}/
+        # XSD DateTime Time
         TIME = /[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?/
+        # XSD DateTime Timezone
         TIME_ZONE = /(?:[\-+][0-9]{2}:[0-9]{2}|Z)?/
+        # Valid first characers in an NCName
         NCNAME_START_CHAR = '[A-Z]|_|[a-z]|[\u{C0}-\u{D6}]|[\u{D8}-\u{F6}]|[\u{F8}-\u{2FF}]|[\u{370}-\u{37D}]|[\u{37F}-\u{1FFF}]|[\u{200C}-\u{200D}]|[\u{2070}-\u{218F}]|[\u{2C00}-\u{2FEF}]|[\u{3001}-\u{D7FF}]|[\u{F900}-\u{FDCF}]|[\u{FDF0}-\u{FFFD}]|[\u{10000}-\u{EFFFF}]'
+        # Valid first characters in an XML Name
         NAME_START_CHAR = ":|" + NCNAME_START_CHAR
+        # Valid characters within an NCName
         NCNAME_CHAR = NCNAME_START_CHAR + '|-|\.|[0-9]|\u{B7}|[\u{0300}-\u{036F}]|[\u{203F}-\u{2040}]'
+        # Valid characters within an XML Name
         NAME_CHAR = ":|" + NCNAME_CHAR
       end
 
       # A collection of lexical space patterns for XDM types
       module Patterns
+        # Construct a Regexp from an array of patterns
+        # @param patterns [Array<String>]
+        # @return [Regexp]
         def self.build(*patterns)
           Regexp.new((['\A'] + patterns.map(&:to_s) + ['\z']).join(''))
         end
+        # @see https://www.w3.org/TR/xmlschema-2/#date-lexical-representation
         DATE = build(PatternFragments::DATE, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#dateTime-lexical-representation
         DATE_TIME = build(PatternFragments::DATE, 'T', PatternFragments::TIME, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#time-lexical-repr
         TIME = build(PatternFragments::TIME, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#duration-lexical-repr
         DURATION = build(/-?P(?!\z)(?:[0-9]+Y)?(?:[0-9]+M)?(?:[0-9]+D)?/, PatternFragments::TIME_DURATION)
+        # @see https://www.w3.org/TR/xmlschema-2/#duration-lexical-repr
         DAY_TIME_DURATION = build(/-?P(?!\z)(?:[0-9]+D)?/, PatternFragments::TIME_DURATION)
+        # @see https://www.w3.org/TR/xmlschema-2/#duration-lexical-repr
         YEAR_MONTH_DURATION = /\A-?P(?!\z)(?:[0-9]+Y)?(?:[0-9]+M)?\z/
+        # @see https://www.w3.org/TR/xmlschema-2/#gDay-lexical-repr
         G_DAY = build(/---([0-9]{2})/, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#gMonth-lexical-repr
         G_MONTH = build(/--([0-9]{2})/, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#gYear-lexical-repr
         G_YEAR = build(/(-?[0-9]{4,})/, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#gYearMonth-lexical-repr
         G_YEAR_MONTH = build(/-?([0-9]{4,})-([0-9]{2})/, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#gMonthDay-lexical-repr
         G_MONTH_DAY = build(/--([0-9]{2})-([0-9]{2})/, PatternFragments::TIME_ZONE)
+        # @see https://www.w3.org/TR/xmlschema-2/#integer-lexical-representation
         INTEGER = /\A[+-]?[0-9]+\z/
+        # @see https://www.w3.org/TR/xmlschema-2/#decimal-lexical-representation
         DECIMAL = /\A[+-]?[0-9]+(?:\.[0-9]+)?\z/
+        # @see https://www.w3.org/TR/xmlschema-2/#float-lexical-representation
         FLOAT = /\A(?:[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][0-9]+)?|-?INF|NaN)\z/
+        # @see https://www.w3.org/TR/xmlschema-2/#NCName
         NCNAME = build("(?:#{PatternFragments::NCNAME_START_CHAR})", "(?:#{PatternFragments::NCNAME_CHAR})*")
+        # @see https://www.w3.org/TR/xmlschema-2/#Name
         NAME = build("(?:#{PatternFragments::NAME_START_CHAR})", "(?:#{PatternFragments::NAME_CHAR})*")
+        # @see https://www.w3.org/TR/xmlschema-2/#token
         TOKEN = /\A[^\u0020\u000A\u000D\u0009]+(?: [^\u0020\u000A\u000D\u0009]+)*\z/
+        # @see https://www.w3.org/TR/xmlschema-2/#normalizedString
         NORMALIZED_STRING = /\A[^\u000A\u000D\u0009]+\z/
+        # @see https://www.w3.org/TR/xmlschema-2/#NMTOKEN
         NMTOKEN = build("(?:#{PatternFragments::NAME_CHAR})+")
+        # @see https://www.w3.org/TR/xmlschema-2/#language
         LANGUAGE = /\A[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*\z/
+        # @see https://www.w3.org/TR/xmlschema-2/#base64Binary
         BASE64_BINARY = /\A(?:(?:[A-Za-z0-9+\/] ?){4})*(?:(?:[A-Za-z0-9+\/] ?){3}[A-Za-z0-9+\/]|(?:[A-Za-z0-9+\/] ?){2}[AEIMQUYcgkosw048] ?=|[A-Za-z0-9+\/] ?[AQgw] ?= ?=)?\z/
       end
 
       # Convertors from Ruby values to lexical string representations for a
       # particular XDM type
       module Convertors
+        # @see https://www.w3.org/TR/xmlschema-2/#anyURI
         ANY_URI = ->(value, item_type) {
           uri_classes = [URI::Generic]
           case value
@@ -286,13 +318,17 @@ module Saxon
             end
           end
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#base64Binary
         BASE64_BINARY = ->(value, item_type) {
           Base64.strict_encode64(value.to_s.force_encoding(Encoding::ASCII_8BIT))
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#boolean
         BOOLEAN = ->(value, item_type) {
           value ? 'true' : 'false'
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#byte
         BYTE = ByteConversion.new
+        # @see https://www.w3.org/TR/xmlschema-2/#date
         DATE = ->(value, item_type) {
           if value.respond_to?(:strftime)
             value.strftime('%F')
@@ -300,6 +336,7 @@ module Saxon
             LexicalStringConversion.validate(value, item_type, Patterns::DATE)
           end
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#dateTime
         DATE_TIME = ->(value, item_type) {
           if value.respond_to?(:strftime)
             value.strftime('%FT%T%:z')
@@ -307,11 +344,15 @@ module Saxon
             LexicalStringConversion.validate(value, item_type, Patterns::DATE_TIME)
           end
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#time
         TIME = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::TIME)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#dateTime
         DATE_TIME_STAMP = DATE_TIME
+        # @see https://www.w3.org/TR/xmlschema-2/#duration
         DAY_TIME_DURATION = DurationConversion.new(Patterns::DAY_TIME_DURATION)
+        # @see https://www.w3.org/TR/xmlschema-2/#decimal
         DECIMAL = ->(value, item_type) {
           case value
           when ::Integer
@@ -324,19 +365,25 @@ module Saxon
             LexicalStringConversion.validate(value, item_type, Patterns::DECIMAL)
           end
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#double
         DOUBLE = FloatConversion.new(:single)
+        # @see https://www.w3.org/TR/xmlschema-2/#duration
         DURATION = DurationConversion.new(Patterns::DURATION)
+        # @see https://www.w3.org/TR/xmlschema-2/#float
         FLOAT = FloatConversion.new
+        # @see https://www.w3.org/TR/xmlschema-2/#gDay
         G_DAY = GDateConversion.new({
           bounds: 1..31,
           validation_pattern: Patterns::G_DAY,
           integer_formatter: ->(value) { '---%02d' }
         })
+        # @see https://www.w3.org/TR/xmlschema-2/#gMonth
         G_MONTH = GDateConversion.new({
           bounds: 1..12,
           validation_pattern: Patterns::G_MONTH,
           integer_formatter: ->(value) { '--%02d' }
         })
+        # @see https://www.w3.org/TR/xmlschema-2/#gMonthDay
         G_MONTH_DAY = ->(value, item_type) {
           month_days = {
              1 => 31,
@@ -359,6 +406,7 @@ module Saxon
           raise Errors::RubyValueOutOfBounds.new(value, item_type) if day > month_days[month]
           formatted_value
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#gYear
         G_YEAR = GDateConversion.new({
           bounds: ->(value) { value != 0 },
           validation_pattern: Patterns::G_YEAR,
@@ -366,6 +414,7 @@ module Saxon
             value.negative? ? '%05d' : '%04d'
           }
         })
+        # @see https://www.w3.org/TR/xmlschema-2/#gYearMonth
         G_YEAR_MONTH = ->(value, item_type) {
           formatted_value = LexicalStringConversion.validate(value, item_type, Patterns::G_YEAR_MONTH)
           year, month = Patterns::G_YEAR_MONTH.match(formatted_value).captures.take(2).map { |i|
@@ -376,43 +425,68 @@ module Saxon
           end
           value
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#hexBinary
         HEX_BINARY = ->(value, item_type) {
           value.to_s.force_encoding(Encoding::ASCII_8BIT).each_byte.map { |b| b.to_s(16) }.join
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#int
         INT = IntegerConversion.new(-2147483648, 2147483647)
+        # @see https://www.w3.org/TR/xmlschema-2/#integer
         INTEGER = IntegerConversion.new(nil, nil)
+        # @see https://www.w3.org/TR/xmlschema-2/#language
         LANGUAGE = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::LANGUAGE)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#long
         LONG = IntegerConversion.new(-9223372036854775808, 9223372036854775807)
+        # @see https://www.w3.org/TR/xmlschema-2/#Name
         NAME = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::NAME)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#ID
+        # @see https://www.w3.org/TR/xmlschema-2/#IDREF
+        # @see https://www.w3.org/TR/xmlschema-2/#ENTITY
+        # @see https://www.w3.org/TR/xmlschema-2/#NCName
         ID = IDREF = ENTITY = NCNAME = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::NCNAME)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#negativeInteger
         NEGATIVE_INTEGER = IntegerConversion.new(nil, -1)
+        # @see https://www.w3.org/TR/xmlschema-2/#NMTOKEN
         NMTOKEN = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::NMTOKEN)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#nonNegativeInteger
         NON_NEGATIVE_INTEGER = IntegerConversion.new(0, nil)
+        # @see https://www.w3.org/TR/xmlschema-2/#nonPositiveInteger
         NON_POSITIVE_INTEGER = IntegerConversion.new(nil, 0)
+        # @see https://www.w3.org/TR/xmlschema-2/#normalizedString
         NORMALIZED_STRING = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::NORMALIZED_STRING)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#positiveInteger
         POSITIVE_INTEGER = IntegerConversion.new(1, nil)
+        # @see https://www.w3.org/TR/xmlschema-2/#short
         SHORT = IntegerConversion.new(-32768, 32767)
         # STRING (It's questionable whether anything needs doing here)
+        # @see https://www.w3.org/TR/xmlschema-2/#token
         TOKEN = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::TOKEN)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#unsignedByte
         UNSIGNED_BYTE = ByteConversion.new(:unsigned)
+        # @see https://www.w3.org/TR/xmlschema-2/#unsignedInt
         UNSIGNED_INT = IntegerConversion.new(0, 4294967295)
+        # @see https://www.w3.org/TR/xmlschema-2/#unsignedLong
         UNSIGNED_LONG = IntegerConversion.new(0, 18446744073709551615)
+        # @see https://www.w3.org/TR/xmlschema-2/#unsignedShort
         UNSIGNED_SHORT = IntegerConversion.new(0, 65535)
+        # @see https://www.w3.org/TR/xmlschema-2/#duration
         YEAR_MONTH_DURATION = ->(value, item_type) {
           LexicalStringConversion.validate(value, item_type, Patterns::YEAR_MONTH_DURATION)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#QName
+        # @see https://www.w3.org/TR/xmlschema-2/#NOTATION
         QNAME = NOTATION = ->(value, item_type) {
           raise Errors::UnconvertableNamespaceSensitveItemType
         }
@@ -430,6 +504,8 @@ module Saxon
             @value, @item_type = value, item_type
           end
 
+          # error message includes Ruby value and the XDM type conversion was
+          # being attempted to
           def to_s
             "Ruby value #{value.inspect} cannot be converted to an XDM #{item_type.type_name.to_s}"
           end
@@ -446,6 +522,7 @@ module Saxon
             @value, @item_type = value, item_type
           end
 
+          # error message includes Ruby value and the XDM type whose bounds it is outside of
           def to_s
             "Ruby value #{value.inspect} is outside the allowed bounds of an XDM #{item_type.type_name.to_s}"
           end

@@ -117,7 +117,12 @@ module Saxon
         DSL.define(block)
       end
 
-      attr_reader :declared_variables, :declared_namespaces, :default_collation
+      # @return [String] The default collation URI as a String
+      attr_reader :default_collation
+      # @return [Hash<Saxon::QName => Saxon::XPath::VariableDeclaration] the declared variables
+      attr_reader :declared_variables
+      # @return [Hash<String => String>] the declared namespaces, as a prefix => uri hash
+      attr_reader :declared_namespaces
 
       # @return [Saxon::QName]
       # @overload resolve_variable_qname(qname)

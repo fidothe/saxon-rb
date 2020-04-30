@@ -8,6 +8,8 @@ module Saxon
     # @see DocumentBuilder.create
     class ConfigurationDSL
       # @api private
+      #
+      # Create a new instance and +instance_exec+ the passed-in block against it
       def self.define(document_builder, block)
         new(document_builder).instance_exec(&block)
       end
@@ -223,7 +225,7 @@ module Saxon
       XDM::Node.new(s9_document_builder.build(source.to_java))
     end
 
-    # @return [net.sf.saxon.s9api.DocumentBuilder] The underlying Java Saxon
+    # @return [Java::NetSfSaxonS9api::DocumentBuilder] The underlying Java Saxon
     #   DocumentBuilder instance
     def to_java
       s9_document_builder
