@@ -68,7 +68,7 @@ RSpec.describe Saxon::XDM::Node do
 
     context "default serialisation with to_s" do
       specify "uses Saxon's toString naive serialisation" do
-        expect(doc_node.to_s).to eq("<doc/>")
+        expect(doc_node.to_s.strip).to eq("<doc/>")
       end
     end
 
