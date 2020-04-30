@@ -66,6 +66,12 @@ RSpec.describe Saxon::XDM::Node do
       end
     end
 
+    context "default serialisation with to_s" do
+      specify "uses Saxon's toString naive serialisation" do
+        expect(doc_node.to_s).to eq("<doc/>")
+      end
+    end
+
     it_should_behave_like "an XDM Value hierarchy sequence-like"
     it_should_behave_like "an XDM Item hierarchy sequence-like"
   end

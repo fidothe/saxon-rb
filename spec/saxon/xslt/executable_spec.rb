@@ -1,6 +1,7 @@
 require 'saxon/processor'
 require 'saxon/source'
 require 'saxon/qname'
+require 'saxon/xdm/value'
 require 'saxon/xslt/executable'
 
 module Saxon::XSLT
@@ -200,6 +201,19 @@ module Saxon::XSLT
             expect(result.xdm_value).to eq(Saxon::XDM.AtomicValue(1))
           end
         end
+      end
+    end
+
+    describe "a Serializer using the <xsl:output> options" do
+      let(:xsl_source) { fixture_source('serialization.xsl') }
+      let(:compiler) { processor.xslt_compiler }
+
+      subject { compiler.compile(xsl_source) }
+
+      specify "the Serializer was correctly configured" do
+        serializer = subject.serializer
+
+        expect(serializer.serialize(Saxon::XDM.Value('a'))).to eq('b')
       end
     end
   end

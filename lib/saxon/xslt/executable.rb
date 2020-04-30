@@ -162,6 +162,14 @@ module Saxon
         transformation(opts.reject { |k, v| k == :args }).call_function(function_name, args)
       end
 
+      # Create a {Serializer::Object} configured using the options that were set
+      # by +<xsl:output>+.
+      #
+      # @return [Saxon::Serializer::Object] the Serializer
+      def serializer
+        Saxon::Serializer::Object.new(@s9_xslt_executable.load30.newSerializer)
+      end
+
       # @return [net.sf.saxon.s9api.XsltExecutable] the underlying Saxon
       #   +XsltExecutable+
       def to_java

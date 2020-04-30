@@ -85,6 +85,36 @@ module Saxon
       def axis_iterator(axis)
         AxisIterator.new(self, axis)
       end
+
+      # Use Saxon's naive XDM Node serialisation to serialize the node and its
+      # descendants. Saxon uses a new Serializer with default options to
+      # serialize the node. In particular, if the Node was produced by an XSLT
+      # that used +<xsl:character-map>+ through +<xsl:output>+ to modify the
+      # contents, then they *WILL* *NOT* have been applied.
+      #
+      # +<xsl:output>+ has its effect at serialization time, not at XDM tree
+      # creation time, so it won't be applied until you serialize the document.
+      #
+      # Even then, unless you use a {Serializer} configured with the XSLT's
+      # +<xsl:output>+. We make a properly configured serializer available in
+      # the result of any XSLT transform (a {Saxon::XSLT::Invocation}), e.g.:
+      #
+      #   result = xslt.apply_templates(input)
+      #   result.to_s
+      #   # or
+      #   result.serialize('/path/to/output.xml')
+      #
+      # You can also get that {Serializer} directly from {XSLT::Executable},
+      # should you want to use the serialization options from a particular XSLT
+      # to serialize arbitrary XDM values:
+      #
+      #   serializer = xslt.serializer
+      #   serializer.serialize(an_xdm_value)
+      #
+      # @see http://www.saxonica.com/documentation9.9/index.html#!javadoc/net.sf.saxon.s9api/XdmNode@toString
+      def to_s
+        s9_xdm_node.toString
+      end
     end
   end
 end
