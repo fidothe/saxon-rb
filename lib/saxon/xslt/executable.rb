@@ -203,6 +203,7 @@ module Saxon
     # Represents a loaded XSLT transformation ready to be applied against a
     # context node.
     class Transformation
+      # A list of valid option names for the transform
       VALID_OPTS = [:raw, :mode, :global_context_item, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters]
 
       attr_reader :s9_transformer, :opts
@@ -297,11 +298,11 @@ module Saxon
       end
 
       def initial_template_parameters(parameters)
-        s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters) , false)
+        s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters), false)
       end
 
       def initial_template_tunnel_parameters(parameters)
-        s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters) , true)
+        s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters), true)
       end
     end
 

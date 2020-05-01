@@ -8,6 +8,7 @@ module Saxon
       # Regexp patterns to assist in converting XDM typed values into Ruby
       # native types
       module Patterns
+        # @see https://www.w3.org/TR/xmlschema-2/#dateTime-lexical-representation
         DATE_TIME = /\A(-?[0-9]{4,})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2}(?:\.[0-9]+)?)(Z|[-+][0-9]{2}:[0-9]{2})?\z/
       end
 
@@ -54,34 +55,45 @@ module Saxon
       # A collection of Lambdas (or objects responding to +#call+) for
       # converting XDM typed values to native Ruby types.
       module Convertors
+        # @see https://www.w3.org/TR/xmlschema-2/#integer
         INTEGER = INT = SHORT = LONG = UNSIGNED_INT = UNSIGNED_SHORT = UNSIGNED_LONG = \
         POSITIVE_INTEGER = NON_POSITIVE_INTEGER = NEGATIVE_INTEGER = NON_NEGATIVE_INTEGER = ->(xdm_atomic_value) {
           xdm_atomic_value.to_java.getValue
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#decimal
         DECIMAL = ->(xdm_atomic_value) {
           BigDecimal(xdm_atomic_value.to_s)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#float
         FLOAT = DOUBLE = ->(xdm_atomic_value) {
           xdm_atomic_value.to_java.getValue
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#dateTime
         DATE_TIME = DATE_TIME_STAMP = ValueToRuby::DateTimeConvertor
+        # @see https://www.w3.org/TR/xmlschema-2/#boolean
         BOOLEAN = ->(xdm_atomic_value) {
           xdm_atomic_value.to_java.getValue
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#NOTATION
+        # @see https://www.w3.org/TR/xmlschema-2/#QName
         NOTATION = QNAME = ->(xdm_atomic_value) {
           Saxon::QName.new(xdm_atomic_value.to_java.getQNameValue)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#base64Binary
         BASE64_BINARY = ->(xdm_atomic_value) {
           Base64.decode64(xdm_atomic_value.to_s)
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#hexBinary
         HEX_BINARY = ->(xdm_atomic_value) {
           bytes = []
           xdm_atomic_value.to_s.scan(/../) { |x| bytes << x.hex.chr(Encoding::ASCII_8BIT) }
           bytes.join
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#byte
         BYTE = ->(xdm_atomic_value) {
           [xdm_atomic_value.to_java.getLongValue].pack('c')
         }
+        # @see https://www.w3.org/TR/xmlschema-2/#unsignedByte
         UNSIGNED_BYTE = ->(xdm_atomic_value) {
           [xdm_atomic_value.to_java.getLongValue].pack('C')
         }

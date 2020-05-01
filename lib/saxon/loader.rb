@@ -19,6 +19,7 @@ module Saxon
         @path = path
       end
 
+      # returns an error message including the missing path
       def to_s
         "The path ('#{@path}') you supplied for the Saxon .jar files doesn't exist, sorry"
       end
@@ -31,6 +32,7 @@ module Saxon
         @path = path
       end
 
+      # returns an error message including the path looked in and jars we were looking for
       def to_s
         "One of saxon9he.jar, saxon9pe.jar, or saxon9ee.jar must be present in the path ('#{@path}') you supplied, sorry"
       end

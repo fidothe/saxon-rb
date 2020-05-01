@@ -46,12 +46,14 @@ module Saxon
       @s9_processor = s9_processor
     end
 
-    # Generate a new DocumentBuilder that uses this Processor.
-    # Sharing DocumentBuilders across threads is not recommended/
+    # Generate a new DocumentBuilder that uses this Processor. Sharing
+    # DocumentBuilders across threads is not safe.
     #
+    # @yield A DocumentBuilder configuration DSL block, see
+    #   {Saxon::DocumentBuilder.create}
     # @return [Saxon::DocumentBuilder] A new Saxon::DocumentBuilder
-    def document_builder
-      Saxon::DocumentBuilder.new(@s9_processor.newDocumentBuilder)
+    def document_builder(&block)
+      Saxon::DocumentBuilder.create(self, &block)
     end
 
     # Declare custom collations for use by XSLT, XPath, and XQuery processors

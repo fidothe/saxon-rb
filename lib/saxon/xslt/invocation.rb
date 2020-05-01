@@ -10,6 +10,7 @@ module Saxon
     # IO.
     class Invocation
       attr_reader :s9_transformer, :invocation_lambda
+      private :s9_transformer, :invocation_lambda
 
       # @api private
       def initialize(s9_transformer, invocation_lambda, raw)
@@ -65,7 +66,7 @@ module Saxon
 
       # Send the result of the transformation to the supplied Destination
       #
-      # @param destination [net.sf.saxon.s9api.Destination] the Saxon
+      # @param s9_destination [net.sf.saxon.s9api.Destination] the Saxon
       #   destination to use
       # @return [nil]
       def to_destination(s9_destination)

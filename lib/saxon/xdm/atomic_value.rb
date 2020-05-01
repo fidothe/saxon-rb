@@ -20,6 +20,7 @@ module Saxon
       # them imlpicitly through the XDM::AtomicValue creation process doesn't really
       # work. They need to be created explicitly and then handed in to be wrapped.
       class CannotCreateQNameFromString < StandardError
+        # returns an error message
         def to_s
           "QName XDM::AtomicValues must be created using an instance of Saxon::QName, not a string like 'prefix:name': Prefix URI binding is undefined at this point"
         end
@@ -29,7 +30,8 @@ module Saxon
       # isn't a way to create these outside of parsing an XML document within
       # Saxon, so attempting to do so raises this error.
       class NotationCannotBeDirectlyCreated < StandardError
-        def to_s
+         # returns an error message
+         def to_s
           "xs:NOTATION XDM::AtomicValues cannot be directly created outside of XML parsing."
         end
       end
