@@ -2,12 +2,13 @@ require 'saxon/s9api'
 require 'saxon/parse_options'
 
 module Saxon
-  # Wraps the <tt>net.saxon.Configuration</tt> class. See
-  # http://saxonica.com/documentation9.5/javadoc/net/sf/saxon/Configuration.html
-  # for details of what configuration options are available and what values
-  # they accept. See
-  # http://saxonica.com/documentation9.5/javadoc/net/sf/saxon/lib/FeatureKeys.html
-  # for details of the constant names used to access the values
+  # Wraps the <tt>net.sf.saxon.Configuration</tt> class.
+  #
+  # See {net.sf.saxon.Configuration} for details of what configuration options
+  # are available and what values they accept.
+  #
+  # See {net.sf.saxon.lib.FeatureKeys} for details of the constant names used to
+  # access the values
   class Configuration
     DEFAULT_SEMAPHORE = Mutex.new
     private_constant :DEFAULT_SEMAPHORE
@@ -60,22 +61,23 @@ module Saxon
     end
 
     # Get a configuration option value
-    # See https://www.saxonica.com/html/documentation/javadoc/net/sf/saxon/lib/FeatureKeys.html
-    # for details of the available options. Use the constant name as a string
-    # or symbol as the option
+    #
+    # See {net.sf.saxon.lib.FeatureKeys} for details of the available options.
+    # Use the constant name as a string or symbol as the option, e.g.
+    # +:allow_multhreading+, +'ALLOW_MULTITHREADING'+, +'allow_multithreading'+.
     #
     # @param option [String, Symbol]
     # @return [Object] the value of the configuration option
     # @raise [NameError] if the option name does not exist
+    # @see net.sf.saxon.lib.FeatureKeys
     def [](option)
       @config.getConfigurationProperty(option_url(option))
     end
 
-    # Get a configuration option value
-    # See http://saxonica.com/documentation9.5/javadoc/net/sf/saxon/lib/FeatureKeys.html
-    # for details of the available options. Use the constant name as a string
-    # or symbol as the option
+    # Set a configuration option value. See {#[]} for details about the option
+    # names.
     #
+    # @see #[]
     # @param option [String, Symbol]
     # @param value [Object] the value of the configuration option
     # @return [Object] the value you passed in
