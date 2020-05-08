@@ -4,6 +4,7 @@ require_relative 'invocation'
 require_relative '../serializer'
 require_relative '../xdm'
 require_relative '../qname'
+require_relative '../feature_flags'
 
 module Saxon
   module XSLT
@@ -53,6 +54,7 @@ module Saxon
     # prefix, you must use an explicit {Saxon::QName} to refer to it.
     class Executable
       extend Forwardable
+      extend Saxon::FeatureFlags::Helpers
 
       attr_reader :evaluation_context
       private :evaluation_context
@@ -169,6 +171,7 @@ module Saxon
       def serializer
         Saxon::Serializer::Object.new(@s9_xslt_executable.load30.newSerializer)
       end
+      requires_saxon_version :serializer, '>= 9.9'
 
       # @return [net.sf.saxon.s9api.XsltExecutable] the underlying Saxon
       #   +XsltExecutable+
