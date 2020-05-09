@@ -12,17 +12,18 @@ module Saxon
         method = klass.instance_method(method_name)
         version_check = new(version_constraint)
 
-        klass.define_method(method_name) do |*args|
+
+        klass.send(:define_method, method_name, ->(*args) {
           if version_check.ok?
-            klass.define_method(method_name, method)
+            klass.send(:define_method, method_name, method)
             method.bind(self).call(*args)
           else
-            klass.define_method(method_name) do |*args|
+            klass.send(:define_method, method_name, ->(*args) {
               raise UnavailableInThisSaxonVersionError
-            end
+            })
             raise UnavailableInThisSaxonVersionError
           end
-        end
+        })
       end
 
       attr_reader :constraint_string, :comparison_operator, :version_string
