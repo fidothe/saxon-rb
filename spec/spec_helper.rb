@@ -35,6 +35,16 @@ end
 
 module SaxonEditionHelpers
   def requires_pe(&block)
+
+  end
+
+  def requires_saxon(constraint, &block)
+    require 'saxon/version/library'
+    require 'saxon/feature_flags/version'
+
+    if Saxon::FeatureFlags::Version.new(constraint).ok?
+      class_exec(&block)
+    end
   end
 end
 
@@ -54,6 +64,9 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+
+  config.filter_run_excluding :broken => true
 
   config.include FixtureHelpers
   config.extend SaxonEditionHelpers

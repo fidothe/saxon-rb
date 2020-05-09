@@ -5,7 +5,7 @@ require 'saxon/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'saxon-rb'
-  spec.version       = Saxon::VERSION
+  spec.version       = Saxon::Version::WRAPPER
   spec.authors       = ['Matt Patterson']
   spec.email         = ['matt@werkstatt.io']
 
