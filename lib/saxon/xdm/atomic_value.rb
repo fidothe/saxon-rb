@@ -36,12 +36,17 @@ module Saxon
         end
       end
 
-      # ItemType representing QNames
-      XS_QNAME = ItemType.get_type('xs:QName')
-      # ItemType representing NOTATION
-      XS_NOTATION = ItemType.get_type('xs:NOTATION')
-
       class << self
+        # ItemType representing QNames
+        def xs_qname
+          @xs_qname ||= ItemType.get_type('xs:QName')
+        end
+
+        # ItemType representing NOTATION
+        def xs_notation
+          @xs_notation ||= ItemType.get_type('xs:NOTATION')
+        end
+
         # Convert a single Ruby value into an XDM::AtomicValue
         #
         # If no explicit {ItemType} is passed, the correct type is guessed based
@@ -71,8 +76,8 @@ module Saxon
 
             item_type = ItemType.get_type(item_type)
 
-            return new(Saxon::S9API::XdmAtomicValue.new(value.to_java)) if item_type == XS_QNAME && value_is_qname?(value)
-            raise NotationCannotBeDirectlyCreated if item_type == XS_NOTATION
+            return new(Saxon::S9API::XdmAtomicValue.new(value.to_java)) if item_type == xs_qname && value_is_qname?(value)
+            raise NotationCannotBeDirectlyCreated if item_type == xs_notation
 
             value_lexical_string = item_type.lexical_string(value)
             new(new_s9_xdm_atomic_value(value_lexical_string, item_type))
@@ -91,7 +96,7 @@ module Saxon
         # @return [Saxon::XDM::AtomicValue]
         def from_lexical_string(value, item_type)
           item_type = ItemType.get_type(item_type)
-          raise CannotCreateQNameFromString if item_type == XS_QNAME
+          raise CannotCreateQNameFromString if item_type == xs_qname
           new(new_s9_xdm_atomic_value(value.to_s, item_type))
         end
 
