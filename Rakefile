@@ -190,12 +190,18 @@ task :circleci do
     def run_tests_step(opts)
       command = [
         "mkdir -p /tmp/test-results",
-        "bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress"
+        "VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml"
       ]
       if opts.fetch(:run_codeclimate)
         command.prepend("./cc-test-reporter before-build")
-        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage#{"-alt-saxon" if opts.fetch(:alt_saxon_url)}.json\"; fi")
+        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage-jar-loading#{"-alt-saxon" if opts.fetch(:alt_saxon_url)}.json\"; fi")
       end
+      command.append("rm -rf coverage")
+      command.append("bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress")
+      if opts.fetch(:run_codeclimate)
+        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage-main#{"-alt-saxon" if opts.fetch(:alt_saxon_url)}.json\"; fi")
+      end
+
       {
         "run" => {
           "name" => "Run the tests" + (opts.fetch(:run_codeclimate) ? ", and upload coverage data to Code Climate" : ""),

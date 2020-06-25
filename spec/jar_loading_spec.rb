@@ -1,4 +1,7 @@
 if ENV['VERIFY_SAXON_LAZY_LOADING']
+  require 'bundler/setup'
+  require 'simplecov'
+  SimpleCov.start
   require 'pathname'
 
   RSpec.describe "Jar loading" do
@@ -17,7 +20,11 @@ if ENV['VERIFY_SAXON_LAZY_LOADING']
 
       expect(Saxon::Loader.jars_on_classpath?).to be(false)
 
-      Saxon::Loader.load!
+      if ENV['ALTERNATE_SAXON_HOME']
+        Saxon::Loader.load!(ENV['ALTERNATE_SAXON_HOME'])
+      else
+        Saxon::Loader.load!
+      end
 
       expect(Saxon::Loader.jars_on_classpath?).to be(true)
     end
