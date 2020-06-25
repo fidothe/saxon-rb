@@ -6,8 +6,49 @@ require_relative 'item_type/value_to_ruby'
 module Saxon
   # Represent XDM types abstractly
   class ItemType
-    # Error raised when a Ruby class has no equivalent XDM type to be converted
-    # into
+    # lazy-loading Hash so we can avoid eager-loading saxon Jars, which prevents
+    # using external Saxon Jars unless the user is more careful than they should
+    # have to be.
+    class LazyReadOnlyHash
+      include Enumerable
+
+      attr_reader :loaded_hash, :load_mutex, :init_block
+      private :loaded_hash, :load_mutex, :init_block
+
+      def initialize(&init_block)
+        @init_block = init_block
+        @load_mutex = Mutex.new
+        @loaded_hash = nil
+      end
+
+      def [](key)
+        ensure_loaded!
+        loaded_hash[key]
+      end
+
+      def fetch(*args, &block)
+        ensure_loaded!
+        loaded_hash.fetch(*args, &block)
+      end
+
+      def each(&block)
+        ensure_loaded!
+        loaded_hash.each(&block)
+      end
+
+      private
+
+      def ensure_loaded!
+        return true unless loaded_hash.nil?
+        load_mutex.synchronize do
+          return true unless loaded_hash.nil?
+          @loaded_hash = init_block.call
+        end
+      end
+    end
+
+    # Error raised when a Ruby class has no equivalent XDM type to
+    # be converted into
     class UnmappedRubyTypeError < StandardError
       def initialize(class_name)
         @class_name = class_name
@@ -54,85 +95,89 @@ module Saxon
     }.freeze
 
     # A mapping of QNames to XDM type constants
-    QNAME_MAPPING = Hash[{
-      'anyAtomicType' => :ANY_ATOMIC_VALUE,
-      'anyURI' => :ANY_URI,
-      'base64Binary' => :BASE64_BINARY,
-      'boolean' => :BOOLEAN,
-      'byte' => :BYTE,
-      'date' => :DATE,
-      'dateTime' => :DATE_TIME,
-      'dateTimeStamp' => :DATE_TIME_STAMP,
-      'dayTimeDuration' => :DAY_TIME_DURATION,
-      'decimal' => :DECIMAL,
-      'double' => :DOUBLE,
-      'duration' => :DURATION,
-      'ENTITY' => :ENTITY,
-      'float' => :FLOAT,
-      'gDay' => :G_DAY,
-      'gMonth' => :G_MONTH,
-      'gMonthDay' => :G_MONTH_DAY,
-      'gYear' => :G_YEAR,
-      'gYearMonth' => :G_YEAR_MONTH,
-      'hexBinary' => :HEX_BINARY,
-      'ID' => :ID,
-      'IDREF' => :IDREF,
-      'int' => :INT,
-      'integer' => :INTEGER,
-      'language' => :LANGUAGE,
-      'long' => :LONG,
-      'Name' => :NAME,
-      'NCName' => :NCNAME,
-      'negativeInteger' => :NEGATIVE_INTEGER,
-      'NMTOKEN' => :NMTOKEN,
-      'nonNegativeInteger' => :NON_NEGATIVE_INTEGER,
-      'nonPositiveInteger' => :NON_POSITIVE_INTEGER,
-      'normalizedString' => :NORMALIZED_STRING,
-      'NOTATION' => :NOTATION,
-      'numeric' => :NUMERIC,
-      'positiveInteger' => :POSITIVE_INTEGER,
-      'QName' => :QNAME,
-      'short' => :SHORT,
-      'string' => :STRING,
-      'time' => :TIME,
-      'token' => :TOKEN,
-      'unsignedByte' => :UNSIGNED_BYTE,
-      'unsignedInt' => :UNSIGNED_INT,
-      'unsignedLong' => :UNSIGNED_LONG,
-      'unsignedShort' => :UNSIGNED_SHORT,
-      'untypedAtomic' => :UNTYPED_ATOMIC,
-      'yearMonthDuration' => :YEAR_MONTH_DURATION
-    }.map { |local_name, constant|
-      qname = Saxon::QName.create({
-        prefix: 'xs', uri: 'http://www.w3.org/2001/XMLSchema',
-        local_name: local_name
-      })
-      [qname, constant]
-    }].freeze
+    QNAME_MAPPING = LazyReadOnlyHash.new do
+      {
+        'anyAtomicType' => :ANY_ATOMIC_VALUE,
+        'anyURI' => :ANY_URI,
+        'base64Binary' => :BASE64_BINARY,
+        'boolean' => :BOOLEAN,
+        'byte' => :BYTE,
+        'date' => :DATE,
+        'dateTime' => :DATE_TIME,
+        'dateTimeStamp' => :DATE_TIME_STAMP,
+        'dayTimeDuration' => :DAY_TIME_DURATION,
+        'decimal' => :DECIMAL,
+        'double' => :DOUBLE,
+        'duration' => :DURATION,
+        'ENTITY' => :ENTITY,
+        'float' => :FLOAT,
+        'gDay' => :G_DAY,
+        'gMonth' => :G_MONTH,
+        'gMonthDay' => :G_MONTH_DAY,
+        'gYear' => :G_YEAR,
+        'gYearMonth' => :G_YEAR_MONTH,
+        'hexBinary' => :HEX_BINARY,
+        'ID' => :ID,
+        'IDREF' => :IDREF,
+        'int' => :INT,
+        'integer' => :INTEGER,
+        'language' => :LANGUAGE,
+        'long' => :LONG,
+        'Name' => :NAME,
+        'NCName' => :NCNAME,
+        'negativeInteger' => :NEGATIVE_INTEGER,
+        'NMTOKEN' => :NMTOKEN,
+        'nonNegativeInteger' => :NON_NEGATIVE_INTEGER,
+        'nonPositiveInteger' => :NON_POSITIVE_INTEGER,
+        'normalizedString' => :NORMALIZED_STRING,
+        'NOTATION' => :NOTATION,
+        'numeric' => :NUMERIC,
+        'positiveInteger' => :POSITIVE_INTEGER,
+        'QName' => :QNAME,
+        'short' => :SHORT,
+        'string' => :STRING,
+        'time' => :TIME,
+        'token' => :TOKEN,
+        'unsignedByte' => :UNSIGNED_BYTE,
+        'unsignedInt' => :UNSIGNED_INT,
+        'unsignedLong' => :UNSIGNED_LONG,
+        'unsignedShort' => :UNSIGNED_SHORT,
+        'untypedAtomic' => :UNTYPED_ATOMIC,
+        'yearMonthDuration' => :YEAR_MONTH_DURATION
+      }.map { |local_name, constant|
+        qname = Saxon::QName.create({
+          prefix: 'xs', uri: 'http://www.w3.org/2001/XMLSchema',
+          local_name: local_name
+        })
+        [qname, constant]
+      }.to_h.freeze
+    end
 
     # A mapping of type names/QNames to XDM type constants
-    STR_MAPPING = {
-      'array(*)' => :ANY_ARRAY,
-      'item()' => :ANY_ITEM,
-      'map(*)' => :ANY_MAP,
-      'node()' => :ANY_NODE
-    }.merge(
-      Hash[QNAME_MAPPING.map { |qname, v| [qname.to_s, v] }]
-    ).freeze
+    STR_MAPPING = LazyReadOnlyHash.new do
+      {
+        'array(*)' => :ANY_ARRAY,
+        'item()' => :ANY_ITEM,
+        'map(*)' => :ANY_MAP,
+        'node()' => :ANY_NODE
+      }.merge(
+        Hash[QNAME_MAPPING.map { |qname, v| [qname.to_s, v] }]
+      ).freeze
+    end
 
     # convertors to generate lexical strings for a given {ItemType}, as a hash keyed on the ItemType
-    ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS = Hash[
+    ATOMIC_VALUE_LEXICAL_STRING_CONVERTORS = LazyReadOnlyHash.new do
       LexicalStringConversion::Convertors.constants.map { |const|
         [S9API::ItemType.const_get(const), LexicalStringConversion::Convertors.const_get(const)]
-      }
-    ].freeze
+      }.to_h.freeze
+    end
 
     # convertors from {XDM::AtomicValue} to a ruby primitve value, as a hash keyed on the ItemType
-    ATOMIC_VALUE_TO_RUBY_CONVERTORS = Hash[
+    ATOMIC_VALUE_TO_RUBY_CONVERTORS = LazyReadOnlyHash.new do
       ValueToRuby::Convertors.constants.map { |const|
         [S9API::ItemType.const_get(const), ValueToRuby::Convertors.const_get(const)]
-      }
-    ].freeze
+      }.to_h.freeze
+    end
 
     class << self
       # Get an appropriate {ItemType} for a Ruby type or given a type name as a
