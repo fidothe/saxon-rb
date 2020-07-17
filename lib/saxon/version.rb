@@ -1,4 +1,4 @@
-require 'saxon/s9api'
+require 'saxon/version/library'
 
 module Saxon
   # Provides the saxon-rb and underlying Saxon library versions
