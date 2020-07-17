@@ -25,7 +25,7 @@ task :circleci do
       end
     end
     def jruby_image_tags
-      %w{9.2.9.0 9.1.17.0 9.2.10.0-SNAPSHOT-latest}
+      %w{9.2.9.0 9.1.17.0 9.2.10.0 9.2.11.1 9.2.12.0 9.2.13.0-SNAPSHOT-latest}
     end
 
     def jdk_image_tags
@@ -51,7 +51,7 @@ task :circleci do
 
     def codeclimate_jobs
       (alt_saxon_urls.keys << nil).map { |alt_saxon_url|
-        ["9.2.9.0", "8-jdk-slim", alt_saxon_url]
+        ["9.2.12.0", "8-jdk-slim", alt_saxon_url]
       }
     end
 
