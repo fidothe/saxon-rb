@@ -11,7 +11,7 @@ if ENV['VERIFY_SAXON_LAZY_LOADING']
       require_targets = Pathname.glob("#{lib_path}/**/*.rb").map { |path|
         path.relative_path_from(lib_path).to_s.slice(0..-4)
       }.sort_by { |target| target.scan('/').size }.reject { |target|
-        %w{saxon-rb_jars}.include?(target)
+        %w{saxon-rb_jars saxon/jruby_bug_6197_workaround}.include?(target)
       }
 
       require_targets.each do |target|
