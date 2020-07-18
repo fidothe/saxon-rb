@@ -80,6 +80,7 @@ module Saxon
               end
             end
 
+            require_relative 'jruby_bug_6197_workaround'
             @saxon_loaded = true
             true
           end
