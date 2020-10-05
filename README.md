@@ -15,7 +15,7 @@ Parameter creation and passing, are richer and more expressive; results from
 XSLT, or XPath, that aren't just result trees can be worked with directly in
 Ruby.
 
-[![Gem Version](https://badge.fury.io/rb/saxon.svg)](http://badge.fury.io/rb/saxon)
+[![Gem Version](https://badge.fury.io/rb/saxon-rb.svg)](http://badge.fury.io/rb/saxon-rb)
 [![Code Climate](https://codeclimate.com/github/fidothe/saxon-rb/badges/gpa.svg)](https://codeclimate.com/github/fidothe/saxon-rb)
 [![Test Coverage](https://codeclimate.com/github/fidothe/saxon-rb/badges/coverage.svg)](https://codeclimate.com/github/fidothe/saxon-rb/coverage)
 [![CircleCI](https://circleci.com/gh/fidothe/saxon-rb.svg?style=svg)](https://circleci.com/gh/fidothe/saxon-rb)
