@@ -2,9 +2,9 @@
 begin
   require 'jar_dependencies'
 rescue LoadError
-  require 'net/sf/saxon/Saxon-HE/9.9.1-6/Saxon-HE-9.9.1-6.jar'
+  require 'net/sf/saxon/Saxon-HE/10.2/Saxon-HE-10.2.jar'
 end
 
 if defined? Jars
-  require_jar 'net.sf.saxon', 'Saxon-HE', '9.9.1-6'
+  require_jar 'net.sf.saxon', 'Saxon-HE', '10.2'
 end

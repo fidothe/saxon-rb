@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{Wraps the Saxon 9.9 XML and XSLT library so you can process, transform, query, and generate XML documents using XSLT 3, XQuery, and XPath 3.1. The HE open-source version is bundled, but you can use the paid-for PE and EE versions of the Java library with this gem as well.
 
 It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
-  spec.summary       = %q{Saxon 9.9 for JRuby, with an idiomatic Ruby API}
+  spec.summary       = %q{Saxon 9.8 + for JRuby, with an idiomatic Ruby API}
   spec.homepage      = "https://github.com/fidothe/saxon-rb"
   spec.license       = 'MIT'
   spec.platform      = 'java'
@@ -24,7 +24,7 @@ It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.requirements << 'jar net.sf.saxon, Saxon-HE, 9.9.1-6'
+  spec.requirements << 'jar net.sf.saxon, Saxon-HE, 10.2'
 
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'jar-dependencies'
