@@ -23,7 +23,7 @@ module Saxon
     end
 
     context "another version" do
-      subject { described_class.new("10.0", [10, 0], "EE") }
+      subject { described_class.new("10.0", "EE") }
 
       specify "returns the correct version string" do
         expect(subject.version).to eq("10.0")
@@ -39,10 +39,10 @@ module Saxon
     end
 
     describe "comparing versions" do
-      let(:v9_9_1_7) { described_class.new("9.9.1.7", [9, 9, 1, 7], "HE") }
-      let(:v9_10_0_0) { described_class.new("9.10.0.0", [9, 10, 0, 0], "HE") }
-      let(:v9_9_1_6) { described_class.new("9.9.1.6", [9, 9, 1, 6], "HE") }
-      let(:v10_0) { described_class.new("10.0", [10, 0], "HE") }
+      let(:v9_9_1_7) { described_class.new("9.9.1.7", "HE") }
+      let(:v9_10_0_0) { described_class.new("9.10.0.0", "HE") }
+      let(:v9_9_1_6) { described_class.new("9.9.1.6", "HE") }
+      let(:v10_0) { described_class.new("10.0", "HE") }
 
       context "greater-than" do
         specify "10.0 > 9.9" do
@@ -91,14 +91,14 @@ module Saxon
       end
 
       context "~> pessimistic version comparison" do
-        let(:v8_9_0_0) { described_class.new("8.9.0.0", [8,9,0,0], "HE") }
-        let(:v9_8_0_0) { described_class.new("9.8.0.0", [9,8,0,0], "HE") }
-        let(:v9_9_0_0) { described_class.new("9.9.0.0", [9,9,0,0], "HE") }
-        let(:v9_9_1_0) { described_class.new("9.9.1.0", [9,9,1,0], "HE") }
-        let(:v9_9_1) { described_class.new("9.9.1", [9,9,1], "HE") }
-        let(:v9_9) { described_class.new("9.9", [9,9], "HE") }
-        let(:v9_0) { described_class.new("9.0", [9,0], "HE") }
-        let(:v9_9_2_0) { described_class.new("9.9.2.0", [9,9,2,0], "HE") }
+        let(:v8_9_0_0) { described_class.new("8.9.0.0", "HE") }
+        let(:v9_8_0_0) { described_class.new("9.8.0.0", "HE") }
+        let(:v9_9_0_0) { described_class.new("9.9.0.0", "HE") }
+        let(:v9_9_1_0) { described_class.new("9.9.1.0", "HE") }
+        let(:v9_9_1) { described_class.new("9.9.1", "HE") }
+        let(:v9_9) { described_class.new("9.9", "HE") }
+        let(:v9_0) { described_class.new("9.0", "HE") }
+        let(:v9_9_2_0) { described_class.new("9.9.2.0", "HE") }
 
         context "passes" do
           specify "9.9.1.6 ~> 9.9.1.0" do
