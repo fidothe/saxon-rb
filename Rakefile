@@ -38,7 +38,8 @@ task :circleci do
 
     def alt_saxon_urls
       {
-        "https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip" => "Saxon HE 9.8"
+        "https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip" => "saxon-he-9.8",
+        "https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip" => "saxon-he-10.2"
       }
     end
 
@@ -192,14 +193,15 @@ task :circleci do
         "mkdir -p /tmp/test-results",
         "VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml"
       ]
+      cc_suffix = opts.fetch(:alt_saxon_url) ? "-alt-#{alt_saxon_urls[opts.fetch(:alt_saxon_url)]}" : ''
       if opts.fetch(:run_codeclimate)
         command.prepend("./cc-test-reporter before-build")
-        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage-jar-loading#{"-alt-saxon" if opts.fetch(:alt_saxon_url)}.json\"; fi")
+        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage-jar-loading#{cc_suffix}.json\"; fi")
       end
       command.append("rm -rf coverage")
       command.append("bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress")
       if opts.fetch(:run_codeclimate)
-        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage-main#{"-alt-saxon" if opts.fetch(:alt_saxon_url)}.json\"; fi")
+        command.append("if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o \"cc-coverage-main#{cc_suffix}.json\"; fi")
       end
 
       {

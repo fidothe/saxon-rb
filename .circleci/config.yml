@@ -1,7 +1,7 @@
 ---
 version: 2
 jobs:
-  JRuby 9.2.9.0, JDK 8 Saxon HE 9.8:
+  JRuby 9.2.9.0, JDK 8 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.9.0-8-jdk-slim
     environment:
@@ -20,6 +20,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.9.0, JDK 8 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.9.0-8-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -60,7 +94,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.9.0, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.9.0, JDK 11 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.9.0-11-jdk-slim
     environment:
@@ -79,6 +113,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.9.0, JDK 11 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.9.0-11-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -119,7 +187,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.9.0, JDK 13 Saxon HE 9.8:
+  JRuby 9.2.9.0, JDK 13 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.9.0-13-jdk-slim
     environment:
@@ -138,6 +206,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.9.0, JDK 13 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.9.0-13-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -178,7 +280,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.1.17.0, JDK 8 Saxon HE 9.8:
+  JRuby 9.1.17.0, JDK 8 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.1.17.0-8-jdk-slim
     environment:
@@ -197,6 +299,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.1.17.0, JDK 8 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.1.17.0-8-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -237,7 +373,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.10.0, JDK 8 Saxon HE 9.8:
+  JRuby 9.2.10.0, JDK 8 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.10.0-8-jdk-slim
     environment:
@@ -256,6 +392,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.10.0, JDK 8 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.10.0-8-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -296,7 +466,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.10.0, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.10.0, JDK 11 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.10.0-11-jdk-slim
     environment:
@@ -315,6 +485,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.10.0, JDK 11 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.10.0-11-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -355,7 +559,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.10.0, JDK 13 Saxon HE 9.8:
+  JRuby 9.2.10.0, JDK 13 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.10.0-13-jdk-slim
     environment:
@@ -374,6 +578,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.10.0, JDK 13 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.10.0-13-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -414,7 +652,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.11.1, JDK 8 Saxon HE 9.8:
+  JRuby 9.2.11.1, JDK 8 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.11.1-8-jdk-slim
     environment:
@@ -433,6 +671,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.11.1, JDK 8 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.11.1-8-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -473,7 +745,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.11.1, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.11.1, JDK 11 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.11.1-11-jdk-slim
     environment:
@@ -492,6 +764,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.11.1, JDK 11 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.11.1-11-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -532,7 +838,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.11.1, JDK 13 Saxon HE 9.8:
+  JRuby 9.2.11.1, JDK 13 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.11.1-13-jdk-slim
     environment:
@@ -551,6 +857,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.11.1, JDK 13 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.11.1-13-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -591,7 +931,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.12.0, JDK 8 Saxon HE 9.8:
+  JRuby 9.2.12.0, JDK 8 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.12.0-8-jdk-slim
     environment:
@@ -624,10 +964,56 @@ jobs:
           ./cc-test-reporter before-build
           mkdir -p /tmp/test-results
           VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
-          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage-jar-loading-alt-saxon.json"; fi
+          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage-jar-loading-alt-saxon-he-9.8.json"; fi
           rm -rf coverage
           bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
-          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage-main-alt-saxon.json"; fi
+          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage-main-alt-saxon-he-9.8.json"; fi
+    - persist_to_workspace:
+        root: "~/project"
+        paths:
+        - cc-coverage*
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.12.0, JDK 8 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.12.0-8-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Install Code Climate Test Reporter
+        command: |
+          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+          chmod +x ./cc-test-reporter
+    - run:
+        name: Run the tests, and upload coverage data to Code Climate
+        command: |-
+          ./cc-test-reporter before-build
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage-jar-loading-alt-saxon-he-10.2.json"; fi
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+          if [ $? -eq 0 ]; then ./cc-test-reporter format-coverage -t simplecov -o "cc-coverage-main-alt-saxon-he-10.2.json"; fi
     - persist_to_workspace:
         root: "~/project"
         paths:
@@ -674,7 +1060,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.12.0, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.12.0, JDK 11 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.12.0-11-jdk-slim
     environment:
@@ -693,6 +1079,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.12.0, JDK 11 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.12.0-11-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -733,7 +1153,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.12.0, JDK 13 Saxon HE 9.8:
+  JRuby 9.2.12.0, JDK 13 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.12.0-13-jdk-slim
     environment:
@@ -752,6 +1172,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.12.0, JDK 13 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.12.0-13-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -792,7 +1246,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 8 Saxon HE 9.8:
+  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 8 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.13.0-SNAPSHOT-latest-8-jdk-slim
     environment:
@@ -811,6 +1265,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 8 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.13.0-SNAPSHOT-latest-8-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -851,7 +1339,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 11 Saxon HE 9.8:
+  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 11 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.13.0-SNAPSHOT-latest-11-jdk-slim
     environment:
@@ -870,6 +1358,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 11 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.13.0-SNAPSHOT-latest-11-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -910,7 +1432,7 @@ jobs:
     - store_artifacts:
         path: "/tmp/test-results"
         destination: test-results
-  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 13 Saxon HE 9.8:
+  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 13 saxon-he-9.8:
     docker:
     - image: fidothe/circleci:jruby-9.2.13.0-SNAPSHOT-latest-13-jdk-slim
     environment:
@@ -929,6 +1451,40 @@ jobs:
           curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip
           unzip SaxonHE9-8-0-15J.zip
           rm -f SaxonHE9-8-0-15J.zip
+    - run:
+        name: Bundle Install
+        command: bundle check || bundle install
+    - run:
+        name: Run the tests
+        command: |-
+          mkdir -p /tmp/test-results
+          VERIFY_SAXON_LAZY_LOADING=1 bundle exec rspec spec/jar_loading_spec.rb --options .rspec-jar-loading --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec-jar-loading.xml
+          rm -rf coverage
+          bundle exec rspec spec --profile 10 --format RspecJunitFormatter --out /tmp/test-results/rspec.xml --format progress
+    - store_test_results:
+        path: "/tmp/test-results"
+    - store_artifacts:
+        path: "/tmp/test-results"
+        destination: test-results
+  JRuby 9.2.13.0-SNAPSHOT-latest, JDK 13 saxon-he-10.2:
+    docker:
+    - image: fidothe/circleci:jruby-9.2.13.0-SNAPSHOT-latest-13-jdk-slim
+    environment:
+      BUNDLE_JOBS: 3
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      JRUBY_OPTS: "--dev --debug"
+      ALTERNATE_SAXON_HOME: "/tmp/saxon"
+    steps:
+    - checkout
+    - run:
+        name: Download SaxonHE10-2J.zip
+        command: |-
+          mkdir -p /tmp/saxon
+          cd /tmp/saxon
+          curl -L -O https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip
+          unzip SaxonHE10-2J.zip
+          rm -f SaxonHE10-2J.zip
     - run:
         name: Bundle Install
         command: bundle check || bundle install
@@ -990,39 +1546,56 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-    - JRuby 9.2.9.0, JDK 8 Saxon HE 9.8
+    - JRuby 9.2.9.0, JDK 8 saxon-he-9.8
+    - JRuby 9.2.9.0, JDK 8 saxon-he-10.2
     - JRuby 9.2.9.0, JDK 8
-    - JRuby 9.2.9.0, JDK 11 Saxon HE 9.8
+    - JRuby 9.2.9.0, JDK 11 saxon-he-9.8
+    - JRuby 9.2.9.0, JDK 11 saxon-he-10.2
     - JRuby 9.2.9.0, JDK 11
-    - JRuby 9.2.9.0, JDK 13 Saxon HE 9.8
+    - JRuby 9.2.9.0, JDK 13 saxon-he-9.8
+    - JRuby 9.2.9.0, JDK 13 saxon-he-10.2
     - JRuby 9.2.9.0, JDK 13
-    - JRuby 9.1.17.0, JDK 8 Saxon HE 9.8
+    - JRuby 9.1.17.0, JDK 8 saxon-he-9.8
+    - JRuby 9.1.17.0, JDK 8 saxon-he-10.2
     - JRuby 9.1.17.0, JDK 8
-    - JRuby 9.2.10.0, JDK 8 Saxon HE 9.8
+    - JRuby 9.2.10.0, JDK 8 saxon-he-9.8
+    - JRuby 9.2.10.0, JDK 8 saxon-he-10.2
     - JRuby 9.2.10.0, JDK 8
-    - JRuby 9.2.10.0, JDK 11 Saxon HE 9.8
+    - JRuby 9.2.10.0, JDK 11 saxon-he-9.8
+    - JRuby 9.2.10.0, JDK 11 saxon-he-10.2
     - JRuby 9.2.10.0, JDK 11
-    - JRuby 9.2.10.0, JDK 13 Saxon HE 9.8
+    - JRuby 9.2.10.0, JDK 13 saxon-he-9.8
+    - JRuby 9.2.10.0, JDK 13 saxon-he-10.2
     - JRuby 9.2.10.0, JDK 13
-    - JRuby 9.2.11.1, JDK 8 Saxon HE 9.8
+    - JRuby 9.2.11.1, JDK 8 saxon-he-9.8
+    - JRuby 9.2.11.1, JDK 8 saxon-he-10.2
     - JRuby 9.2.11.1, JDK 8
-    - JRuby 9.2.11.1, JDK 11 Saxon HE 9.8
+    - JRuby 9.2.11.1, JDK 11 saxon-he-9.8
+    - JRuby 9.2.11.1, JDK 11 saxon-he-10.2
     - JRuby 9.2.11.1, JDK 11
-    - JRuby 9.2.11.1, JDK 13 Saxon HE 9.8
+    - JRuby 9.2.11.1, JDK 13 saxon-he-9.8
+    - JRuby 9.2.11.1, JDK 13 saxon-he-10.2
     - JRuby 9.2.11.1, JDK 13
-    - JRuby 9.2.12.0, JDK 8 Saxon HE 9.8
+    - JRuby 9.2.12.0, JDK 8 saxon-he-9.8
+    - JRuby 9.2.12.0, JDK 8 saxon-he-10.2
     - JRuby 9.2.12.0, JDK 8
-    - JRuby 9.2.12.0, JDK 11 Saxon HE 9.8
+    - JRuby 9.2.12.0, JDK 11 saxon-he-9.8
+    - JRuby 9.2.12.0, JDK 11 saxon-he-10.2
     - JRuby 9.2.12.0, JDK 11
-    - JRuby 9.2.12.0, JDK 13 Saxon HE 9.8
+    - JRuby 9.2.12.0, JDK 13 saxon-he-9.8
+    - JRuby 9.2.12.0, JDK 13 saxon-he-10.2
     - JRuby 9.2.12.0, JDK 13
-    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 8 Saxon HE 9.8
+    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 8 saxon-he-9.8
+    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 8 saxon-he-10.2
     - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 8
-    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 11 Saxon HE 9.8
+    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 11 saxon-he-9.8
+    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 11 saxon-he-10.2
     - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 11
-    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 13 Saxon HE 9.8
+    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 13 saxon-he-9.8
+    - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 13 saxon-he-10.2
     - JRuby 9.2.13.0-SNAPSHOT-latest, JDK 13
     - Report test coverage to Code Climate:
         requires:
-        - JRuby 9.2.12.0, JDK 8 Saxon HE 9.8
+        - JRuby 9.2.12.0, JDK 8 saxon-he-9.8
+        - JRuby 9.2.12.0, JDK 8 saxon-he-10.2
         - JRuby 9.2.12.0, JDK 8
