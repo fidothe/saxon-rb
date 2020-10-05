@@ -72,10 +72,7 @@ module Saxon
       #
       # @return [Saxon::Version::Library] the constraint version
       def constraint_version
-        @constraint_version ||= begin
-          components = version_string.split('.').map { |n| Integer(n, 10) }
-          Saxon::Version::Library.new(version_string, components, 'HE')
-        end
+        @constraint_version ||= Saxon::Version::Library.new(version_string, 'HE')
       end
 
       private

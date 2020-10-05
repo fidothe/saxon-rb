@@ -12,7 +12,7 @@ module Saxon
         Saxon::Loader.load!
 
         sv = Java::net.sf.saxon.Version
-        new(sv.getProductVersion, sv.getStructuredVersionNumber, sv.softwareEdition)
+        new(sv.getProductVersion, sv.softwareEdition)
       end
 
       include Comparable
@@ -27,9 +27,9 @@ module Saxon
       # @param version [String] the version string
       # @param components [Array<Integer>] the version components separated
       # @param edition [String, Symbol] the name of the Saxon edition (e.g. +:he+, +'HE'+)
-      def initialize(version, components, edition)
+      def initialize(version, edition)
         @version = version.dup.freeze
-        @components = components.dup.freeze
+        @components = version.split('.').map { |n| Integer(n, 10) }
         @edition = edition.downcase.to_sym
       end
 
