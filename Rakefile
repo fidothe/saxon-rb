@@ -38,7 +38,8 @@ task :circleci do
 
     def alt_saxon_urls
       {
-        "https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip" => "Saxon HE 9.8"
+        "https://sourceforge.net/projects/saxon/files/Saxon-HE/9.8/SaxonHE9-8-0-15J.zip" => "Saxon HE 9.8",
+        "https://sourceforge.net/projects/saxon/files/Saxon-HE/10/Java/SaxonHE10-2J.zip" => "Saxon HE 10.2"
       }
     end
 
