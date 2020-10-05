@@ -90,7 +90,9 @@ module Saxon
       private
 
       def main_jar(path)
-        ['saxon9he.jar', 'saxon9pe.jar', 'saxon9ee.jar'].map { |jar| path.join(jar) }.find { |jar| jar.file? }
+        path.children.find { |jar|
+          !jar.basename.to_s.match(/^saxon(?:9[hpe]e\.jar|-[hpe]e-10\.[0-9]+\.jar)$/).nil?
+        }
       end
 
       def extra_jars(path)
