@@ -65,6 +65,25 @@ module Saxon
     #       initial_template_parameters 'param' => 'other value'
     #       initial_template_tunnel_parameters 'param' => 'tunnel value'
     #     }
+    #
+    # To set an Error reporter, which will be called for warnings and runtime
+    # xslt/xpath errors you can pass in a block which will be called with a
+    # Saxon::XMLProcessingError. Processing will continue after a warning, but
+    # for other kinds of error will be aborted, after your reporter code has
+    # run, with a raised Exception.
+    #
+    #     xslt = compiler.compile(source) {
+    #       error_reporter do |error|
+    #         ...
+    #       end
+    #     }
+    #
+    # You can also pass a lambda or an object which responds to +#call()+:
+    #
+    #     xslt = compiler.compile(source) {
+    #       error_reporter ->(error) { ... }
+    #     }
+    #
     class Compiler
       # Create a new <tt>XSLT::Compiler</tt> using the supplied Processor.
       # Passing a block gives access to a DSL for setting up the compiler's

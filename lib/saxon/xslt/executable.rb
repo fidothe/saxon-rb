@@ -5,6 +5,7 @@ require_relative '../serializer'
 require_relative '../xdm'
 require_relative '../qname'
 require_relative '../feature_flags'
+require_relative '../error_reporter'
 
 module Saxon
   module XSLT
@@ -68,7 +69,7 @@ module Saxon
         @s9_xslt_executable, @evaluation_context = s9_xslt_executable, evaluation_context
       end
 
-      def_delegators :evaluation_context, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
+      def_delegators :evaluation_context, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters, :error_reporter
 
       # Run the XSLT by applying templates against the provided {Saxon::Source}
       # or {Saxon::XDM::Node}.
@@ -196,6 +197,7 @@ module Saxon
             merged_opts[key] = value
           end
         end
+        merged_opts[:error_reporter] = error_reporter unless error_reporter.nil?
         merged_opts
       end
 
@@ -215,7 +217,11 @@ module Saxon
     # context node.
     class Transformation
       # A list of valid option names for the transform
-      VALID_OPTS = [:raw, :mode, :global_context_item, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters]
+      VALID_OPTS = [
+        :raw, :mode, :global_context_item,
+        :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters,
+        :error_reporter
+      ]
 
       attr_reader :s9_transformer, :opts
       private :s9_transformer, :opts
@@ -314,6 +320,10 @@ module Saxon
 
       def initial_template_tunnel_parameters(parameters)
         s9_transformer.setInitialTemplateParameters(XSLT::ParameterHelper.to_java(parameters), true)
+      end
+
+      def error_reporter(reporter)
+        s9_transformer.setErrorReporter(Saxon::ErrorReporter.new(reporter))
       end
     end
 

@@ -20,6 +20,7 @@ module Saxon
           @global_parameters = args.fetch(:global_parameters, {}).freeze
           @initial_template_parameters = args.fetch(:initial_template_parameters, {}).freeze
           @initial_template_tunnel_parameters = args.fetch(:initial_template_tunnel_parameters, {}).freeze
+          @error_reporter = args.fetch(:error_reporter, nil)
         end
 
         # returns the context details in a hash suitable for initializing a new one
@@ -31,7 +32,8 @@ module Saxon
             static_parameters: @static_parameters,
             global_parameters: @global_parameters,
             initial_template_parameters: @initial_template_parameters,
-            initial_template_tunnel_parameters: @initial_template_tunnel_parameters
+            initial_template_tunnel_parameters: @initial_template_tunnel_parameters,
+            error_reporter: @error_reporter
           }
         end
 
@@ -123,6 +125,22 @@ module Saxon
           @initial_template_tunnel_parameters = @initial_template_tunnel_parameters.merge(process_parameters(parameters))
         end
 
+        # Set an error reporter which will be called with any warnings or
+        # errors that occur during stylesheet execution. Can be passed a block,
+        # OR have a lambda or other object (which responds to +#call()+) passed
+        # as an argument. (But not both.) A lambda or object will be +#call()+'d with the error as the only argument
+        #
+        # @param reporter [Proc, Object] a Proc/lambda (or +#call()+able Object)
+        # @yield [error]
+        # @yieldparam error [XMLProcessingError]
+        def error_reporter(callable = nil, &block)
+          if block_given?
+            @error_reporter = block
+          else
+            @error_reporter = callable
+          end
+        end
+
         private
 
         def process_parameters(parameters)
@@ -154,6 +172,8 @@ module Saxon
       attr_reader :initial_template_parameters
       # @return [Hash<Saxon::QName => Saxon::XDM::Value>] All the initial template parameters with tunnelling = "yes"
       attr_reader :initial_template_tunnel_parameters
+      # @return [Proc, Object, nil] The callable error reporter, or nil if none is set
+      attr_reader :error_reporter
 
       # @api private
       # When passed a Proc, create a new EvaluationContext based on this one, with the same DSL available as in {.define}.

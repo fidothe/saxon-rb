@@ -162,6 +162,15 @@ module Saxon
 
         expect(subject.global_parameters).to eq({})
       end
+
+      specify "an error reporter can be set" do
+        reporter = ->(error) { error.message }
+        executable = subject.compile(xsl_source) {
+          error_reporter reporter
+        }
+
+        expect(executable.error_reporter).to be(reporter)
+      end
     end
   end
 end
