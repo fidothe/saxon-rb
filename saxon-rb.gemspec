@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Matt Patterson']
   spec.email         = ['matt@werkstatt.io']
 
-  spec.description   = %q{Wraps the Saxon 9.9 XML and XSLT library so you can process, transform, query, and generate XML documents using XSLT 3, XQuery, and XPath 3.1. The HE open-source version is bundled, but you can use the paid-for PE and EE versions of the Java library with this gem as well.
+  spec.description   = %q{Wraps the Saxon 10 XML and XSLT library so you can process, transform, query, and generate XML documents using XSLT 3, XQuery, and XPath 3.1. The HE open-source version is bundled, but you can use the paid-for PE and EE versions of the Java library with this gem as well.
 
 It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
   spec.summary       = %q{Saxon 9.9 for JRuby, with an idiomatic Ruby API}
@@ -24,11 +24,11 @@ It aims to provide an idiomatic Ruby wrapper around all of Saxon's features.}
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.requirements << 'jar net.sf.saxon, Saxon-HE, 9.9.1-7'
+  spec.requirements << 'jar net.sf.saxon, Saxon-HE, 10.3'
 
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'jar-dependencies'
-  spec.add_development_dependency 'rake', '~> 12.0'
+  spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'vcr', '~> 4.0'
   spec.add_development_dependency 'addressable', '~> 2.4.0'
