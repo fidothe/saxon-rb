@@ -7,9 +7,6 @@ module Saxon
     let(:xslt_compiler) { processor.xslt_compiler }
     let(:xml_source) { fixture_source('eg.xml') }
 
-    let(:dynamic_error) { xslt_compiler.compile(fixture_source('dynamic-error.xsl')) }
-    let(:ambiguity_warning) { xslt_compiler.compile(fixture_source('ambiguity-warning.xsl')) }
-
     context "given a dynamic error" do
       context "when set up with a block" do
         specify "the block has an XmlProcessingError instance passed to it" do
@@ -44,6 +41,35 @@ module Saxon
 
           expect(errors.size).to eq(1)
           error = errors.first
+          expect(error.warning?).to be(true)
+          expect(error).to be_a(Saxon::XMLProcessingError)
+        end
+      end
+
+      context "when set up with an object instance responding to #call" do
+        class TestErrorReporter
+          attr_reader :errors
+
+          def initialize
+            @errors = []
+          end
+
+          def call(error)
+            errors << error
+          end
+        end
+
+        specify "the instance is called with an XmlProcessingError instance" do
+          reporter = TestErrorReporter.new
+
+          xslt = xslt_compiler.compile(fixture_source('ambiguity-warning.xsl')) {
+            error_reporter(reporter)
+          }
+
+          xslt.apply_templates(xml_source).xdm_value
+
+          expect(reporter.errors.size).to eq(1)
+          error = reporter.errors.first
           expect(error.warning?).to be(true)
           expect(error).to be_a(Saxon::XMLProcessingError)
         end

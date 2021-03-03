@@ -197,7 +197,6 @@ module Saxon
             merged_opts[key] = value
           end
         end
-        merged_opts[:error_reporter] = error_reporter unless error_reporter.nil?
         merged_opts
       end
 
@@ -207,6 +206,7 @@ module Saxon
           params_hash[:global_parameters] = global_parameters unless global_parameters.empty?
           params_hash[:initial_template_parameters] = initial_template_parameters unless initial_template_parameters.empty?
           params_hash[:initial_template_tunnel_parameters] = initial_template_tunnel_parameters unless initial_template_tunnel_parameters.empty?
+          params_hash[:error_reporter] = error_reporter unless error_reporter.nil?
           params_hash
         end.freeze
       end
