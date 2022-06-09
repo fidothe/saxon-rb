@@ -109,7 +109,11 @@ module Saxon
     end
 
     def option_url(option)
-      feature_keys.field(normalize_option_name(option)).static_value
+      begin
+        feature_keys.field(normalize_option_name(option)).static_value
+      rescue Java::JavaLang::NoSuchFieldException
+        raise NameError, "Option #{option} does not exist"
+      end
     end
 
     def normalize_option_name(option)
