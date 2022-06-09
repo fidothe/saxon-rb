@@ -7,6 +7,20 @@ module Saxon
     let(:xslt_compiler) { processor.xslt_compiler }
     let(:xml_source) { fixture_source('eg.xml') }
 
+    context "creation" do
+      specify "returns an ErrorReporter instance given a callable" do
+        reporter = described_class.create(->(err) { err.message })
+
+        expect(reporter).to be_a(described_class)
+      end
+
+      specify "returns its arg given an existing ErrorReporter instance" do
+        reporter = described_class.new(->(err) { err.message })
+
+        expect(described_class.create(reporter)).to be(reporter)
+      end
+    end
+
     context "given a dynamic error" do
       context "when set up with a block" do
         specify "the block has an XmlProcessingError instance passed to it" do

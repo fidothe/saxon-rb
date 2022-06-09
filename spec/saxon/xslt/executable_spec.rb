@@ -202,6 +202,68 @@ module Saxon::XSLT
           end
         end
       end
+
+      context "setting an error reporter" do
+        let(:xsl_source) { fixture_source('dynamic-error.xsl') }
+        let(:compiler) { processor.xslt_compiler }
+        let(:executable) { compiler.compile(xsl_source) }
+
+        class TestErrorReporter
+          attr_reader :errors
+
+          def initialize
+            @errors = []
+          end
+
+          def call(error)
+            errors << error
+          end
+
+          def has_errors?
+            !errors.empty?
+          end
+        end
+
+        def invoke
+          expect {
+            yield.to_s # lazy execution forced by #to_s
+          }.to raise_error(Java::NetSfSaxonS9api::SaxonApiException)
+        end
+
+        let(:reporter) { TestErrorReporter.new }
+
+        specify "apply-templates reporter lambda is called as expected" do
+          invoke do
+            executable.apply_templates(xml_source, {
+              error_reporter: reporter
+            })
+          end
+
+          expect(reporter).to have_errors
+        end
+
+        specify "call-template reporter lambda is called as expected" do
+          invoke {
+            executable.call_template("root", {
+              error_reporter: reporter
+            })
+          }
+
+          expect(reporter).to have_errors
+        end
+
+        specify "call-function reporter lambda is called as expected" do
+          invoke {
+            executable.call_function(Saxon::QName.clark("{http://example.org/ns}bound-to-fail"), {
+              error_reporter: reporter
+            })
+          }
+
+          expect(reporter).to have_errors
+        end
+      end
+
+
     end
 
     requires_saxon('>= 9.9') do

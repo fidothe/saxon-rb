@@ -45,6 +45,68 @@ module Saxon
         end
       end
 
+      context "compile-time error handling" do
+        context "as part of the evaluation context" do
+          specify "an error reporter can be set" do
+            reporter = ->(error) { error.message }
+            compiler = XSLT::Compiler.create(processor) {
+              compile_error_reporter reporter
+            }
+
+            expect(compiler.error_reporter.callable).to be(reporter)
+          end
+
+          specify "the error reporter is called correctly when there's an error" do
+            errors = []
+            reporter = ->(error) { errors << error.message }
+            xsl_source = fixture_source('compile-error.xsl')
+            compiler = XSLT::Compiler.create(processor){
+              compile_error_reporter reporter
+            }
+
+            expect { compiler.compile(xsl_source) }.to raise_error(Java::NetSfSaxonS9api::SaxonApiException)
+            expect(errors.size).to be > 0
+          end
+
+          specify "the reporter is not also set for runtime error reporting in the executable" do
+            reporter = ->(error) { error.message }
+            compiler = XSLT::Compiler.create(processor) {
+              compile_error_reporter reporter
+            }
+            xsl_source = fixture_source('eg.xsl')
+
+            executable = compiler.compile(xsl_source)
+            expect(executable.error_reporter).to be_nil
+          end
+        end
+
+        context "specifically for compiler errors" do
+          specify "can be set after initialization" do
+            reporter = ->(error) { error.message }
+            compiler = XSLT::Compiler.create(processor)
+            compiler.error_reporter = reporter
+
+            expect(compiler.error_reporter.callable).to be(reporter)
+          end
+
+          specify "can be set after initialization" do
+            reporter = ->(error) { error.message }
+            compiler = XSLT::Compiler.create(processor)
+            compiler.error_reporter = reporter
+
+            expect(compiler.error_reporter.callable).to be(reporter)
+          end
+
+          specify "can be set after initialization with a block" do
+            reporter = ->(error) { error.message }
+            compiler = XSLT::Compiler.create(processor)
+            compiler.set_error_reporter(&reporter)
+
+            expect(compiler.error_reporter.callable).to be(reporter)
+          end
+        end
+      end
+
       context "run-time parameters" do
         context "global parameters" do
           specify "can be declared" do
@@ -169,7 +231,7 @@ module Saxon
           error_reporter reporter
         }
 
-        expect(executable.error_reporter).to be(reporter)
+        expect(executable.error_reporter.callable).to be(reporter)
       end
     end
   end

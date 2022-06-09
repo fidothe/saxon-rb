@@ -7,6 +7,15 @@ module Saxon
       include Java::net.sf.saxon.lib.ErrorReporter
     end
 
+    def self.create(reporter_or_callable)
+      case reporter_or_callable
+      when self
+        reporter_or_callable
+      else
+        new(reporter_or_callable)
+      end
+    end
+
     attr_reader :callable
 
     def initialize(callable)

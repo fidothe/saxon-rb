@@ -9,9 +9,13 @@
     <xsl:template match="child">
         <xsl:sequence select="eg:bound-to-fail(.)"/>
     </xsl:template>
-    
+
+    <xsl:template name="root">
+        <xsl:sequence select="eg:bound-to-fail(())"/>
+    </xsl:template>
+
     <xsl:function name="eg:bound-to-fail" as="element()+">
-        <xsl:param name="node"/>
+        <xsl:param name="node" as="element()?"/>
 
         <xsl:analyze-string select="$node" regex="bothersome">
             <xsl:matching-substring><el/></xsl:matching-substring>

@@ -191,13 +191,20 @@ module Saxon
       def params_merged_opts(opts)
         merged_opts = params_hash.dup
         opts.each do |key, value|
-          if [:global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters].include?(key)
-            merged_opts[key] = merged_opts.fetch(key, {}).merge(XSLT::ParameterHelper.process_parameters(value))
-          else
-            merged_opts[key] = value
-          end
+          merged_opts[key] = params_merged_opt_value(merged_opts, key, value)
         end
         merged_opts
+      end
+
+      def params_merged_opt_value(merged_opts, key, value)
+        case key
+        when :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
+          merged_opts.fetch(key, {}).merge(XSLT::ParameterHelper.process_parameters(value))
+        when :error_reporter
+          Saxon::ErrorReporter.create(value)
+        else
+          value
+        end
       end
 
       def params_hash
@@ -323,7 +330,7 @@ module Saxon
       end
 
       def error_reporter(reporter)
-        s9_transformer.setErrorReporter(Saxon::ErrorReporter.new(reporter))
+        s9_transformer.setErrorReporter(reporter)
       end
     end
 

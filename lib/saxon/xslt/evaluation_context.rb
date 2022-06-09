@@ -20,6 +20,7 @@ module Saxon
           @global_parameters = args.fetch(:global_parameters, {}).freeze
           @initial_template_parameters = args.fetch(:initial_template_parameters, {}).freeze
           @initial_template_tunnel_parameters = args.fetch(:initial_template_tunnel_parameters, {}).freeze
+          @compile_error_reporter = args.fetch(:compile_error_reporter, nil)
           @error_reporter = args.fetch(:error_reporter, nil)
         end
 
@@ -33,6 +34,7 @@ module Saxon
             global_parameters: @global_parameters,
             initial_template_parameters: @initial_template_parameters,
             initial_template_tunnel_parameters: @initial_template_tunnel_parameters,
+            compile_error_reporter: @compile_error_reporter,
             error_reporter: @error_reporter
           }
         end
@@ -126,19 +128,27 @@ module Saxon
         end
 
         # Set an error reporter which will be called with any warnings or
+        # errors that occur during stylesheet compilation. Can be passed a block,
+        # OR have a lambda or other object (which responds to +#call()+) passed
+        # as an argument. (But not both.) A lambda or object will be +#call()+'d with the error as the only argument
+        #
+        # @param reporter [Saxon::ErrorReporter, Proc, Object] a Proc/lambda (or +#call()+able Object)
+        # @yield [error]
+        # @yieldparam error [XMLProcessingError]
+        def compile_error_reporter(callable = nil, &block)
+          @compile_error_reporter = Saxon::ErrorReporter.create(block_given? ? block : callable)
+        end
+
+        # Set an error reporter which will be called with any warnings or
         # errors that occur during stylesheet execution. Can be passed a block,
         # OR have a lambda or other object (which responds to +#call()+) passed
         # as an argument. (But not both.) A lambda or object will be +#call()+'d with the error as the only argument
         #
-        # @param reporter [Proc, Object] a Proc/lambda (or +#call()+able Object)
+        # @param reporter [Saxon::ErrorReporter, Proc, Object] a Proc/lambda (or +#call()+able Object)
         # @yield [error]
         # @yieldparam error [XMLProcessingError]
         def error_reporter(callable = nil, &block)
-          if block_given?
-            @error_reporter = block
-          else
-            @error_reporter = callable
-          end
+          @error_reporter = Saxon::ErrorReporter.create(block_given? ? block : callable)
         end
 
         private
@@ -172,7 +182,9 @@ module Saxon
       attr_reader :initial_template_parameters
       # @return [Hash<Saxon::QName => Saxon::XDM::Value>] All the initial template parameters with tunnelling = "yes"
       attr_reader :initial_template_tunnel_parameters
-      # @return [Proc, Object, nil] The callable error reporter, or nil if none is set
+      # @return [Saxon::ErrorReporter, Proc, Object, nil] The callable error reporter, or nil if none is set
+      attr_reader :compile_error_reporter
+      # @return [Saxon::ErrorReporter, Proc, Object, nil] The callable error reporter, or nil if none is set
       attr_reader :error_reporter
 
       # @api private
@@ -181,6 +193,12 @@ module Saxon
       # When passed {nil}, simply return the EvaluationContext unaltered.
       def define(block)
         block.nil? ? self : DSL.define(block, args_hash)
+      end
+
+      # @api private
+      # Report whether a compile-specific error reporter has been set
+      def has_compile_error_reporter?
+        !compile_error_reporter.nil?
       end
     end
 

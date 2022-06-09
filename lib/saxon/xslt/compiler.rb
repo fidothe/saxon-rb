@@ -112,13 +112,15 @@ module Saxon
       end
 
       def_delegators :evaluation_context, :default_collation, :static_parameters, :global_parameters, :initial_template_parameters, :initial_template_tunnel_parameters
-      # @!attribute [r] declared_collations
-      #   @return [Hash<String => java.text.Collator>] declared collations as URI => Collator hash
-      # @!attribute [r] default_collation
-      #   @return [String] the URI of the default declared collation
-      # @!attribute [r] static_parameters
-      #   @return [Hash<Saxon::QName => Saxon::XDM::Value, Saxon::XDM::Node,
-      #   Saxon::XDM::AtomicValue>] parameters required at compile time as QName => value hash
+      # @!attribute [r] declared_collations @return [Hash<String =>
+      #   java.text.Collator>] declared collations as URI => Collator hash
+      # @!attribute [r] default_collation @return [String] the URI of the
+      #   default declared collation @!attribute [r] static_parameters @return
+      # [Hash<Saxon::QName => Saxon::XDM::Value, Saxon::XDM::Node,
+      #   Saxon::XDM::AtomicValue>] parameters required at compile time as QName
+      #   => value hash @!attribute [r] error_reporter @return
+      # [Saxon::ErrorReporter] ErrorReporter or Callable that will be called for
+      #   compile-time errors
 
       # @param source [Saxon::Source] the Source to compile
       # @yield the block is executed in the context of an {XSLT::EvaluationContext} DSL instance
@@ -143,10 +145,42 @@ module Saxon
         self.class.new(@s9_processor, new_evaluation_context)
       end
 
+      # Returns the compile-time error reporter, if one is set. A reporter can
+      # be set directly on the instance, or with the creation DSL. Either way, a
+      # reporter set for run-time errors will not be returned here.
+      #
+      # @return [Saxon::ErrorReporter]
+      def error_reporter
+        @error_reporter || evaluation_context.compile_error_reporter
+      end
+
+      # Set an error reporter which will be called with any warnings or
+      # errors that occur during stylesheet compilation. Can be passed a block,
+      # OR have a lambda or other object (which responds to +#call()+) passed
+      # as an argument. (But not both.) A lambda or object will be +#call()+'d with the error as the only argument
+      #
+      # @param reporter [Saxon::ErrorReporter, Proc, Object] a Proc/lambda (or +#call()+able Object)
+      def error_reporter=(callable = nil)
+        set_error_reporter(callable)
+      end
+
+      # Set an error reporter which will be called with any warnings or
+      # errors that occur during stylesheet compilation. Can be passed a block,
+      # OR have a lambda or other object (which responds to +#call()+) passed
+      # as an argument. (But not both.) A lambda or object will be +#call()+'d with the error as the only argument
+      #
+      # @param reporter [Saxon::ErrorReporter, Proc, Object] a Proc/lambda (or +#call()+able Object)
+      # @yield [error]
+      # @yieldparam error [XMLProcessingError]
+      def set_error_reporter(callable = nil, &block)
+        @error_reporter = Saxon::ErrorReporter.create(block_given? ? block : callable)
+      end
+
       private
 
       def new_compiler(evaluation_context)
         compiler = @s9_processor.newXsltCompiler
+        compiler.setErrorReporter(error_reporter) unless error_reporter.nil?
         compiler.declareDefaultCollation(evaluation_context.default_collation) unless evaluation_context.default_collation.nil?
         evaluation_context.static_parameters.each do |qname, value|
           compiler.setParameter(qname.to_java, value.to_java)
