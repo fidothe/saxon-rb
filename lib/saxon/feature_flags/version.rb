@@ -5,46 +5,6 @@ module Saxon
   module FeatureFlags
     # Restrict a specific method to only work with the specified Saxon version
     class Version
-      # Modify the method so that it will only run if the version constraint is
-      # satisfied.
-      #
-      # We can't know what version of Saxon is in use at code load time, only
-      # once {Saxon::Loader#load!} has been called, either explicitly or by
-      # calling a method which requires a Saxon Java object. Therefore, we have
-      # to check this the first time someone calls the method.
-      #
-      # Creating this check replaces the method on the target class with one
-      # that checks the version, and runs the original version if its constraint
-      # is satisfied.
-      #
-      # To avoid performing the check every time the method is called, once we
-      # know whether or not the constraint is satisfied, we assume that the
-      # verion of Saxon cannot be unloaded and a new one loaded in its place and
-      # replace our version checking method with the original (if the constraint
-      # is passed), or with one that simply +raise+s the constraint error.
-      #
-      # @param klass [Class] the class the method lives on
-      # @param method_name [Symbol] the name of the method to be constrained
-      # @param version_constraint [String] the version constraint
-      #   (<tt>'>9.9.1.7'</tt> or <tt>'>= 9.9'</tt>)
-      def self.create(klass, method_name, version_constraint)
-        method = klass.instance_method(method_name)
-        version_check = new(version_constraint)
-
-
-        klass.send(:define_method, method_name, ->(*args) {
-          if version_check.ok?
-            klass.send(:define_method, method_name, method)
-            method.bind(self).call(*args)
-          else
-            klass.send(:define_method, method_name, ->(*args) {
-              raise UnavailableInThisSaxonVersionError
-            })
-            raise UnavailableInThisSaxonVersionError
-          end
-        })
-      end
-
       # @return [String] the complete constraint string
       attr_reader :constraint_string
       # @return [Symbol] the extracted comparison operator

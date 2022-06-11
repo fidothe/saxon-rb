@@ -8,7 +8,15 @@ module Saxon
       # @param method_name [Symbol] the name of the method
       # @param version_constraint [String] the version constraint (<tt>'>= 9.9'</tt>)
       def requires_saxon_version(method_name, version_constraint)
-        Saxon::FeatureFlags::Version.create(self, method_name, version_constraint)
+        Saxon::FeatureFlags::Method.critical(self, method_name, version_constraint)
+      end
+
+      def requires_saxon_version_or_noop(method_name, version_constraint)
+        Saxon::FeatureFlags::Method.noop(self, method_name, version_constraint)
+      end
+
+      def class_requires_saxon_version(klass, version_constraint)
+        Saxon::FeatureFlags::Class.critical(klass, version_constraint)
       end
     end
   end

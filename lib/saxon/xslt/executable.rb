@@ -223,6 +223,8 @@ module Saxon
     # Represents a loaded XSLT transformation ready to be applied against a
     # context node.
     class Transformation
+      extend Saxon::FeatureFlags::Helpers
+
       # A list of valid option names for the transform
       VALID_OPTS = [
         :raw, :mode, :global_context_item,
@@ -332,6 +334,7 @@ module Saxon
       def error_reporter(reporter)
         s9_transformer.setErrorReporter(reporter)
       end
+      requires_saxon_version :error_reporter, '>= 10.0'
     end
 
     # Raised if a bad option name is passed in the options hash to
