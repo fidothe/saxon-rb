@@ -10,10 +10,16 @@ module Saxon
       let(:doc) { processor.document_builder.build(xml_source) }
       let(:xslt) { processor.xslt_compiler.compile(xslt_source) }
 
+      def match_global_parameters(params)
+        satisfy { |args|
+          expect(args[:global_parameters]).to eq(params)
+        }
+      end
+
       specify "Calling #transform passes param args through correctly to #apply_templates" do
-        expect(xslt).to receive(:apply_templates).with(doc, global_parameters: {
-          Saxon::QName.clark('param') => Saxon::XDM.Value('1')
-        }).and_call_original
+        expect(xslt).to receive(:apply_templates).with(eq(doc), match_global_parameters({
+          Saxon::QName.clark('param') => Saxon::XDM.AtomicValue('1')
+        })).and_call_original
 
         xslt.transform(doc, ['param', '1'])
       end

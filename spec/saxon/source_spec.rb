@@ -13,14 +13,14 @@ RSpec.describe Saxon::Source do
 
       specify "an open-uri'd file URI" do
         uri = "file://#{fixture_path('eg.xml')}"
-        source = Saxon::Source.from_io(open(uri))
+        source = Saxon::Source.from_io(URI.open(uri))
 
         expect(source.base_uri).to eq(uri)
       end
 
       specify "an open-uri'd http URI", :vcr do
         uri = "http://example.org/"
-        source = Saxon::Source.from_io(open(uri))
+        source = Saxon::Source.from_io(URI.open(uri))
 
         expect(source.base_uri).to eq(uri)
       end

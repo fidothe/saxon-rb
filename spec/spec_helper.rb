@@ -37,15 +37,6 @@ module SaxonEditionHelpers
   def requires_pe(&block)
 
   end
-
-  def requires_saxon(constraint, &block)
-    require 'saxon/version/library'
-    require 'saxon/feature_flags/version'
-
-    if Saxon::FeatureFlags::Version.new(constraint).ok?
-      class_exec(&block)
-    end
-  end
 end
 
 VCR.configure do |c|

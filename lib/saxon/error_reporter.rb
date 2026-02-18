@@ -27,5 +27,4 @@ module Saxon
       callable.call(Saxon::XMLProcessingError.new(xml_processing_error))
     end
   end
-  Saxon::FeatureFlags.class_requires_saxon_version ErrorReporter, '>= 10.0'
 end

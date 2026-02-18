@@ -2,10 +2,16 @@ require 'saxon/s9api'
 
 module Saxon
   # Wraps the <tt>net.sf.saxon.lib.ParseOptions</tt> class, which holds default
-  # options to be passed to the parser
+  # options to be passed to the parser. This is an immutable class, so all
+  # mnodifications result in new instances and we provide a block-based creation dsl
   class ParseOptions
     attr_reader :parse_options
     private :parse_options
+
+    def self.create(&block)
+      dsl = DSL.new(Saxon::S9API::ParseOptions.new)
+      new(dsl.build(block))
+    end
 
     # @api private
     # @param parse_options [net.sf.saxon.lib.ParseOptions, nil] The Saxon
@@ -24,6 +30,39 @@ module Saxon
     # @return [Saxon::ParseOptions::ParserFeatures] the features object
     def features
       @features ||= ParserFeatures.new(parse_options)
+    end
+
+    class DSL
+      attr_reader :s9_parse_options
+      private :s9_parse_options
+      def initialize(s9_parse_options)
+        @s9_parse_options = s9_parse_options
+      end
+
+      def build(block)
+        instance_exec(&block)
+        s9_parse_options
+      end
+
+      # Set the values of Parser Properties using a hash
+      #
+      # @param Hash{String, URI => Object} properties The properties to set as a Hash of URI to Value
+      def properties(properties)
+        @s9_parse_options = properties.inject(s9_parse_options)  { |s9_parse_options, kv|
+          uri, value = kv
+          s9_parse_options.withParserProperty(uri, value)
+        }
+      end
+
+      # Set the values of Parser Features using a hash
+      #
+      # @param Hash{String, URI => Boolean} features The parser features to set as a Hash of URI to Value
+      def features(features)
+        @s9_parse_options = features.inject(s9_parse_options)  { |s9_parse_options, kv|
+          uri, value = kv
+          s9_parse_options.withParserFeature(uri, value)
+        }
+      end
     end
   end
 
@@ -55,16 +94,6 @@ module Saxon
       parse_options.getParserProperty(uri)
     end
 
-    # Set the value of a Parser Property
-    #
-    # @param [String, URI] uri The Parser Property URI to set
-    # @param [Object] value The value to set the property to
-    # @return [Object] The new value of the property
-    def []=(uri, value)
-      parse_options.addParserProperties(uri, value)
-      self[uri]
-    end
-
     # Iterate across each currently-set property, in the same way as a hash
     #
     # @yield [uri, value]
@@ -94,25 +123,15 @@ module Saxon
       (parse_options.getParserFeatures || {}).freeze
     end
 
-    # Fetch the current value of a Parser Feature
+    # Fetch the current state of a Parser Feature
     #
     # @param [String, URI] uri The Parser Feature URI to fetch
-    # @return [Boolean, nil] The current value of the feature, or nil if it's
+    # @return [Boolean] The current value of the feature, or nil if it's
     #   unset
     def [](uri)
       pf = parse_options.getParserFeatures
       return nil if pf.nil? || !pf.include?(uri)
-      parse_options.getParserFeature(uri)
-    end
-
-    # Set the value of a Parser Feature
-    #
-    # @param [String, URI] uri The Parser Property URI to set
-    # @param [Boolean] value The value to set the property to
-    # @return [Boolean] The new value of the property
-    def []=(uri, value)
-      parse_options.addParserFeature(uri, value)
-      self[uri]
+      parse_options.hasParserFeature(uri)
     end
 
     # Iterate across each currently-set feature, in the same way as a hash

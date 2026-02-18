@@ -183,7 +183,7 @@ module Saxon
       # @return [Saxon::Source] the Saxon::Source wrapping the input
       def from_uri(uri, opts = {})
         encoding = opts.fetch(:encoding, nil)
-        return from_io(open(uri), encoding: encoding) if encoding
+        return from_io(URI.open(uri), encoding: encoding) if encoding
         from_inputstream_or_reader(uri.to_s, opts[:base_uri])
       end
 

@@ -1,8 +1,6 @@
 require 'forwardable'
 require_relative './evaluation_context'
 require_relative './executable'
-require_relative '../feature_flags'
-
 
 module Saxon
   module XSLT
@@ -87,7 +85,6 @@ module Saxon
     #     }
     #
     class Compiler
-      extend Saxon::FeatureFlags::Helpers
 
       # Create a new <tt>XSLT::Compiler</tt> using the supplied Processor.
       # Passing a block gives access to a DSL for setting up the compiler's
@@ -167,7 +164,6 @@ module Saxon
       def error_reporter=(callable = nil)
         set_error_reporter(callable)
       end
-      requires_saxon_version :error_reporter=, '>= 10.0'
 
       # Set an error reporter which will be called with any warnings or
       # errors that occur during stylesheet compilation. Can be passed a block,
@@ -180,7 +176,6 @@ module Saxon
       def set_error_reporter(callable = nil, &block)
         @error_reporter = Saxon::ErrorReporter.create(block_given? ? block : callable)
       end
-      requires_saxon_version :set_error_reporter, '>= 10.0'
 
       private
 
@@ -198,7 +193,6 @@ module Saxon
       def set_s9_error_reporter(compiler)
         compiler.setErrorReporter(error_reporter) unless error_reporter.nil?
       end
-      requires_saxon_version_or_noop :set_s9_error_reporter, '>= 10.0'
     end
   end
 end

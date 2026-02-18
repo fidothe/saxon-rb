@@ -266,18 +266,16 @@ module Saxon::XSLT
 
     end
 
-    requires_saxon('>= 9.9') do
-      describe "a Serializer using the <xsl:output> options" do
-        let(:xsl_source) { fixture_source('serialization.xsl') }
-        let(:compiler) { processor.xslt_compiler }
+    describe "a Serializer using the <xsl:output> options" do
+      let(:xsl_source) { fixture_source('serialization.xsl') }
+      let(:compiler) { processor.xslt_compiler }
 
-        subject { compiler.compile(xsl_source) }
+      subject { compiler.compile(xsl_source) }
 
-        specify "the Serializer was correctly configured" do
-          serializer = subject.serializer
+      specify "the Serializer was correctly configured" do
+        serializer = subject.serializer
 
-          expect(serializer.serialize(Saxon::XDM.Value('a'))).to eq('b')
-        end
+        expect(serializer.serialize(Saxon::XDM.Value('a'))).to eq('b')
       end
     end
   end

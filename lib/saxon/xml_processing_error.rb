@@ -22,7 +22,7 @@ module Saxon
     end
 
     def fatal?
-      !s9_error.getFatalErrorMessage.nil?
+      !s9_error.getTerminationMessage.nil?
     end
 
     def static_error?

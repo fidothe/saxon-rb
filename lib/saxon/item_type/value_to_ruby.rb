@@ -1,4 +1,5 @@
 require 'bigdecimal'
+require 'base64'
 
 module Saxon
   class ItemType

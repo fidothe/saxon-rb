@@ -11,33 +11,41 @@ RSpec.describe Saxon::ParseOptions do
     expect(parse_options).to be_a(Saxon::ParseOptions)
   end
 
-  context "parser properties" do
-    subject { Saxon::ParseOptions.new }
+  it "provides a block instantiation option" do
+    parse_options = Saxon::ParseOptions.create {
+      properties({
+        'http://xml.org/sax/properties/document-xml-version' => '1.1'
+      })
+      features({
+         'http://xml.org/sax/features/validation' => true
+      })
+    }
+    expect(parse_options).to be_a(Saxon::ParseOptions)
+  end
 
-    it "can be set singly by URL" do
-      expect(subject.properties['http://xml.org/sax/properties/document-xml-version'] = '1.1').to eq('1.1')
-    end
+  context "parser properties" do
+    subject {
+      Saxon::ParseOptions.create {
+        properties({
+          'http://xml.org/sax/properties/document-xml-version' => '1.1'
+        })
+      }
+    }
 
     it "can be fetched singly by URL" do
-      subject.properties['http://xml.org/sax/properties/document-xml-version'] = '1.1'
-
       expect(subject.properties['http://xml.org/sax/properties/document-xml-version']).to eq('1.1')
     end
 
     it "fetching an unset property when none have been set returns nil" do
+      subject = Saxon::ParseOptions.new
       expect(subject.properties['http://xml.org/sax/properties/document-xml-version']).to be_nil
     end
 
     it "fetching an unset property returns nil" do
-      subject.properties['http://xml.org/sax/properties/document-xml-version'] = '1.1'
       expect(subject.properties['http://example.org/null']).to be_nil
     end
 
     context "acting Enumerable" do
-      before do
-        subject.properties['http://xml.org/sax/properties/document-xml-version'] = '1.1'
-      end
-
       it "all can be fetched as a hash" do
         expect(subject.properties.to_h).to eq({
           'http://xml.org/sax/properties/document-xml-version' => '1.1'
@@ -67,33 +75,28 @@ RSpec.describe Saxon::ParseOptions do
   end
 
   context "parser features" do
-    subject { Saxon::ParseOptions.new }
-
-    it "can be set singly by URL" do
-      expect(subject.features['http://xml.org/sax/features/validation'] = true).to be(true)
-    end
+    subject {
+      Saxon::ParseOptions.create {
+        features({
+          'http://xml.org/sax/features/validation' => true
+        })
+      }
+    }
 
     it "can be fetched singly by URL" do
-      subject.features['http://xml.org/sax/features/validation'] = true
-
       expect(subject.features['http://xml.org/sax/features/validation']).to be(true)
     end
 
-    it "fetching an unset property when none have been set returns nil" do
+    it "fetching an default-unset feature when none have been set returns nil" do
+      subject = Saxon::ParseOptions.new
       expect(subject.features['http://xml.org/sax/features/validation']).to be_nil
     end
 
-    it "fetching an unset property returns nil" do
-      subject.features['http://xml.org/sax/features/validation'] = true
-
+    it "fetching an unset feature returns nil" do
       expect(subject.features['http://example.org/null']).to be_nil
     end
 
     context "acting Enumerable" do
-      before do
-        subject.features['http://xml.org/sax/features/validation'] = true
-      end
-
       it "all can be fetched as a hash" do
         expect(subject.features.to_h).to eq({
           'http://xml.org/sax/features/validation' => true
