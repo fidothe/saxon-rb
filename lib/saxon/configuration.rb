@@ -1,5 +1,6 @@
 require 'saxon/s9api'
 require 'saxon/parse_options'
+require 'saxon/configuration/feature'
 
 module Saxon
   # Wraps the <tt>net.sf.saxon.Configuration</tt> class.
@@ -71,7 +72,8 @@ module Saxon
     # @raise [NameError] if the option name does not exist
     # @see net.sf.saxon.lib.FeatureKeys
     def [](option)
-      @config.getConfigurationProperty(option_url(option))
+      feature = Feature.by_name(option)
+      feature.get(@config)
     end
 
     # Set a configuration option value. See {#[]} for details about the option
@@ -83,8 +85,8 @@ module Saxon
     # @return [Object] the value you passed in
     # @raise [NameError] if the option name does not exist
     def []=(option, value)
-      url = option_url(option)
-      @config.setConfigurationProperty(url, value)
+      feature = Feature.get(option)
+      feature.set(@config, value)
     end
 
     # Return the current ParseOptions object
@@ -104,20 +106,8 @@ module Saxon
 
     private
 
-    def feature_keys
-      @feature_keys ||= Saxon::S9API::FeatureKeys.java_class
-    end
-
-    def option_url(option)
-      begin
-        feature_keys.field(normalize_option_name(option)).static_value
-      rescue Java::JavaLang::NoSuchFieldException
-        raise NameError, "Option #{option} does not exist"
-      end
-    end
-
     def normalize_option_name(option)
-      option.to_s.upcase
+      option.to_s.downcase.to_sym
     end
   end
 end

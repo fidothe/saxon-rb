@@ -1,5 +1,6 @@
 require 'saxon/configuration'
 require 'saxon/processor'
+require 'uri'
 
 RSpec.describe Saxon::Configuration do
   it "is instantiated from a java Configuration instance" do
@@ -28,6 +29,11 @@ RSpec.describe Saxon::Configuration do
     it "can set a configuration option to a new value" do
       config[:line_numbering] = true
       expect(config[:line_numbering]).to be(true)
+    end
+
+    it "can set a URI-based configuration option" do
+      config[:xquery_default_element_namespace] = URI("http://example.org/ns")
+      expect(config[:xquery_default_element_namespace]).to eq(URI("http://example.org/ns"))
     end
 
     it "returns the passed-in value when setting an option" do

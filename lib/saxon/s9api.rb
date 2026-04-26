@@ -30,7 +30,9 @@ module Saxon
         @imported_classes ||= Module.new {
           include_package 'net.sf.saxon.s9api'
           java_import Java::net.sf.saxon.Configuration
+          java_import Java::net.sf.saxon.lib.Feature
           java_import Java::net.sf.saxon.lib.FeatureKeys
+          java_import Java::net.sf.saxon.lib.FeatureIndex
           java_import Java::net.sf.saxon.lib.ParseOptions
         }
       end
