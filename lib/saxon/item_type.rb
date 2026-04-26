@@ -47,9 +47,11 @@ module Saxon
       end
     end
 
+    class ItemTypeError < StandardError; end
+
     # Error raised when a Ruby class has no equivalent XDM type to
     # be converted into
-    class UnmappedRubyTypeError < StandardError
+    class UnmappedRubyTypeError < ItemTypeError
       def initialize(class_name)
         @class_name = class_name
       end
@@ -63,7 +65,7 @@ module Saxon
     # Error raise when an attempt to reify an <tt>xs:*</tt> type string is
     # made, but the type string doesn't match any of the built-in <tt>xs:*</tt>
     # types
-    class UnmappedXSDTypeNameError < StandardError
+    class UnmappedXSDTypeNameError < ItemTypeError
       def initialize(type_str)
         @type_str = type_str
       end
@@ -153,14 +155,33 @@ module Saxon
       }.to_h.freeze
     end
 
+    def self.wilcardable_str_mapping
+      mapping = {
+        'element' => :ELEMENT_NODE,
+        'attribute' => :ATTRIBUTE_NODE,
+        'function' => :ANY_FUNCTION,
+        'map' => :ANY_MAP,
+        'array' => :ANY_ARRAY
+      }
+      expanded = []
+      mapping.each do |test, constant|
+        expanded << ["#{test}()", constant]
+        expanded << ["#{test}(*)", constant]
+      end
+      expanded.to_h.freeze
+    end
+
     # A mapping of type names/QNames to XDM type constants
     STR_MAPPING = LazyReadOnlyHash.new do
       {
-        'array(*)' => :ANY_ARRAY,
         'item()' => :ANY_ITEM,
-        'map(*)' => :ANY_MAP,
+        'document-node()' => :DOCUMENT_NODE,
+        'comment()' => :COMMENT_NODE,
+        'text()' => :TEXT_NODE,
+        'processing-instruction()' => :PROCESSING_INSTRUCTION_NODE,
+        'namespace-node()' => :NAMESPACE_NODE,
         'node()' => :ANY_NODE
-      }.merge(
+      }.merge(wilcardable_str_mapping).merge(
         Hash[QNAME_MAPPING.map { |qname, v| [qname.to_s, v] }]
       ).freeze
     end
@@ -248,9 +269,9 @@ module Saxon
 
       def get_s9_str_mapped_type(type_str)
         if mapped_type = STR_MAPPING.fetch(type_str, false)
-          # ANY_ITEM is a method, not a constant, for reasons not entirely
+          # ANY_ITEM and ANY_FUNCTION are methods, not constants, for reasons not entirely
           # clear to me
-          return S9API::ItemType.ANY_ITEM if mapped_type == :ANY_ITEM
+          return S9API::ItemType.send(mapped_type) if [:ANY_ITEM, :ANY_FUNCTION].include?(mapped_type)
           S9API::ItemType.const_get(mapped_type)
         else
           raise UnmappedXSDTypeNameError, type_str

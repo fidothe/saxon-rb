@@ -49,7 +49,6 @@ module Saxon
       {
         'xs:string' => S9API::ItemType::STRING,
         'xs:duration' => S9API::ItemType::DURATION,
-        'node()' => S9API::ItemType::ANY_NODE
       }.each do |qname_str, xsd_type|
         specify "Ruby string '#{qname_str}' maps to #{xsd_type}" do
           expect(described_class.get_type(qname_str).to_java).to be(xsd_type)
@@ -62,6 +61,33 @@ module Saxon
         }.to raise_error(Saxon::ItemType::UnmappedXSDTypeNameError)
       end
     end
+
+    context "mapping string node types" do
+      {
+        'node()' => S9API::ItemType::ANY_NODE,
+        'element()' => S9API::ItemType::ELEMENT_NODE,
+        'text()' => S9API::ItemType::TEXT_NODE,
+        'document-node()' => S9API::ItemType::DOCUMENT_NODE,
+        'attribute()' => S9API::ItemType::ATTRIBUTE_NODE,
+        'namespace-node()' => S9API::ItemType::NAMESPACE_NODE,
+        'comment()' => S9API::ItemType::COMMENT_NODE,
+        'processing-instruction()' => S9API::ItemType::PROCESSING_INSTRUCTION_NODE,
+        'function()' => S9API::ItemType::ANY_FUNCTION(), # I have no idea why, but it's a method not a constant
+        'map()' => S9API::ItemType::ANY_MAP,
+        'array()' => S9API::ItemType::ANY_ARRAY,
+      }.each do |node_str, node_type|
+        specify "Ruby string '#{node_str}' maps to #{node_type}" do
+          expect(described_class.get_type(node_str).to_java).to be(node_type)
+        end
+      end
+
+      specify "unmapped type strings raise an appropriate error" do
+        expect {
+          described_class.get_type('ice-cream()')
+        }.to raise_error(Saxon::ItemType::UnmappedXSDTypeNameError)
+      end
+    end
+
 
     specify "passing an existing ItemType instance to get_type returns the instance" do
       item_type = described_class.get_type(::String)
